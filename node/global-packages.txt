@@ -1,1 +1,13 @@
 @anthropic-ai/claude-code
+npm
+yarn
+pnpm
+typescript
+ts-node
+nodemon
+eslint
+prettier
+@vercel/cli
+create-react-app
+vue-cli
+@angular/cli

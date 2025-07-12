@@ -1,38 +1,82 @@
 tap "homebrew/autoupdate"
-brew "openssl@3"
-brew "bat"
-brew "readline"
-brew "xz"
-brew "cairo"
-brew "commitizen"
-brew "diff-so-fancy"
-brew "docker"
-brew "eza"
-brew "fzf"
-brew "giflib"
+
+# Core development tools
 brew "git"
-brew "gping"
-brew "jpeg"
-brew "pango"
-brew "librsvg"
-brew "nginx"
+brew "gh"                    # GitHub CLI
+brew "docker"
+brew "docker-completion"
+
+# Programming languages & package managers
 brew "node"
 brew "nvm"
-brew "pkgconf"
 brew "pnpm"
 brew "pyenv"
-brew "python@3.10"
-brew "python@3.11"
-brew "scc"
-brew "tldr"
-brew "vim"
+brew "rbenv"
+brew "go"
+brew "rust"
+brew "php"
+brew "composer"
+
+# Modern CLI replacements
+brew "bat"                   # Enhanced cat
+brew "eza"                   # Enhanced ls
+brew "fd"                    # Enhanced find
+brew "fzf"                   # Fuzzy finder
+brew "ripgrep"               # Enhanced grep
+brew "zoxide"                # Smart cd
+
+# Development utilities
+brew "jq"                    # JSON processor
 brew "wget"
-brew "zlib"
-brew "zoxide"
+brew "curl"
+brew "git-gui"
+brew "diff-so-fancy"
+brew "commitizen"
+brew "gping"                 # Ping with graph
+brew "tldr"                  # Simplified man pages
+brew "scc"                   # Source lines counter
+brew "entr"                  # File watcher
+brew "ast-grep"              # Structural search for code
+
+# Text editors
+brew "vim"
+brew "neovim"
+
+# File management
+brew "yazi"                  # Terminal file manager
+brew "tree-sitter"
+
+# Development workflow
+brew "lazygit"               # Terminal Git UI
+
+# Media processing
+brew "ffmpeg"
+brew "imagemagick"
+
+# System utilities
+brew "sevenzip"
+brew "telnet"
+brew "tesseract"            # OCR
+brew "nginx"
+
+# Applications
+cask "1password"
+cask "arc"
 cask "claude"
 cask "figma"
+cask "google-drive"
+cask "notion"
+cask "raycast"
 cask "rectangle"
+cask "slack"
+cask "spotify"
+cask "stats"
+cask "visual-studio-code"
 cask "vlc"
+
+# Fonts
+cask "font-anonymice-nerd-font"
+cask "font-symbols-only-nerd-font"
 vscode "akamud.vscode-caniuse"
 vscode "dbaeumer.vscode-eslint"
 vscode "editorconfig.editorconfig"
@@ -42,7 +86,6 @@ vscode "github.copilot-chat"
 vscode "github.vscode-pull-request-github"
 vscode "graphql.vscode-graphql"
 vscode "graphql.vscode-graphql-syntax"
-vscode "netflix.netflix-ide-plugin-vscode-dropship"
 vscode "pomdtr.excalidraw-editor"
 vscode "redhat.java"
 vscode "sonarsource.sonarlint-vscode"

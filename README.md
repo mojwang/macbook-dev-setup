@@ -16,8 +16,14 @@ A comprehensive, reproducible development environment setup for macOS with moder
 git clone https://github.com/YOUR_USERNAME/dev-setup.git
 cd dev-setup
 
+# Preview what will be installed (dry run)
+./setup.sh --dry-run
+
 # Run the setup script
 ./setup.sh
+
+# Run with verbose output and logging
+./setup.sh --verbose --log setup.log
 ```
 
 ## 📦 What's Included
@@ -35,6 +41,7 @@ cd dev-setup
 - **fzf**: Fuzzy finder for files and commands
 - **zoxide**: Smart directory navigation
 - **diff-so-fancy**: Beautiful git diffs
+- **gping**: Ping with a graph
 
 ### Applications
 - **Browsers**: Chrome, Firefox, Safari, Brave, Edge
@@ -47,10 +54,27 @@ cd dev-setup
 
 Some tools require manual setup:
 
-1. **Claude CLI**: Requires authentication token
-2. **Git**: Update user email in `.gitconfig`
-3. **VS Code**: Install extensions from `vscode-extensions.txt`
-4. **Applications**: Some apps require manual App Store installation
+1. **Claude CLI**: Run `claude setup-token` to authenticate
+2. **Git**: Update your name and email in `~/.gitconfig`
+3. **VS Code**: Extensions are automatically installed; settings are configured
+4. **Applications**: Some apps may require manual App Store installation
+
+## ⚙️ Command Line Options
+
+The setup script supports several options:
+
+- `--dry-run` or `-d`: Preview what would be installed without making changes
+- `--verbose` or `-v`: Enable detailed output
+- `--log FILE` or `-l FILE`: Write detailed logs to a file
+- `--help` or `-h`: Show help message
+
+Examples:
+```bash
+./setup.sh --dry-run                    # Preview installation
+./setup.sh --verbose                    # Verbose output
+./setup.sh --log setup.log              # Log to file
+./setup.sh -d -v -l setup.log          # Combine options
+```
 
 ## 📁 Repository Structure
 
@@ -69,12 +93,12 @@ dev-setup/
 │   └── scripts/
 │       └── exa-wrapper.sh      # Custom eza wrapper
 ├── homebrew/
-│   ├── Brewfile                # Homebrew dependencies
-│   └── Brewfile.lock.json      # Lockfile for reproducibility
+│   └── Brewfile                # Homebrew dependencies
 ├── node/
 │   ├── .nvmrc                  # Node version specification
 │   └── global-packages.txt     # Global npm packages
 ├── python/
+│   ├── .python-version         # Python version specification
 │   └── requirements.txt        # Python packages
 ├── vscode/
 │   ├── extensions.txt          # VS Code extensions
@@ -91,6 +115,9 @@ dev-setup/
 - **Documented**: Comprehensive documentation and troubleshooting
 - **Modern**: Latest tools and best practices
 - **Customizable**: Easy to modify for personal preferences
+- **Safe**: Dry-run mode and automatic backups
+- **Robust**: Error handling and validation throughout
+- **Logged**: Optional detailed logging for troubleshooting
 
 ## 🔄 Keeping It Updated
 

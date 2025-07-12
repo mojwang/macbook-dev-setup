@@ -1,6 +1,9 @@
 #!/bin/bash
 
-## Change following to '0' for output to be like ls and '1' for exa features
+# Eza wrapper script for ls-like behavior
+# This script provides an ls-compatible interface for the eza command
+
+## Configuration - Change following to '0' or '1' to customize behavior
 # Don't list implied . and .. by default with -a
 dot=0
 # Show human readable file sizes by default

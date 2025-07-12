@@ -1,53 +1,187 @@
 
 
-if type brew &>/dev/null
-then
-  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+# Development Environment .zshrc Configuration
+# Optimized for Apple Silicon macOS
 
-  autoload -Uz compinit
-  compinit
-fi
-
-if command -v eza >/dev/null; then
-    alias ls="~/.scripts/exa-wrapper.sh"
+# Homebrew setup
+if [[ $(uname -m) == "arm64" ]]; then
+    # Apple Silicon
+    eval "$(/opt/homebrew/bin/brew shellenv)"
 else
-    alias ls="/bin/ls $LS_OPTIONS"
+    # Intel Mac
+    eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-alias ll="ls -aghl"
-alias cat="bat"
-alias ip="ipconfig getifaddr en0"
-alias home="cd ~"
-alias reload="source ~/.zshrc"
-alias copy="rsync -ahr --progress"
-alias trash="mv --force -t ~/.local/share/Trash "
+# Homebrew completion setup
+if type brew &>/dev/null; then
+    FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+    autoload -Uz compinit
+    compinit
+fi
 
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+# Node.js version management (NVM)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+# Auto-load .nvmrc files
 autoload -U add-zsh-hook
 load-nvmrc() {
-  local nvmrc_path="$(nvm_find_nvmrc)"
-
-  if [ -n "$nvmrc_path" ]; then
-    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
-
-    if [ "$nvmrc_node_version" = "N/A" ]; then
-      nvm install
-    elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
-      nvm use
+    local nvmrc_path="$(nvm_find_nvmrc)"
+    
+    if [ -n "$nvmrc_path" ]; then
+        local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+        
+        if [ "$nvmrc_node_version" = "N/A" ]; then
+            nvm install
+        elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
+            nvm use
+        fi
+    elif [ -n "$(PWD=$OLDPWD nvm_find_nvmrc)" ] && [ "$(nvm version)" != "$(nvm version default)" ]; then
+        echo "Reverting to nvm default version"
+        nvm use default
     fi
-  elif [ -n "$(PWD=$OLDPWD nvm_find_nvmrc)" ] && [ "$(nvm version)" != "$(nvm version default)" ]; then
-    echo "Reverting to nvm default version"
-    nvm use default
-  fi
 }
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 
-if command -v pyenv 1>/dev/null 2>&1; then eval "$(pyenv init -)"; fi
+# Python version management (pyenv)
+if command -v pyenv 1>/dev/null 2>&1; then
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+fi
 
-eval "$(fzf --zsh)"
-eval "$(zoxide init zsh)"
-# Claude CLI OAuth token will be set up during installation
+# Custom scripts directory
+export PATH="$HOME/.scripts:$PATH"
+
+# Modern CLI tools
+if command -v eza &> /dev/null; then
+    # Use custom eza wrapper if available
+    if [[ -x "$HOME/.scripts/exa-wrapper.sh" ]]; then
+        alias ls="$HOME/.scripts/exa-wrapper.sh"
+        alias ll="$HOME/.scripts/exa-wrapper.sh -l"
+        alias la="$HOME/.scripts/exa-wrapper.sh -la"
+        alias tree="$HOME/.scripts/exa-wrapper.sh --tree"
+    else
+        alias ls="eza --color=always --group-directories-first"
+        alias ll="eza -l --color=always --group-directories-first"
+        alias la="eza -la --color=always --group-directories-first"
+        alias tree="eza --tree --color=always"
+    fi
+else
+    alias ls="/bin/ls $LS_OPTIONS"
+    alias ll="ls -aghl"
+fi
+
+if command -v bat &> /dev/null; then
+    alias cat="bat"
+fi
+
+# Fuzzy finder (fzf)
+if command -v fzf &> /dev/null; then
+    eval "$(fzf --zsh)"
+fi
+
+# Smart directory navigation (zoxide)
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+fi
+
+# Git aliases
+alias gs="git status"
+alias ga="git add"
+alias gc="git commit"
+alias gp="git push"
+alias gl="git log --oneline"
+alias gd="git diff"
+alias gb="git branch"
+alias gco="git checkout"
+
+# Utility aliases
+alias ip="ipconfig getifaddr en0"
+alias home="cd ~"
+alias reload="source ~/.zshrc"
+alias copy="rsync -ahr --progress"
+
+# Docker aliases
+alias d="docker"
+alias dc="docker-compose"
+alias dps="docker ps"
+alias di="docker images"
+
+# Utility functions
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Extract function for various archive types
+extract() {
+    if [ -f $1 ] ; then
+        case $1 in
+            *.tar.bz2)   tar xjf $1     ;;
+            *.tar.gz)    tar xzf $1     ;;
+            *.bz2)       bunzip2 $1     ;;
+            *.rar)       unrar e $1     ;;
+            *.gz)        gunzip $1      ;;
+            *.tar)       tar xf $1      ;;
+            *.tbz2)      tar xjf $1     ;;
+            *.tgz)       tar xzf $1     ;;
+            *.zip)       unzip $1       ;;
+            *.Z)         uncompress $1  ;;
+            *.7z)        7z x $1        ;;
+            *)     echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Development environment info
+devinfo() {
+    echo "🔧 Development Environment Info"
+    echo "==============================="
+    echo "OS: $(uname -s) $(uname -m)"
+    echo "Shell: $SHELL"
+    
+    if command -v brew &> /dev/null; then
+        echo "Homebrew: $(brew --version | head -n1)"
+    fi
+    
+    if command -v node &> /dev/null; then
+        echo "Node.js: $(node --version)"
+        echo "npm: $(npm --version)"
+    fi
+    
+    if command -v python3 &> /dev/null; then
+        echo "Python: $(python3 --version)"
+    fi
+    
+    if command -v git &> /dev/null; then
+        echo "Git: $(git --version)"
+    fi
+    
+    if command -v code &> /dev/null; then
+        echo "VS Code: $(code --version | head -n1)"
+    fi
+}
+
+# History configuration
+HISTSIZE=10000
+SAVEHIST=10000
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt SHARE_HISTORY
+
+# Environment variables
+export EDITOR="code"
+export PAGER="less"
+export BROWSER="open"
+
+# Claude CLI OAuth token setup reminder
 # Run: claude setup-token
+
+# Load local customizations if they exist
+if [[ -f ~/.zshrc.local ]]; then
+    source ~/.zshrc.local
+fi

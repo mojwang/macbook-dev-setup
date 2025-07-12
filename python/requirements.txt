@@ -1,23 +1,32 @@
-# Common Python packages for development
+# Essential Python packages
 pip
 setuptools
 wheel
 
-# Development tools
+# Code formatting and linting
 black
 flake8
 mypy
 pytest
 coverage
 
-# Jupyter
+# Jupyter ecosystem
 jupyter
+jupyterlab
 notebook
 ipython
+ipywidgets
 
-# Data science (uncomment if needed)
+# Development utilities
+requests
+pyyaml
+click
+
+# Data science basics (commonly used)
+# Uncomment if needed:
 # numpy
 # pandas
 # matplotlib
 # seaborn
 # scikit-learn
+# beautifulsoup4
