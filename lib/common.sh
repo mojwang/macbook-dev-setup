@@ -328,6 +328,8 @@ show_progress_bar() {
     local width="${4:-50}"
     
     local percentage=$((current * 100 / total))
+    # Cap percentage at 100 to handle cases where current exceeds total
+    [[ $percentage -gt 100 ]] && percentage=100
     local filled=$((percentage * width / 100))
     local empty=$((width - filled))
     
