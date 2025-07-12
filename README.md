@@ -65,6 +65,14 @@ This repository includes two scripts optimized for different use cases:
 - **Neovim**: Primary terminal editor (replaces vim)
 - **VS Code**: Primary IDE
 
+### Database & Cloud Tools
+- **Databases**: PostgreSQL, MySQL, Redis, SQLite
+- **Database CLIs**: pgcli, mycli (with auto-completion)
+- **Database GUIs**: TablePlus, Postico, Sequel Ace
+- **Cloud CLIs**: AWS CLI, Azure CLI, Google Cloud SDK
+- **Container Tools**: kubectl, helm, minikube, Docker Compose
+- **Infrastructure**: Terraform, Ansible
+
 ### CLI Enhancements
 - **bat**: Enhanced `cat` with syntax highlighting
 - **eza**: Modern `ls` replacement with custom wrapper
@@ -72,6 +80,8 @@ This repository includes two scripts optimized for different use cases:
 - **zoxide**: Smart directory navigation
 - **diff-so-fancy**: Beautiful git diffs
 - **gping**: Ping with a graph
+- **htop/btop**: Process viewers
+- **ripgrep**: Fast file search
 
 ### Applications
 - **Browsers**: Chrome, Firefox, Safari, Brave, Edge
@@ -79,6 +89,8 @@ This repository includes two scripts optimized for different use cases:
 - **Design**: Figma
 - **AI**: Claude (Desktop + CLI)
 - **Terminal**: Warp
+- **API Testing**: Postman, Insomnia
+- **Container Management**: OrbStack
 
 ## 🔧 Manual Configuration
 
@@ -89,6 +101,38 @@ Some tools require manual setup:
 3. **Neovim**: Basic configuration is included; customize `~/.config/nvim/init.lua` as needed
 4. **VS Code**: Extensions are automatically installed; settings are configured
 5. **Applications**: Some apps may require manual App Store installation
+
+## 🚀 Additional Scripts
+
+### Health Check
+Verify your development environment health:
+```bash
+./scripts/health-check.sh
+```
+- Checks 50+ tools and configurations
+- Validates Git configuration
+- Reports health score percentage
+- Provides fix suggestions
+
+### Update Everything
+Keep all tools up to date with one command:
+```bash
+./scripts/update.sh
+```
+- Updates Homebrew packages and casks
+- Updates npm global packages
+- Updates Python packages
+- Updates VS Code extensions
+- Creates restore point before updates
+
+### Uninstall
+Cleanly remove the development environment:
+```bash
+./scripts/uninstall.sh
+```
+- Creates final backup before removal
+- Selective uninstall with confirmations
+- Preserves system tools and personal data
 
 ## ⚙️ Command Line Options
 
@@ -113,14 +157,26 @@ Examples:
 dev-setup/
 ├── README.md                   # This file
 ├── setup.sh                    # Main setup script
+├── setup-test.sh               # Fast validation script
+├── lib/
+│   └── common.sh               # Shared functions library
 ├── scripts/
 │   ├── install-homebrew.sh     # Homebrew installation
 │   ├── install-packages.sh     # Package installation
 │   ├── setup-dotfiles.sh       # Dotfile configuration
-│   └── setup-applications.sh   # Application installation
+│   ├── setup-applications.sh   # Application installation
+│   ├── setup-macos.sh          # macOS preferences
+│   ├── health-check.sh         # System health verification
+│   ├── update.sh               # Update all tools
+│   └── uninstall.sh            # Clean removal
 ├── dotfiles/
 │   ├── .zshrc                  # Zsh configuration
 │   ├── .gitconfig              # Git configuration
+│   ├── .vimrc                  # Vim configuration
+│   ├── .fzf.zsh                # FZF configuration
+│   ├── .config/
+│   │   └── nvim/
+│   │       └── init.lua        # Neovim configuration
 │   └── scripts/
 │       └── exa-wrapper.sh      # Custom eza wrapper
 ├── homebrew/
@@ -136,7 +192,8 @@ dev-setup/
 │   └── settings.json           # VS Code settings
 └── docs/
     ├── manual-setup.md         # Manual configuration steps
-    └── troubleshooting.md      # Common issues and solutions
+    ├── troubleshooting.md      # Common issues and solutions
+    └── improvements.md         # Recent improvements
 ```
 
 ## 🎯 Features
@@ -149,9 +206,21 @@ dev-setup/
 - **Safe**: Dry-run mode and automatic backups
 - **Robust**: Error handling and validation throughout
 - **Logged**: Optional detailed logging for troubleshooting
+- **Health Monitoring**: Built-in health check script
+- **Easy Updates**: One-command update for all tools
+- **Clean Uninstall**: Safe removal with backups
+- **Restore Points**: Automatic backup before major operations
+- **Network Resilient**: Retry logic for downloads
+- **Security Focused**: Download verification and input validation
 
 ## 🔄 Keeping It Updated
 
+Use the update script to update everything at once:
+```bash
+./scripts/update.sh
+```
+
+Or update individual components:
 ```bash
 # Update Homebrew packages
 brew update && brew upgrade
@@ -165,6 +234,19 @@ pip install --upgrade -r python/requirements.txt
 
 # Update VS Code extensions
 code --update-extensions
+```
+
+## 💡 Useful Aliases
+
+Add these to your `.zshrc` for quick access:
+```bash
+# Development environment management
+alias devhealth="~/repos/personal/macbook-dev-setup/scripts/health-check.sh"
+alias devupdate="~/repos/personal/macbook-dev-setup/scripts/update.sh"
+alias devuninstall="~/repos/personal/macbook-dev-setup/scripts/uninstall.sh"
+
+# Quick health check
+alias checkhealth="devhealth | grep -E '(✅|❌|Score:)'"
 ```
 
 ## 📞 Support

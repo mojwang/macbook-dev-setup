@@ -57,6 +57,38 @@ brew "tree-sitter"
 brew "lazygit"               # Terminal Git UI
 brew "starship"              # Cross-shell prompt
 
+# Database tools
+brew "postgresql@16"        # PostgreSQL database
+brew "mysql"                # MySQL database
+brew "redis"                # Key-value store
+brew "sqlite"               # Lightweight database
+brew "pgcli"                # PostgreSQL CLI with auto-completion
+brew "mycli"                # MySQL CLI with auto-completion
+
+# Cloud and container tools
+brew "awscli"               # AWS CLI
+brew "azure-cli"            # Azure CLI
+brew "google-cloud-sdk"     # Google Cloud SDK
+brew "kubectl"              # Kubernetes CLI
+brew "helm"                 # Kubernetes package manager
+brew "minikube"             # Local Kubernetes
+brew "terraform"            # Infrastructure as code
+brew "ansible"              # Configuration management
+brew "docker-compose"       # Multi-container Docker apps
+
+# API development tools
+brew "httpie"               # Modern HTTP client
+brew "curl"                 # Classic HTTP client
+brew "mkcert"              # Local HTTPS certificates
+brew "ngrok"               # Expose local servers
+
+# Performance monitoring
+brew "htop"                 # Process viewer
+brew "btop"                 # Better process viewer
+brew "ncdu"                 # Disk usage analyzer
+brew "duf"                  # Better df
+brew "procs"               # Modern ps replacement
+
 # Media processing
 brew "ffmpeg"
 brew "imagemagick"
@@ -82,6 +114,19 @@ cask "stats"
 cask "visual-studio-code"
 cask "vlc"
 cask "warp"
+
+# Database GUIs
+cask "tableplus"            # Modern database management
+cask "postico"              # PostgreSQL client
+cask "sequel-ace"           # MySQL/MariaDB client
+
+# API development GUIs
+cask "postman"              # API testing
+cask "insomnia"             # REST client
+cask "rapidapi"             # API testing
+
+# Container management
+cask "orbstack"             # Docker Desktop alternative
 
 # Fonts
 cask "font-anonymice-nerd-font"

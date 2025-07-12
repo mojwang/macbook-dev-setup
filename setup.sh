@@ -4,57 +4,15 @@
 # High-performance setup with intelligent dry-run delegation
 # For macOS Apple Silicon
 
-set -e
+# Load common library
+source "$(dirname "$0")/lib/common.sh"
 
 # Global variables
-DRY_RUN=false
-VERBOSE=false
-LOG_FILE=""
 UPDATE_MODE=false
 PARALLEL_JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-NC='\033[0m' # No Color
-
 # Performance tracking
 SCRIPT_START_TIME=$(date +%s)
-
-# Helper functions
-print_step() {
-    echo -e "${BLUE}🔧 $1${NC}"
-    log_message "STEP: $1"
-}
-
-print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-    log_message "SUCCESS: $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-    log_message "WARNING: $1"
-}
-
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
-    log_message "ERROR: $1"
-}
-
-print_dry_run() {
-    echo -e "${PURPLE}🔍 [DRY RUN] $1${NC}"
-    log_message "DRY_RUN: $1"
-}
-
-log_message() {
-    if [[ -n "$LOG_FILE" ]]; then
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
-    fi
-}
 
 show_help() {
     cat << EOF
@@ -127,8 +85,8 @@ parse_args() {
     done
 }
 
-# Execute command with dry-run support and timeout
-execute_command() {
+# Execute command with timeout support (extends common library function)
+execute_command_with_timeout() {
     local cmd="$1"
     local description="$2"
     local timeout="${3:-300}"  # 5 minute default timeout
@@ -140,17 +98,21 @@ execute_command() {
         fi
         return 0
     else
+        print_step "$description"
         if [[ "$VERBOSE" == true ]]; then
             echo "  Executing: $cmd"
         fi
         
         # Use timeout to prevent hanging
         if timeout "$timeout" bash -c "$cmd"; then
+            print_success "$description completed"
             return 0
         else
             local exit_code=$?
             if [[ $exit_code -eq 124 ]]; then
                 print_error "Command timed out after ${timeout}s: $description"
+            else
+                print_error "$description failed (exit code: $exit_code)"
             fi
             return $exit_code
         fi
@@ -235,10 +197,6 @@ update_packages() {
     fi
 }
 
-# Check if command exists
-command_exists() {
-    command -v "$1" &> /dev/null
-}
 
 # Fast prerequisite validation with parallel checks
 validate_prerequisites() {
@@ -419,19 +377,33 @@ main() {
     fi
     
     # System checks
-    if [[ "$OSTYPE" != "darwin"* ]]; then
-        print_error "This script is designed for macOS only."
-        exit 1
+    require_macos
+    
+    # Create restore point for potential rollback
+    RESTORE_POINT=$(create_restore_point "setup")
+    export RESTORE_POINT
+    
+    # Perform system checks
+    print_step "Performing system checks..."
+    
+    # Check disk space (require 10GB minimum)
+    if ! check_disk_space 10; then
+        die "Insufficient disk space. Please free up space and try again."
     fi
     
-    if [[ $(uname -m) != "arm64" ]]; then
+    # Check network connectivity
+    print_step "Checking network connectivity..."
+    if ! check_network; then
+        if ! confirm "Network issues detected. Continue anyway?" "n"; then
+            die "Setup cancelled due to network issues."
+        fi
+    fi
+    
+    # Check if running on Apple Silicon
+    if ! check_apple_silicon; then
         print_warning "This script is optimized for Apple Silicon Macs."
-        if [[ "$DRY_RUN" == false ]]; then
-            read -p "Continue anyway? (y/N): " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                exit 1
-            fi
+        if ! confirm "Continue anyway?" "n"; then
+            die "Setup cancelled. This script is optimized for Apple Silicon."
         fi
     fi
     

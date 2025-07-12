@@ -1,65 +1,27 @@
 #!/bin/bash
 
-# Setup dotfiles with error handling
-set -e
+# Setup dotfiles with error handling and Git configuration
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Load common library
+source "$(dirname "$0")/../lib/common.sh"
 
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
-
-echo "Setting up dotfiles..."
+print_step "Setting up dotfiles..."
 
 # Check if dotfiles directory exists
-if [[ ! -d "dotfiles" ]]; then
-    print_error "Dotfiles directory not found"
-    exit 1
+if [[ ! -d "$DOTFILES_DIR" ]]; then
+    die "Dotfiles directory not found at $DOTFILES_DIR"
 fi
 
 # Create backup directory
-backup_dir="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+backup_dir="$HOME/.dotfiles_backup_$TIMESTAMP"
 mkdir -p "$backup_dir"
-echo "Created backup directory: $backup_dir"
-
-# Backup existing files
-backup_file() {
-    local source="$1"
-    local backup_name="$2"
-    
-    if [[ -f "$source" ]]; then
-        cp "$source" "$backup_dir/$backup_name"
-        echo "Backed up $source"
-    fi
-}
-
-backup_directory() {
-    local source="$1"
-    local backup_name="$2"
-    
-    if [[ -d "$source" ]]; then
-        cp -r "$source" "$backup_dir/$backup_name"
-        echo "Backed up $source directory"
-    fi
-}
+print_info "Created backup directory: $backup_dir"
 
 # Backup existing dotfiles
-backup_file ~/.zshrc .zshrc
-backup_file ~/.gitconfig .gitconfig
-backup_directory ~/.scripts .scripts
-backup_directory ~/.config/nvim .config-nvim
+backup_item ~/.zshrc "$backup_dir"
+backup_item ~/.gitconfig "$backup_dir"
+backup_item ~/.scripts "$backup_dir"
+backup_item ~/.config/nvim "$backup_dir"
 
 # Install dotfiles
 install_dotfile() {
