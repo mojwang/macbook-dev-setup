@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cloud Tools**: AWS CLI, Azure CLI, Google Cloud SDK, kubectl, Terraform
 - **API Tools**: HTTPie, Postman, Insomnia, mkcert
 - **Performance Tools**: htop, btop, ncdu, duf, procs
+- **Shell Reload Guidance**: Prominent warning with clear instructions after setup completion
 
 ### Changed
 - **Enhanced Security**: Added download verification, input validation, and secure temp files
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Git Configuration**: Intelligent handling that preserves existing configurations
 - **System Checks**: Added disk space and network connectivity validation
 - **Homebrew Installation**: Enhanced with better verification and error recovery
+- **Setup Completion Message**: Added visual emphasis with yellow warning box for shell reload instructions
 
 ### Fixed
 - Git configuration no longer overwrites existing valid configurations

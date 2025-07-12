@@ -24,6 +24,9 @@ cd dev-setup
 
 # Run with verbose output and logging
 ./setup.sh --verbose --log setup.log
+
+# IMPORTANT: After setup completes, reload your shell:
+source ~/.zshrc  # Or open a new terminal
 ```
 
 ## ⚡ Performance-Optimized Scripts
@@ -52,6 +55,14 @@ This repository includes two scripts optimized for different use cases:
 | I/O operations | 1.1s | 0.18s | 83% faster (6x) |
 | Command execution | 1.06s | 0.18s | 82% faster (6x) |
 | Full setup | Sequential | Parallel (16 cores) | 30-50% faster |
+
+### 🔄 Shell Reload After Setup
+
+After running the setup script, you'll see a prominent yellow warning that your shell configuration has been updated. You have three options to apply the changes:
+
+1. **Recommended**: Close your terminal and open a new one (cleanest approach)
+2. **Quick reload**: Run `source ~/.zshrc` (reloads config in current shell)
+3. **Full reload**: Run `exec zsh` (replaces current shell with new one)
 
 ## 📦 What's Included
 

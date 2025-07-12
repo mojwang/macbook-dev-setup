@@ -192,6 +192,12 @@ macbook-dev-setup/
 - Package state comparison
 - Selective restoration
 
+### 11. **Shell Configuration Reload Guidance**
+- **Enhanced completion message**: Added prominent yellow warning box after setup
+- **Clear reload options**: Three methods explained with recommendations
+- **User education**: Explains why automatic reload isn't possible (process isolation)
+- **Visual emphasis**: Color-coded guidance for better visibility
+
 ## 🔄 Future Enhancement Ideas
 
 Potential improvements to consider:
