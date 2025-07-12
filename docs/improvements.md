@@ -99,13 +99,25 @@ Key features:
 ```
 macbook-dev-setup/
 ├── lib/
-│   └── common.sh           # Shared library (NEW)
+│   ├── common.sh           # Shared library (NEW)
+│   └── config.sh           # Configuration parser (NEW)
 ├── scripts/
 │   ├── health-check.sh     # System health verification (NEW)
 │   ├── update.sh          # Update all components (NEW)
-│   └── uninstall.sh       # Clean removal (NEW)
-└── docs/
-    └── improvements.md     # This file (NEW)
+│   ├── uninstall.sh       # Clean removal (NEW)
+│   └── rollback.sh        # Restore point management (NEW)
+├── tests/
+│   ├── test_framework.sh   # Test framework (NEW)
+│   ├── test_common.sh      # Unit tests (NEW)
+│   └── run_tests.sh        # Test runner (NEW)
+├── config/
+│   └── setup.yaml          # Configuration file (NEW)
+├── docs/
+│   ├── improvements.md     # This file (NEW)
+│   └── troubleshooting.md  # Enhanced guide (NEW)
+└── .github/
+    └── workflows/
+        └── ci.yml          # CI/CD pipeline (NEW)
 ```
 
 ## 🚀 Usage Examples
@@ -146,11 +158,48 @@ macbook-dev-setup/
 4. **Completeness**: Database, cloud, and monitoring tools included
 5. **User-friendly**: Clear feedback and recovery options
 
-## 🔄 Next Steps
+## ✅ Additional Improvements Implemented
 
-Consider these additional enhancements:
-1. Add automated tests for scripts
-2. Create a configuration file for customization
-3. Implement automatic backups scheduling
-4. Add telemetry/analytics (with user consent)
-5. Enhanced Apple Silicon optimizations
+### 6. **Testing Framework**
+- Custom test framework with assertion functions
+- Unit tests for common library functions
+- CI/CD pipeline with GitHub Actions
+- Test runner with colored output and summaries
+
+### 7. **Configuration System**
+- YAML configuration file (`config/setup.yaml`)
+- Component selection (languages, databases, tools)
+- Custom package lists
+- Predefined profiles for different roles
+- Configuration parser library
+
+### 8. **Enhanced Command-Line Options**
+- `--config`: Use custom configuration file
+- `--check`: Validation-only mode
+- `--minimal`: Minimal installation
+- `--profile`: Use predefined profiles
+- Quick actions: `--health`, `--rollback`, `--show-config`
+
+### 9. **Progress Tracking**
+- Progress bars for long operations
+- Spinner animations for background tasks
+- Real-time status updates
+- Percentage completion indicators
+
+### 10. **Rollback System**
+- Automatic restore point creation
+- Interactive rollback selection
+- Package state comparison
+- Selective restoration
+
+## 🔄 Future Enhancement Ideas
+
+Potential improvements to consider:
+1. **Automatic backup scheduling**: Set up launchd jobs for periodic backups
+2. **Usage analytics**: Optional telemetry with user consent for improvement insights
+3. **Enhanced Apple Silicon optimizations**: 
+   - Rosetta 2 management
+   - Universal binary preferences
+   - Architecture-specific performance tuning
+4. **Plugin system**: Allow community extensions
+5. **GUI companion app**: Native macOS app for visual configuration
