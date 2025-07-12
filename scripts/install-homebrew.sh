@@ -48,6 +48,9 @@ print_success "Homebrew installer downloaded and verified"
 print_step "Installing Homebrew..."
 print_info "This may take a few minutes and will ask for your password"
 
+# Ensure output is flushed before running interactive installer
+printf "\n"
+
 if ! /bin/bash "$INSTALL_SCRIPT"; then
     die "Homebrew installation failed"
 fi

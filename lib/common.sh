@@ -34,32 +34,32 @@ readonly MACOS_VERSION="$(sw_vers -productVersion 2>/dev/null || echo "unknown")
 
 # Utility functions
 print_step() {
-    echo -e "${BLUE}🔧 $1${NC}"
+    echo -e "${BLUE}→ $1${NC}"
     log_message "STEP: $1"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✓ $1${NC}"
     log_message "SUCCESS: $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}! $1${NC}"
     log_message "WARNING: $1"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}" >&2
+    echo -e "${RED}✗ $1${NC}" >&2
     log_message "ERROR: $1"
 }
 
 print_info() {
-    echo -e "${CYAN}ℹ️  $1${NC}"
+    echo -e "${CYAN}i $1${NC}"
     log_message "INFO: $1"
 }
 
 print_dry_run() {
-    echo -e "${PURPLE}🔍 [DRY RUN] $1${NC}"
+    echo -e "${PURPLE}◊ [DRY RUN] $1${NC}"
     log_message "DRY_RUN: $1"
 }
 
@@ -131,7 +131,8 @@ confirm() {
     
     if [[ -t 0 ]]; then
         read -r -p "$prompt" response
-        case "${response,,}" in
+        response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
+        case "$response" in
             y|yes) return 0 ;;
             n|no) return 1 ;;
             "") [[ "$default" =~ ^[Yy]$ ]] && return 0 || return 1 ;;
@@ -334,9 +335,9 @@ show_progress_bar() {
     printf "\r${BLUE}$message: [${NC}"
     printf "%${filled}s" | tr ' ' '='
     printf "%${empty}s" | tr ' ' '>'
-    printf "${BLUE}] $percentage%%${NC}"
+    printf "${BLUE}] $percentage%% ${NC}"
     
-    # Clear line when complete
+    # Always move to next line when complete to prevent overlap
     if [[ $current -eq $total ]]; then
         printf "\n"
     fi
@@ -363,10 +364,12 @@ execute_with_progress() {
     wait "$pid"
     local exit_code=$?
     
+    # Clear the spinner line and show result on a new line
+    printf "\r\033[K"
     if [[ $exit_code -eq 0 ]]; then
-        printf "\r${GREEN}✓ $message completed${NC}\n"
+        printf "${GREEN}✓ $message completed${NC}\n"
     else
-        printf "\r${RED}✗ $message failed${NC}\n"
+        printf "${RED}✗ $message failed${NC}\n"
     fi
     
     return $exit_code

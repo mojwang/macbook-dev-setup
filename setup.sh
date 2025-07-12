@@ -364,9 +364,30 @@ install_packages_optimized() {
                 fi
                 [[ "$VERBOSE" == true ]] && echo "$line"
             done
+            # Ensure we're on a new line after progress bar
+            printf "\n"
         fi
         
         print_success "Packages installed successfully"
+        
+        # Offer cleanup option
+        print_step "Homebrew cleanup..."
+        print_info "Old versions and cache can take up significant disk space"
+        if confirm "Run cleanup to remove old formulae and casks?" "y"; then
+            # Show what will be removed
+            local cleanup_size=$(brew cleanup -n 2>/dev/null | grep "Would remove" | tail -1 | awk '{print $3}' || echo "0MB")
+            if [[ "$cleanup_size" != "0MB" ]]; then
+                print_info "This will free up approximately $cleanup_size"
+            fi
+            
+            # Run cleanup
+            execute_with_progress "brew cleanup --prune=all" "Removing old versions"
+            execute_with_progress "brew autoremove" "Removing unused dependencies"
+            
+            print_success "Cleanup completed"
+        else
+            print_info "Skipping cleanup (you can run './scripts/cleanup.sh' later)"
+        fi
     else
         print_dry_run "Would install packages from Brewfile"
     fi
@@ -406,7 +427,7 @@ show_performance_stats() {
     local seconds=$((duration % 60))
     
     echo -e "${BLUE}"
-    echo "⚡ Performance Summary"
+    echo "» Performance Summary"
     echo "===================="
     echo -e "${NC}"
     echo "Total execution time: ${minutes}m ${seconds}s"
@@ -426,7 +447,7 @@ main() {
     # Performance optimization: delegate dry-runs to the fast test script
     if [[ "$DRY_RUN" == true ]]; then
         if [[ -f "setup-test.sh" ]]; then
-            echo -e "${BLUE}🚀 Delegating to fast dry-run script for optimal performance${NC}"
+            echo -e "${BLUE}» Delegating to fast dry-run script for optimal performance${NC}"
             echo -e "${YELLOW}Running setup-test.sh --dry-run for 6x faster execution${NC}"
             echo ""
             exec ./setup-test.sh "$@"
@@ -444,7 +465,7 @@ main() {
     # Handle update mode
     if [[ "$UPDATE_MODE" == true ]]; then
         echo -e "${BLUE}"
-        echo "🔄 OPTIMIZED UPDATE MODE"
+        echo "↻ OPTIMIZED UPDATE MODE"
         echo "======================="
         echo -e "${NC}"
         update_packages
@@ -501,7 +522,7 @@ main() {
     fi
     
     echo -e "${BLUE}"
-    echo "🚀 High-Performance Development Environment Setup"
+    echo "» High-Performance Development Environment Setup"
     echo "================================================="
     echo "Using $PARALLEL_JOBS parallel jobs for optimal performance"
     echo "For testing/validation, use: ./setup-test.sh --dry-run"
@@ -562,14 +583,14 @@ main() {
     # Completion message
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "${PURPLE}"
-        echo "🔍 Optimized dry run completed!"
+        echo "◊ Optimized dry run completed!"
         echo "==============================="
         echo -e "${NC}"
         echo "The above shows what would be installed/configured."
         echo "Run without --dry-run to perform the actual setup."
     else
         echo -e "${GREEN}"
-        echo "🎉 Optimized Setup Complete!"
+        echo "✓ Optimized Setup Complete!"
         echo "============================"
         echo -e "${NC}"
         echo "Your development environment is now set up with performance optimizations!"
@@ -580,7 +601,7 @@ main() {
         echo "3. Install VS Code extensions: cat vscode/extensions.txt"
         echo "4. Configure Claude CLI: claude setup-token"
         echo ""
-        echo "Happy coding! 🚀"
+        echo "Happy coding!"
     fi
     
     # Show performance statistics

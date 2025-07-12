@@ -25,27 +25,27 @@ NC='\033[0m' # No Color
 
 # Helper functions
 print_step() {
-    echo -e "${BLUE}🔧 $1${NC}"
+    echo -e "${BLUE}→ $1${NC}"
     log_message "STEP: $1"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✓ $1${NC}"
     log_message "SUCCESS: $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}! $1${NC}"
     log_message "WARNING: $1"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}✗ $1${NC}"
     log_message "ERROR: $1"
 }
 
 print_dry_run() {
-    echo -e "${PURPLE}🔍 [DRY RUN] $1${NC}"
+    echo -e "${PURPLE}◊ [DRY RUN] $1${NC}"
     log_message "DRY_RUN: $1"
 }
 
@@ -590,7 +590,7 @@ main() {
     fi
     
     echo -e "${PURPLE}"
-    echo "🔍 TESTING & VALIDATION MODE - No changes will be made"
+    echo "◊ TESTING & VALIDATION MODE - No changes will be made"
     echo "======================================================"
     echo -e "${NC}"
     
@@ -616,7 +616,7 @@ main() {
     fi
     
     echo -e "${BLUE}"
-    echo "🧪 Development Environment Testing & Validation"
+    echo "» Development Environment Testing & Validation"
     echo "==============================================="
     echo -e "${NC}"
     
@@ -696,7 +696,7 @@ main() {
     
     # Completion message
     echo -e "${GREEN}"
-    echo "🧪 Testing & Validation Complete!"
+    echo "✓ Testing & Validation Complete!"
     echo "=================================="
     echo -e "${NC}"
     echo "The above shows what would be installed/configured."

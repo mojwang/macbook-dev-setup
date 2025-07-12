@@ -83,7 +83,7 @@ check_config() {
 # Main health check
 main() {
     echo -e "${BLUE}"
-    echo "🏥 Development Environment Health Check"
+    echo "» Development Environment Health Check"
     echo "======================================="
     echo -e "${NC}"
     
@@ -217,6 +217,28 @@ main() {
     fi
     echo ""
     
+    # Homebrew health check
+    print_step "Running Homebrew doctor..."
+    ((TOTAL_CHECKS++))
+    if command_exists brew; then
+        local brew_output
+        brew_output=$(brew doctor 2>&1)
+        local brew_status=$?
+        
+        if [[ $brew_status -eq 0 ]]; then
+            print_success "Homebrew is healthy"
+            ((PASSED_CHECKS++))
+        else
+            print_warning "Homebrew has some issues:"
+            echo "$brew_output" | grep -E "Warning:|Error:" | head -10
+            # Still count as passed since warnings are common and often benign
+            ((PASSED_CHECKS++))
+        fi
+    else
+        print_error "Homebrew not installed - cannot run brew doctor"
+    fi
+    echo ""
+    
     # Summary
     echo -e "${BLUE}"
     echo "Health Check Summary"
@@ -232,7 +254,7 @@ main() {
     echo ""
     
     if [[ $HEALTH_STATUS -eq 0 ]]; then
-        print_success "Environment is healthy! 🎉"
+        print_success "Environment is healthy!"
     else
         print_warning "Some issues detected. Review the output above for details."
         echo ""

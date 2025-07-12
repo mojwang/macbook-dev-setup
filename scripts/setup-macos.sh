@@ -24,6 +24,9 @@ print_success() {
 echo "Configuring macOS system preferences..."
 
 # Ask for the administrator password upfront
+print_info "Please enter your password to configure macOS settings:"
+# Ensure clean line for password prompt
+printf "\n"
 sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until script has finished
