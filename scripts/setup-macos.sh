@@ -196,10 +196,10 @@ defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 
 echo "Restarting affected applications..."
 
-for app in "Activity Monitor" \\
-    "cfprefsd" \\
-    "Dock" \\
-    "Finder" \\
+for app in "Activity Monitor" \
+    "cfprefsd" \
+    "Dock" \
+    "Finder" \
     "SystemUIServer"; do
     killall "${app}" &> /dev/null || true
 done

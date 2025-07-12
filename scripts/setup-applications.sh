@@ -41,7 +41,7 @@ EXTENSIONS_FILE="vscode/extensions.txt"
 if command -v code &> /dev/null; then
     if [[ -f "$EXTENSIONS_FILE" ]]; then
         echo "Installing VS Code extensions..."
-        local failed_extensions=()
+        failed_extensions=()
         
         while IFS= read -r extension; do
             # Skip empty lines and comments

@@ -1,4 +1,4 @@
-# Essential Python packages
+# Essential Tools for Packaging
 pip
 setuptools
 wheel
@@ -10,7 +10,7 @@ mypy
 pytest
 coverage
 
-# Jupyter ecosystem
+# Jupyter Ecosystem for Interactive Development
 jupyter
 jupyterlab
 notebook
