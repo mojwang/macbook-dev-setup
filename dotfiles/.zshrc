@@ -55,6 +55,17 @@ fi
 # Custom scripts directory
 export PATH="$HOME/.scripts:$PATH"
 
+# Adaptive color configuration
+# Load adaptive colors that automatically detect terminal type and theme
+if [[ -f "$HOME/.scripts/adaptive-colors.sh" ]]; then
+    source "$HOME/.scripts/adaptive-colors.sh"
+else
+    # Fallback color configuration
+    export LS_COLORS="di=1;34:fi=0:ln=1;36:pi=1;33:so=1;35:bd=1;33;40:cd=1;33;40:or=1;31;40:ex=1;32"
+    export CLICOLOR=1
+    export CLICOLOR_FORCE=1
+fi
+
 # Modern CLI tools
 if command -v eza &> /dev/null; then
     # Use custom eza wrapper if available
