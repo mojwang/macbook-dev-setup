@@ -347,6 +347,67 @@ validate_script_dependencies() {
     print_success "Script dependencies validation completed"
 }
 
+# Validate git configuration
+validate_git_configuration() {
+    print_step "Validating git configuration..."
+    
+    if command_exists git; then
+        # Check current git configuration
+        local git_name=$(git config --global user.name 2>/dev/null || echo "")
+        local git_email=$(git config --global user.email 2>/dev/null || echo "")
+        
+        # Check if git is configured with real values (not placeholders)
+        if [[ -n "$git_name" && "$git_name" != "Your Name" ]]; then
+            print_success "Git user.name is configured: $git_name"
+        else
+            print_warning "Git user.name is not configured or using placeholder value"
+            print_dry_run "Would configure git user.name with system full name"
+        fi
+        
+        if [[ -n "$git_email" && "$git_email" != "your.email@example.com" ]]; then
+            print_success "Git user.email is configured: $git_email"
+        else
+            print_warning "Git user.email is not configured or using placeholder value"
+            print_dry_run "Would prompt for email address and configure git user.email"
+        fi
+        
+        # Check if .gitconfig exists and validate it doesn't have placeholders
+        if [[ -f "$HOME/.gitconfig" ]]; then
+            if grep -q "Your Name" "$HOME/.gitconfig" 2>/dev/null; then
+                print_warning "~/.gitconfig contains placeholder 'Your Name'"
+                print_dry_run "Would update ~/.gitconfig with real name"
+            fi
+            
+            if grep -q "your.email@example.com" "$HOME/.gitconfig" 2>/dev/null; then
+                print_warning "~/.gitconfig contains placeholder 'your.email@example.com'"
+                print_dry_run "Would update ~/.gitconfig with real email"
+            fi
+            
+            if ! grep -q "Your Name" "$HOME/.gitconfig" 2>/dev/null && ! grep -q "your.email@example.com" "$HOME/.gitconfig" 2>/dev/null; then
+                print_success "~/.gitconfig appears to be properly configured"
+            fi
+        else
+            print_warning "~/.gitconfig not found"
+            print_dry_run "Would create ~/.gitconfig with proper configuration"
+        fi
+        
+        # Check if dotfiles template has placeholders
+        if [[ -f "dotfiles/.gitconfig" ]]; then
+            if grep -q "Your Name" "dotfiles/.gitconfig" 2>/dev/null; then
+                print_dry_run "dotfiles/.gitconfig template contains 'Your Name' placeholder (expected)"
+            fi
+            
+            if grep -q "your.email@example.com" "dotfiles/.gitconfig" 2>/dev/null; then
+                print_dry_run "dotfiles/.gitconfig template contains email placeholder (expected)"
+            fi
+        fi
+    else
+        print_warning "Git not found, would skip git configuration validation"
+    fi
+    
+    print_success "Git configuration validation completed"
+}
+
 # Validate post-installation expectations
 validate_post_installation_state() {
     print_step "Validating expected post-installation state..."
