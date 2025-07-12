@@ -1,0 +1,23 @@
+# Common Python packages for development
+pip
+setuptools
+wheel
+
+# Development tools
+black
+flake8
+mypy
+pytest
+coverage
+
+# Jupyter
+jupyter
+notebook
+ipython
+
+# Data science (uncomment if needed)
+# numpy
+# pandas
+# matplotlib
+# seaborn
+# scikit-learn

@@ -1,0 +1,37 @@
+[user]
+	email = YOUR_EMAIL@example.com
+	name = YOUR_NAME
+[core]
+	excludesfile = ~/.gitignore-global
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[alias]
+	log = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	tags = tag -l
+	branches = branch -a
+	del = branch -D
+	br = branch --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) %(color:green)(%(committerdate:relative)) [%(authorname)]' --sort=-committerdate
+	save = !git add -A && git commit -m 'chore: commit save point'
+	undo = reset HEAD~1 --mixed
+	clean = !git reset --hard
+	done = !git push origin HEAD
+[branch]
+	autosetuprebase = always
+[color]
+	ui = true
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+[color "status"]
+	added = yellow
+	changed = green
+	untracked = cyan
+[push]
+	default = simple
+[interactive]
+	diffFilter = diff-so-fancy --patch

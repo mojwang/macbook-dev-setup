@@ -1,0 +1,23 @@
+{
+    "editor.fontSize": 14,
+    "editor.fontFamily": "SF Mono, Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.minimap.enabled": false,
+    "editor.rulers": [80, 120],
+    "editor.wordWrap": "on",
+    "editor.lineNumbers": "on",
+    "editor.renderWhitespace": "boundary",
+    "workbench.colorTheme": "Default Dark+",
+    "workbench.iconTheme": "vs-seti",
+    "terminal.integrated.fontSize": 13,
+    "terminal.integrated.fontFamily": "SF Mono, Monaco",
+    "files.autoSave": "afterDelay",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "extensions.autoUpdate": true,
+    "telemetry.telemetryLevel": "off"
+}
