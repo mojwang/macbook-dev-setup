@@ -40,9 +40,7 @@ This guide covers common issues and their solutions when using the macOS Develop
 
 **Problem**: Running on non-macOS system.
 
-**Solution**: This setup is specifically for macOS. For other systems:
-- Linux users: Fork and modify for your distribution
-- Windows users: Use WSL2 with Ubuntu
+**Solution**: This setup is specifically designed for macOS only. It is not compatible with other operating systems.
 
 ### "Insufficient disk space" error
 

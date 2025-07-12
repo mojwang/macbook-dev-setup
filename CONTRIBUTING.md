@@ -160,12 +160,12 @@ git push origin feature/your-feature-name
 
 Current areas where contributions are especially welcome:
 
-1. **Cross-platform support** (Linux/WSL)
-2. **Additional tool integrations**
-3. **Performance improvements**
-4. **Test coverage expansion**
-5. **Documentation improvements**
-6. **Accessibility enhancements**
+1. **Additional tool integrations**
+2. **Performance improvements**
+3. **Test coverage expansion**
+4. **Documentation improvements**
+5. **Accessibility enhancements**
+6. **Apple Silicon optimizations**
 
 ## 📮 Getting Help
 

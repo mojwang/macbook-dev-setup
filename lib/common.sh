@@ -109,7 +109,7 @@ command_exists() {
 # Check if running on macOS
 require_macos() {
     if [[ "$OS_TYPE" != "Darwin" ]]; then
-        die "This script requires macOS. Current OS: $OS_TYPE"
+        die "This script is designed for macOS only."
     fi
 }
 
@@ -200,11 +200,8 @@ check_disk_space() {
     local mount_point="${2:-/}"
     
     local available_gb
-    if [[ "$OS_TYPE" == "Darwin" ]]; then
-        available_gb=$(df -g "$mount_point" | awk 'NR==2 {print $4}')
-    else
-        available_gb=$(df -BG "$mount_point" | awk 'NR==2 {print $4}' | sed 's/G//')
-    fi
+    # macOS disk space check
+    available_gb=$(df -g "$mount_point" | awk 'NR==2 {print $4}')
     
     if [[ -z "$available_gb" ]] || (( available_gb < required_gb )); then
         print_error "Insufficient disk space. Required: ${required_gb}GB, Available: ${available_gb:-unknown}GB"

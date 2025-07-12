@@ -151,6 +151,6 @@ macbook-dev-setup/
 Consider these additional enhancements:
 1. Add automated tests for scripts
 2. Create a configuration file for customization
-3. Add support for Linux/WSL
-4. Implement automatic backups scheduling
-5. Add telemetry/analytics (with user consent)
+3. Implement automatic backups scheduling
+4. Add telemetry/analytics (with user consent)
+5. Enhanced Apple Silicon optimizations
