@@ -56,3 +56,4 @@ private/
 
 # Homebrew lockfile (can be sensitive)
 homebrew/Brewfile.lock.json
+# GPG signing configured
