@@ -113,12 +113,39 @@ else
     print_warning "Scripts directory not found"
 fi
 
+# Configure Git with personal information
+echo "Configuring Git with your personal information..."
+
+# Auto-detect full name from system
+full_name=$(id -F 2>/dev/null || echo "")
+if [[ -z "$full_name" ]]; then
+    # Fallback to username if full name not available
+    full_name=$(whoami)
+fi
+
+echo "Detected name: $full_name"
+
+# Prompt for email if not in non-interactive mode
+if [[ -t 0 ]]; then
+    echo -n "Enter your email address: "
+    read -r email_address
+else
+    # Non-interactive mode - use placeholder
+    email_address="your.email@example.com"
+    print_warning "Running in non-interactive mode. Please update email in ~/.gitconfig"
+fi
+
+# Configure git with the provided information
+if [[ -n "$email_address" && "$email_address" != "your.email@example.com" ]]; then
+    git config --global user.name "$full_name"
+    git config --global user.email "$email_address"
+    print_success "Git configured with name: $full_name and email: $email_address"
+else
+    print_warning "Git configuration skipped. Please manually update ~/.gitconfig"
+fi
+
 print_success "Dotfiles setup completed"
 echo ""
 echo "Backup created at: $backup_dir"
-echo ""
-echo "⚠️  IMPORTANT: Please update your personal information in ~/.gitconfig:"
-echo "   - Name: Update 'Your Name' with your actual name"
-echo "   - Email: Update 'your.email@example.com' with your actual email"
 echo ""
 echo "To apply changes immediately, run: source ~/.zshrc"
