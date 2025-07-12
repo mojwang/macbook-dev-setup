@@ -20,9 +20,18 @@ if type brew &>/dev/null; then
 fi
 
 # Node.js version management (NVM)
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# Check if nvm is installed via Homebrew first
+if [ -s "$(brew --prefix)/opt/nvm/nvm.sh" ]; then
+    export NVM_DIR="$HOME/.nvm"
+    [ ! -d "$NVM_DIR" ] && mkdir -p "$NVM_DIR"
+    source "$(brew --prefix)/opt/nvm/nvm.sh"
+    [ -s "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm" ] && source "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
+else
+    # Fallback to manual installation
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi
 
 # Auto-load .nvmrc files
 autoload -U add-zsh-hook
