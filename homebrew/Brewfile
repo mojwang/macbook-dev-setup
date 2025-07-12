@@ -30,6 +30,7 @@ brew "zoxide"                # Smart cd
 
 # Development utilities
 brew "jq"                    # JSON processor
+brew "yq"                    # YAML processor
 brew "wget"
 brew "curl"
 brew "git-gui"
@@ -68,7 +69,6 @@ brew "mycli"                # MySQL CLI with auto-completion
 # Cloud and container tools
 brew "awscli"               # AWS CLI
 brew "azure-cli"            # Azure CLI
-brew "google-cloud-sdk"     # Google Cloud SDK
 brew "kubectl"              # Kubernetes CLI
 brew "helm"                 # Kubernetes package manager
 brew "minikube"             # Local Kubernetes
@@ -80,7 +80,6 @@ brew "docker-compose"       # Multi-container Docker apps
 brew "httpie"               # Modern HTTP client
 brew "curl"                 # Classic HTTP client
 brew "mkcert"              # Local HTTPS certificates
-brew "ngrok"               # Expose local servers
 
 # Performance monitoring
 brew "htop"                 # Process viewer
@@ -128,35 +127,13 @@ cask "rapidapi"             # API testing
 # Container management
 cask "orbstack"             # Docker Desktop alternative
 
+# Cloud SDKs and tools
+cask "google-cloud-sdk"     # Google Cloud SDK
+cask "ngrok"                # Expose local servers
+
 # Fonts
 cask "font-anonymice-nerd-font"
 cask "font-symbols-only-nerd-font"
-vscode "akamud.vscode-caniuse"
-vscode "dbaeumer.vscode-eslint"
-vscode "editorconfig.editorconfig"
-vscode "esbenp.prettier-vscode"
-vscode "github.copilot"
-vscode "github.copilot-chat"
-vscode "github.vscode-pull-request-github"
-vscode "graphql.vscode-graphql"
-vscode "graphql.vscode-graphql-syntax"
-vscode "pomdtr.excalidraw-editor"
-vscode "redhat.java"
-vscode "sonarsource.sonarlint-vscode"
-vscode "streetsidesoftware.code-spell-checker"
-vscode "styled-components.vscode-styled-components"
-vscode "stylelint.vscode-stylelint"
-vscode "unifiedjs.vscode-mdx"
-vscode "visualstudioexptteam.intellicode-api-usage-examples"
-vscode "visualstudioexptteam.vscodeintellicode"
-vscode "vmware.vscode-boot-dev-pack"
-vscode "vmware.vscode-spring-boot"
-vscode "vscjava.vscode-gradle"
-vscode "vscjava.vscode-java-debug"
-vscode "vscjava.vscode-java-dependency"
-vscode "vscjava.vscode-java-pack"
-vscode "vscjava.vscode-java-test"
-vscode "vscjava.vscode-maven"
-vscode "vscjava.vscode-spring-boot-dashboard"
-vscode "vscjava.vscode-spring-initializr"
-vscode "yzhang.markdown-all-in-one"
+
+# VS Code extensions are managed separately by scripts/setup-vscode-extensions.sh
+# This avoids overwhelming VS Code with parallel installations from brew bundle
