@@ -1,4 +1,5 @@
 tap "homebrew/autoupdate"
+tap "oven-sh/bun"
 
 # Core development tools
 brew "git"
@@ -10,7 +11,9 @@ brew "docker-completion"
 brew "node"
 brew "nvm"
 brew "pnpm"
+brew "bun"                   # Modern JavaScript runtime
 brew "pyenv"
+brew "uv"                    # Modern Python package manager
 brew "rbenv"
 brew "go"
 brew "rust"
@@ -37,6 +40,10 @@ brew "tldr"                  # Simplified man pages
 brew "scc"                   # Source lines counter
 brew "entr"                  # File watcher
 brew "ast-grep"              # Structural search for code
+brew "hyperfine"             # Benchmarking tool
+brew "tokei"                 # Code statistics
+brew "procs"                 # Modern ps replacement
+brew "btop"                  # Enhanced top
 
 # Text editors
 brew "vim"
@@ -48,6 +55,7 @@ brew "tree-sitter"
 
 # Development workflow
 brew "lazygit"               # Terminal Git UI
+brew "starship"              # Cross-shell prompt
 
 # Media processing
 brew "ffmpeg"
@@ -73,6 +81,7 @@ cask "spotify"
 cask "stats"
 cask "visual-studio-code"
 cask "vlc"
+cask "warp"
 
 # Fonts
 cask "font-anonymice-nerd-font"
