@@ -322,6 +322,59 @@ show_progress() {
     printf "\r"
 }
 
+# Progress bar for operations with known total
+show_progress_bar() {
+    local current="$1"
+    local total="$2"
+    local message="${3:-Progress}"
+    local width="${4:-50}"
+    
+    local percentage=$((current * 100 / total))
+    local filled=$((percentage * width / 100))
+    local empty=$((width - filled))
+    
+    # Build the bar
+    printf "\r${BLUE}$message: [${NC}"
+    printf "%${filled}s" | tr ' ' '='
+    printf "%${empty}s" | tr ' ' '>'
+    printf "${BLUE}] $percentage%%${NC}"
+    
+    # Clear line when complete
+    if [[ $current -eq $total ]]; then
+        printf "\n"
+    fi
+}
+
+# Execute command with progress indicator
+execute_with_progress() {
+    local cmd="$1"
+    local message="${2:-Executing}"
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        print_dry_run "$message"
+        return 0
+    fi
+    
+    # Run command in background
+    eval "$cmd" &
+    local pid=$!
+    
+    # Show progress
+    show_progress "$pid" "$message"
+    
+    # Wait for completion
+    wait "$pid"
+    local exit_code=$?
+    
+    if [[ $exit_code -eq 0 ]]; then
+        printf "\r${GREEN}✓ $message completed${NC}\n"
+    else
+        printf "\r${RED}✗ $message failed${NC}\n"
+    fi
+    
+    return $exit_code
+}
+
 # Cleanup function to be called on exit
 cleanup() {
     local exit_code=$?
@@ -346,6 +399,11 @@ export ROOT_DIR
 export LIB_DIR="$ROOT_DIR/lib"
 export SCRIPTS_DIR="$ROOT_DIR/scripts"
 export DOTFILES_DIR="$ROOT_DIR/dotfiles"
+
+# Export functions for progress tracking
+export -f show_progress
+export -f show_progress_bar
+export -f execute_with_progress
 
 # Initialization message
 if [[ "${COMMON_LIB_LOADED:-}" != "true" ]]; then

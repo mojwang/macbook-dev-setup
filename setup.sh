@@ -10,6 +10,11 @@ source "$(dirname "$0")/lib/common.sh"
 # Global variables
 UPDATE_MODE=false
 PARALLEL_JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+CONFIG_FILE="$ROOT_DIR/config/setup.yaml"
+RUN_HEALTH_CHECK=false
+MINIMAL_INSTALL=false
+CREATE_BACKUP=true
+PROFILE_NAME=""
 
 # Performance tracking
 SCRIPT_START_TIME=$(date +%s)
@@ -26,24 +31,39 @@ Options:
     -l, --log FILE      Write logs to specified file
     -u, --update        Update and upgrade existing packages and tools
     -j, --jobs N        Set number of parallel jobs (default: $PARALLEL_JOBS)
+    -c, --config FILE   Use custom configuration file (default: config/setup.yaml)
+    --check             Run health check after installation
+    --minimal           Install only essential tools (skip optional components)
+    --no-backup         Skip creating restore points
+    --profile NAME      Use a predefined profile from config
     -h, --help          Show this help message
 
-Performance Features:
-    - Parallel processing for faster installation (16 cores)
-    - Optimized Homebrew operations
-    - Smart dry-run delegation for optimal performance
-    - Enhanced error handling and recovery
-    - Automatic resource optimization
+Quick Actions:
+    --health            Run health check and exit
+    --rollback          Show rollback options and exit
+    --show-config       Display configuration and exit
 
-Scripts:
-    setup.sh            # Main high-performance setup script
-    setup-test.sh       # Fast testing and validation script (used for dry-runs)
+Performance Features:
+    - Parallel processing for faster installation
+    - Progress bars for long operations
+    - Smart dry-run delegation for optimal performance
+    - Automatic restore points before changes
+    - Configuration-based customization
 
 Examples:
-    $0                  # Run full optimized setup
-    $0 --dry-run        # Fast preview (uses setup-test.sh)
-    $0 -v -l setup.log  # Verbose mode with logging
-    $0 --update -j 8    # Update mode with 8 parallel jobs
+    $0                              # Run full setup with defaults
+    $0 --dry-run                    # Preview what will be installed
+    $0 --minimal                    # Essential tools only
+    $0 --config my-config.yaml      # Use custom configuration
+    $0 --profile web_developer      # Use web developer profile
+    $0 --update --check             # Update everything and verify
+    $0 --health                     # Just run health check
+
+Related Scripts:
+    ./scripts/health-check.sh       # Verify system health
+    ./scripts/update.sh             # Update all tools
+    ./scripts/rollback.sh           # Restore previous state
+    ./scripts/uninstall.sh          # Remove everything
 
 EOF
     exit 0
@@ -72,6 +92,38 @@ parse_args() {
             -j|--jobs)
                 PARALLEL_JOBS="$2"
                 shift 2
+                ;;
+            -c|--config)
+                CONFIG_FILE="$2"
+                shift 2
+                ;;
+            --check)
+                RUN_HEALTH_CHECK=true
+                shift
+                ;;
+            --minimal)
+                MINIMAL_INSTALL=true
+                shift
+                ;;
+            --no-backup)
+                CREATE_BACKUP=false
+                shift
+                ;;
+            --profile)
+                PROFILE_NAME="$2"
+                shift 2
+                ;;
+            --health)
+                exec ./scripts/health-check.sh
+                ;;
+            --rollback)
+                exec ./scripts/rollback.sh
+                ;;
+            --show-config)
+                source "$ROOT_DIR/lib/config.sh"
+                check_config_file
+                print_config_summary
+                exit 0
                 ;;
             -h|--help)
                 show_help
@@ -287,9 +339,33 @@ install_homebrew_optimized() {
 install_packages_optimized() {
     print_step "Installing packages (optimized)..."
     
+    if [[ "$MINIMAL_INSTALL" == true ]]; then
+        print_info "Minimal installation mode - installing essential packages only"
+    fi
+    
     if [[ "$DRY_RUN" == false ]]; then
+        # Count total packages for progress bar
+        local total_formulae=$(grep -c "^brew " homebrew/Brewfile || echo 0)
+        local total_casks=$(grep -c "^cask " homebrew/Brewfile || echo 0)
+        local total=$((total_formulae + total_casks))
+        local current=0
+        
+        print_info "Installing $total packages ($total_formulae formulae, $total_casks casks)"
+        
         # Install packages without automatic updates (faster)
-        HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="homebrew/Brewfile"
+        if [[ "$VERBOSE" == true ]]; then
+            HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="homebrew/Brewfile" --verbose
+        else
+            # Install with progress tracking
+            HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="homebrew/Brewfile" | while IFS= read -r line; do
+                if [[ "$line" =~ Installing|Pouring|Using ]]; then
+                    ((current++))
+                    show_progress_bar "$current" "$total" "Installing packages"
+                fi
+                [[ "$VERBOSE" == true ]] && echo "$line"
+            done
+        fi
+        
         print_success "Packages installed successfully"
     else
         print_dry_run "Would install packages from Brewfile"
@@ -376,12 +452,29 @@ main() {
         exit 0
     fi
     
+    # Load configuration if available
+    if [[ -f "$ROOT_DIR/lib/config.sh" ]]; then
+        source "$ROOT_DIR/lib/config.sh"
+        load_config_settings
+        
+        if [[ -f "$CONFIG_FILE" ]]; then
+            print_info "Using configuration: $CONFIG_FILE"
+            if [[ "$VERBOSE" == true ]]; then
+                print_config_summary
+            fi
+        fi
+    fi
+    
     # System checks
     require_macos
     
-    # Create restore point for potential rollback
-    RESTORE_POINT=$(create_restore_point "setup")
-    export RESTORE_POINT
+    # Create restore point if enabled
+    if [[ "$CREATE_BACKUP" == true ]]; then
+        RESTORE_POINT=$(create_restore_point "setup")
+        export RESTORE_POINT
+    else
+        print_info "Skipping restore point creation (--no-backup)"
+    fi
     
     # Perform system checks
     print_step "Performing system checks..."
@@ -496,6 +589,14 @@ main() {
     if [[ -n "$LOG_FILE" ]]; then
         log_message "Optimized setup completed successfully"
         show_performance_stats >> "$LOG_FILE"
+    fi
+    
+    # Run health check if requested
+    if [[ "$RUN_HEALTH_CHECK" == true ]] && [[ "$DRY_RUN" == false ]]; then
+        echo ""
+        print_step "Running health check..."
+        sleep 2  # Give system a moment to settle
+        ./scripts/health-check.sh
     fi
 }
 

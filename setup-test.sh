@@ -11,6 +11,9 @@ DRY_RUN=false
 VERBOSE=false
 LOG_FILE=""
 UPDATE_MODE=false
+CONFIG_FILE=""
+MINIMAL_INSTALL=false
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Colors for output
 RED='\033[0;31m'
@@ -62,7 +65,14 @@ Options:
     -d, --dry-run       Show what would be done without executing
     -v, --verbose       Enable verbose output
     -l, --log FILE      Write logs to specified file
+    -c, --config FILE   Use custom configuration file (default: config/setup.yaml)
+    --minimal           Test minimal installation only
+    --show-config       Display configuration and exit
     -h, --help          Show this help message
+
+Quick Actions:
+    --health            Run health check and exit
+    --test              Run test suite and exit
 
 Note: This script is for testing and validation ONLY. It never performs actual setup.
 For production setup, use setup.sh
@@ -71,6 +81,13 @@ Examples:
     $0 --dry-run        # Fast preview (recommended)
     $0                  # Validate environment and prerequisites
     $0 -v -l test.log   # Verbose validation with logging
+    $0 --minimal        # Test minimal setup only
+    $0 --config custom.yaml  # Use custom configuration
+
+Related Scripts:
+    ./setup.sh              # Main setup script
+    ./scripts/health-check.sh   # System health verification
+    ./tests/run_tests.sh    # Run test suite
 
 EOF
     exit 0
@@ -91,6 +108,30 @@ parse_args() {
             -l|--log)
                 LOG_FILE="$2"
                 shift 2
+                ;;
+            -c|--config)
+                CONFIG_FILE="$2"
+                shift 2
+                ;;
+            --minimal)
+                MINIMAL_INSTALL=true
+                shift
+                ;;
+            --show-config)
+                if [[ -f "$ROOT_DIR/lib/config.sh" ]]; then
+                    source "$ROOT_DIR/lib/config.sh"
+                    check_config_file
+                    print_config_summary
+                else
+                    print_error "Configuration library not found"
+                fi
+                exit 0
+                ;;
+            --health)
+                exec ./scripts/health-check.sh
+                ;;
+            --test)
+                exec ./tests/run_tests.sh
                 ;;
             -h|--help)
                 show_help

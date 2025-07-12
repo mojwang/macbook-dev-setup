@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run tests
+      run: |
+        echo "Running test suite..."
+        ./tests/run_tests.sh
+    
+    - name: Validate scripts
+      run: |
+        echo "Validating shell scripts with shellcheck..."
+        brew install shellcheck || true
+        
+        # Check all shell scripts
+        find . -name "*.sh" -type f | while read -r script; do
+          echo "Checking: $script"
+          shellcheck "$script" || true
+        done
+    
+    - name: Test dry-run
+      run: |
+        echo "Testing setup script in dry-run mode..."
+        ./setup.sh --dry-run
+    
+    - name: Test health check
+      run: |
+        echo "Testing health check script..."
+        ./scripts/health-check.sh || true
+
+  validate-documentation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check markdown files
+      run: |
+        echo "Validating markdown files..."
+        # Check for broken links in markdown files (basic check)
+        find . -name "*.md" -type f | while read -r file; do
+          echo "Checking: $file"
+          # Basic validation - ensure files exist
+          grep -oE '\[.*\]\(.*\)' "$file" | grep -oE '\(.*\)' | tr -d '()' | while read -r link; do
+            if [[ "$link" =~ ^https?:// ]]; then
+              echo "  External link: $link"
+            elif [[ -f "$link" ]]; then
+              echo "  ✓ Valid file link: $link"
+            elif [[ "$link" =~ ^# ]]; then
+              echo "  Anchor link: $link"
+            else
+              echo "  ⚠ Possible broken link: $link"
+            fi
+          done
+        done
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check for secrets
+      run: |
+        echo "Checking for potential secrets..."
+        # Basic secret detection
+        grep -rEn "(password|secret|key|token|api_key).*=.*['\"]" . --include="*.sh" || echo "No hardcoded secrets found"
+        
+        # Check for common secret patterns
+        grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256" || echo "No potential API keys found"

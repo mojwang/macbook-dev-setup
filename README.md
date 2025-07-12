@@ -134,6 +134,21 @@ Cleanly remove the development environment:
 - Selective uninstall with confirmations
 - Preserves system tools and personal data
 
+### Rollback
+Restore from a previous state:
+```bash
+./scripts/rollback.sh --list     # Show available restore points
+./scripts/rollback.sh --latest   # Restore from most recent point
+./scripts/rollback.sh            # Interactive mode
+```
+
+### Configuration
+Customize your installation with `config/setup.yaml`:
+- Enable/disable specific tools
+- Add custom packages
+- Configure installation behavior
+- Use predefined profiles
+
 ## ⚙️ Command Line Options
 
 The setup script supports several options:
