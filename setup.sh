@@ -393,29 +393,40 @@ install_packages_optimized() {
     fi
 }
 
-# Optimized dotfiles setup
+# Optimized dotfiles setup with interactive git configuration
 setup_dotfiles_optimized() {
-    print_step "Setting up dotfiles (optimized)..."
+    print_step "Setting up dotfiles..."
     
     if [[ "$DRY_RUN" == false ]]; then
-        local backup_dir="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
-        mkdir -p "$backup_dir"
-        
-        # Parallel backup and copy operations
-        local setup_commands=(
-            "cp ~/.zshrc '$backup_dir/.zshrc' 2>/dev/null || true"
-            "cp ~/.gitconfig '$backup_dir/.gitconfig' 2>/dev/null || true"
-            "cp -r ~/.config/nvim '$backup_dir/.config-nvim' 2>/dev/null || true"
-            "cp dotfiles/.zshrc ~/.zshrc"
-            "cp dotfiles/.gitconfig ~/.gitconfig"
-            "mkdir -p ~/.config/nvim && cp -r dotfiles/.config/nvim/* ~/.config/nvim/"
-            "mkdir -p ~/.scripts && cp dotfiles/scripts/* ~/.scripts/ && chmod +x ~/.scripts/*"
-        )
-        
-        execute_parallel "${setup_commands[@]}"
-        print_success "Dotfiles setup completed"
+        # Use the full setup-dotfiles.sh script to ensure git configuration is prompted
+        if [[ -f "./scripts/setup-dotfiles.sh" ]]; then
+            ./scripts/setup-dotfiles.sh
+        else
+            # Fallback to inline setup if script not found
+            local backup_dir="$HOME/.dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
+            mkdir -p "$backup_dir"
+            
+            # Parallel backup and copy operations
+            local setup_commands=(
+                "cp ~/.zshrc '$backup_dir/.zshrc' 2>/dev/null || true"
+                "cp ~/.gitconfig '$backup_dir/.gitconfig' 2>/dev/null || true"
+                "cp -r ~/.config/nvim '$backup_dir/.config-nvim' 2>/dev/null || true"
+                "cp dotfiles/.zshrc ~/.zshrc"
+                "cp dotfiles/.gitconfig ~/.gitconfig"
+                "mkdir -p ~/.config/nvim && cp -r dotfiles/.config/nvim/* ~/.config/nvim/"
+                "mkdir -p ~/.scripts && cp dotfiles/scripts/* ~/.scripts/ && chmod +x ~/.scripts/*"
+            )
+            
+            execute_parallel "${setup_commands[@]}"
+            print_success "Dotfiles setup completed"
+            
+            # Prompt for git configuration if using fallback
+            print_warning "Git configuration was not set up interactively."
+            print_warning "Please run: git config --global user.name 'Your Name'"
+            print_warning "Please run: git config --global user.email 'your.email@example.com'"
+        fi
     else
-        print_dry_run "Would setup dotfiles"
+        print_dry_run "Would setup dotfiles and configure git"
     fi
 }
 
