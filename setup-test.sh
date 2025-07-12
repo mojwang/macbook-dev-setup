@@ -589,6 +589,7 @@ main() {
     validate_file_contents_enhanced
     validate_script_dependencies
     validate_dependency_chains
+    validate_git_configuration
     validate_post_installation_state
     
     # Validate prerequisites
@@ -670,6 +671,7 @@ main() {
     echo "✓ Enhanced syntax checking completed"
     echo "✓ Script dependencies validated"
     echo "✓ Dependency chains analyzed"
+    echo "✓ Git configuration validated"
     echo "✓ Post-installation state validated"
     echo "✓ Prerequisites checked"
     echo "✓ Installation steps validated"

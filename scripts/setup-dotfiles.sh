@@ -82,7 +82,24 @@ install_dotfile() {
 
 # Install main dotfiles
 install_dotfile "dotfiles/.zshrc" ~/.zshrc ".zshrc configuration"
-install_dotfile "dotfiles/.gitconfig" ~/.gitconfig ".gitconfig settings"
+
+# Special handling for .gitconfig - don't overwrite if it already has real values
+if [[ -f ~/.gitconfig ]]; then
+    existing_name=$(git config --global user.name 2>/dev/null || echo "")
+    existing_email=$(git config --global user.email 2>/dev/null || echo "")
+    
+    if [[ -n "$existing_name" && "$existing_name" != "Your Name" && -n "$existing_email" && "$existing_email" != "your.email@example.com" ]]; then
+        print_warning ".gitconfig already configured with real values, skipping installation"
+        print_success "Existing Git configuration: $existing_name <$existing_email>"
+    else
+        # Backup and install new gitconfig
+        backup_file ~/.gitconfig .gitconfig
+        install_dotfile "dotfiles/.gitconfig" ~/.gitconfig ".gitconfig settings"
+    fi
+else
+    # No existing gitconfig, install the template
+    install_dotfile "dotfiles/.gitconfig" ~/.gitconfig ".gitconfig settings"
+fi
 
 # Setup Neovim configuration
 if [[ -d "dotfiles/.config/nvim" ]]; then
@@ -116,32 +133,63 @@ fi
 # Configure Git with personal information
 echo "Configuring Git with your personal information..."
 
-# Auto-detect full name from system
-full_name=$(id -F 2>/dev/null || echo "")
-if [[ -z "$full_name" ]]; then
-    # Fallback to username if full name not available
-    full_name=$(whoami)
+# Check current Git configuration
+current_name=$(git config --global user.name 2>/dev/null || echo "")
+current_email=$(git config --global user.email 2>/dev/null || echo "")
+
+# Only configure if not already set with real values
+if [[ -z "$current_name" || "$current_name" == "Your Name" || -z "$current_email" || "$current_email" == "your.email@example.com" ]]; then
+    # Auto-detect full name from system
+    full_name=$(id -F 2>/dev/null || echo "")
+    if [[ -z "$full_name" ]]; then
+        # Fallback to username if full name not available
+        full_name=$(whoami)
+    fi
+
+    echo "Detected name: $full_name"
+
+    # Prompt for email if not in non-interactive mode
+    if [[ -t 0 ]]; then
+        echo -n "Enter your email address: "
+        read -r email_address
+        
+        # Validate email format
+        if [[ "$email_address" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            # Configure git with the provided information
+            git config --global user.name "$full_name"
+            git config --global user.email "$email_address"
+            print_success "Git configured with name: $full_name and email: $email_address"
+            
+            # Update the .gitconfig file directly to remove placeholder comments
+            if [[ -f ~/.gitconfig ]]; then
+                # Remove the placeholder comment line
+                sed -i '' '/# Update with your actual name and email/d' ~/.gitconfig 2>/dev/null || true
+            fi
+        else
+            print_error "Invalid email format. Git configuration skipped."
+            print_warning "Please manually update ~/.gitconfig with: git config --global user.email 'your.email@example.com'"
+        fi
+    else
+        # Non-interactive mode - use placeholder
+        print_warning "Running in non-interactive mode. Git configuration requires manual update."
+        print_warning "Run: git config --global user.name 'Your Name'"
+        print_warning "Run: git config --global user.email 'your.email@example.com'"
+    fi
+else
+    print_success "Git already configured: $current_name <$current_email>"
 fi
 
-echo "Detected name: $full_name"
+# Final validation
+final_name=$(git config --global user.name 2>/dev/null || echo "")
+final_email=$(git config --global user.email 2>/dev/null || echo "")
 
-# Prompt for email if not in non-interactive mode
-if [[ -t 0 ]]; then
-    echo -n "Enter your email address: "
-    read -r email_address
-else
-    # Non-interactive mode - use placeholder
-    email_address="your.email@example.com"
-    print_warning "Running in non-interactive mode. Please update email in ~/.gitconfig"
-fi
-
-# Configure git with the provided information
-if [[ -n "$email_address" && "$email_address" != "your.email@example.com" ]]; then
-    git config --global user.name "$full_name"
-    git config --global user.email "$email_address"
-    print_success "Git configured with name: $full_name and email: $email_address"
-else
-    print_warning "Git configuration skipped. Please manually update ~/.gitconfig"
+if [[ "$final_name" == "Your Name" || "$final_email" == "your.email@example.com" ]]; then
+    echo ""
+    print_warning "IMPORTANT: Git is configured with placeholder values!"
+    print_warning "Please update your Git configuration:"
+    echo "  git config --global user.name 'Your Actual Name'"
+    echo "  git config --global user.email 'your.actual@email.com'"
+    echo ""
 fi
 
 print_success "Dotfiles setup completed"
