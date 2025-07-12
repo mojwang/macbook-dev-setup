@@ -190,6 +190,7 @@ validate_prerequisites() {
         "homebrew/Brewfile"
         "node/global-packages.txt"
         "python/requirements.txt"
+        "dotfiles/.config/nvim/init.lua"
     )
     
     for file in "${required_files[@]}"; do

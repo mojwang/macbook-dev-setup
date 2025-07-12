@@ -59,6 +59,7 @@ backup_directory() {
 backup_file ~/.zshrc .zshrc
 backup_file ~/.gitconfig .gitconfig
 backup_directory ~/.scripts .scripts
+backup_directory ~/.config/nvim .config-nvim
 
 # Install dotfiles
 install_dotfile() {
@@ -82,6 +83,20 @@ install_dotfile() {
 # Install main dotfiles
 install_dotfile "dotfiles/.zshrc" ~/.zshrc ".zshrc configuration"
 install_dotfile "dotfiles/.gitconfig" ~/.gitconfig ".gitconfig settings"
+
+# Setup Neovim configuration
+if [[ -d "dotfiles/.config/nvim" ]]; then
+    echo "Setting up Neovim configuration..."
+    mkdir -p ~/.config/nvim
+    
+    if cp -r dotfiles/.config/nvim/* ~/.config/nvim/ 2>/dev/null; then
+        print_success "Neovim configuration installed"
+    else
+        print_warning "Failed to install Neovim configuration"
+    fi
+else
+    print_warning "Neovim configuration directory not found"
+fi
 
 # Create scripts directory and copy scripts
 if [[ -d "dotfiles/scripts" ]]; then

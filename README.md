@@ -33,6 +33,7 @@ cd dev-setup
 - **Python**: Latest version via Pyenv
 - **Docker**: Container runtime
 - **Git**: Version control with custom aliases
+- **Neovim**: Primary terminal editor (replaces vim)
 - **VS Code**: Primary IDE
 
 ### CLI Enhancements
@@ -56,8 +57,9 @@ Some tools require manual setup:
 
 1. **Claude CLI**: Run `claude setup-token` to authenticate
 2. **Git**: Update your name and email in `~/.gitconfig`
-3. **VS Code**: Extensions are automatically installed; settings are configured
-4. **Applications**: Some apps may require manual App Store installation
+3. **Neovim**: Basic configuration is included; customize `~/.config/nvim/init.lua` as needed
+4. **VS Code**: Extensions are automatically installed; settings are configured
+5. **Applications**: Some apps may require manual App Store installation
 
 ## ⚙️ Command Line Options
 

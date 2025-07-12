@@ -109,6 +109,11 @@ alias gd="git diff"
 alias gb="git branch"
 alias gco="git checkout"
 
+# Text editor aliases
+alias vim="nvim"
+alias vi="nvim"
+alias v="nvim"
+
 # Utility aliases
 alias ip="ipconfig getifaddr en0"
 alias home="cd ~"
@@ -172,6 +177,10 @@ devinfo() {
         echo "Git: $(git --version)"
     fi
     
+    if command -v nvim &> /dev/null; then
+        echo "Neovim: $(nvim --version | head -n1)"
+    fi
+    
     if command -v code &> /dev/null; then
         echo "VS Code: $(code --version | head -n1)"
     fi
@@ -185,7 +194,8 @@ setopt HIST_IGNORE_SPACE
 setopt SHARE_HISTORY
 
 # Environment variables
-export EDITOR="code"
+export EDITOR="nvim"
+export VISUAL="nvim"
 export PAGER="less"
 export BROWSER="open"
 
