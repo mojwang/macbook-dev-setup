@@ -83,3 +83,31 @@ jobs:
         
         # Check for common secret patterns
         grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256" || echo "No potential API keys found"
+
+  # Summary job that depends on all other jobs
+  # This is the job that will be required in branch protection
+  all-checks-pass:
+    name: All Checks Pass
+    runs-on: macos-latest
+    needs: [test, validate-documentation, security-scan]
+    if: always()
+    
+    steps:
+    - name: Check job results
+      run: |
+        if [[ "${{ needs.test.result }}" != "success" ]]; then
+          echo "❌ Test job failed"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.validate-documentation.result }}" != "success" ]]; then
+          echo "❌ Documentation validation job failed"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
+          echo "❌ Security scan job failed"
+          exit 1
+        fi
+        
+        echo "✅ All checks passed successfully!"
