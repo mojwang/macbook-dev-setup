@@ -18,11 +18,7 @@
       ],
       "extra-files": [
         "VERSION",
-        {
-          "type": "generic",
-          "path": "setup.sh",
-          "glob": "{**/,}VERSION=\"[0-9]+.[0-9]+.[0-9]+\""
-        }
+        "setup.sh"
       ]
     }
   },
