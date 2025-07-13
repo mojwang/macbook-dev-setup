@@ -92,7 +92,7 @@ assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/20-tools.zsh" "Tools module s
 assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/30-aliases.zsh" "Aliases module should exist"
 assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/40-functions.zsh" "Functions module should exist"
 assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/50-environment.zsh" "Environment module should exist"
-assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/99-local.zsh" "Local module should exist"
+# Note: 99-local.zsh is gitignored and created by users, so we don't test for it
 
 it "should have modular zshrc loader"
 assert_file_exists "$ROOT_DIR/dotfiles/.zshrc" "Main .zshrc should exist"

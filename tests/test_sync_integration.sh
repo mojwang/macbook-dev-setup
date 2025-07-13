@@ -53,7 +53,8 @@ fi
 # Test 6: Verify all zsh modules exist
 echo -n "Test 6: All zsh modules exist... "
 missing=0
-for module in 00-homebrew 10-languages 20-tools 30-aliases 40-functions 50-environment 99-local; do
+# Note: 99-local.zsh is gitignored and optional, so we don't check for it
+for module in 00-homebrew 10-languages 20-tools 30-aliases 40-functions 50-environment; do
     if [[ ! -f "dotfiles/.config/zsh/${module}.zsh" ]]; then
         echo "FAIL: Missing ${module}.zsh"
         ((missing++))
