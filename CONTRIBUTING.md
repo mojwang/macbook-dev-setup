@@ -58,9 +58,63 @@ git checkout -b feature/your-feature-name
 ### 2. Making Changes
 
 - Keep commits focused and atomic
-- Write clear commit messages
+- Write clear commit messages following [Conventional Commits](https://www.conventionalcommits.org/)
 - Follow the existing code style
 - Add comments for complex logic
+
+#### Commit Message Format
+
+We use Conventional Commits for consistent, semantic commit messages:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Test additions or fixes
+- `build`: Build system changes
+- `ci`: CI/CD changes
+- `chore`: Other maintenance tasks
+
+**Scopes:**
+- `setup`: Main setup script
+- `dotfiles`: Dotfile configurations
+- `homebrew`: Package management
+- `scripts`: Component scripts
+- `docs`: Documentation
+- `tests`: Test suite
+- `vscode`: VS Code configs
+- `zsh`: Shell configuration
+
+**Example:**
+```bash
+git commit -m "feat(homebrew): add terraform to developer tools"
+```
+
+**Using Commitizen (optional):**
+```bash
+# Install commitizen
+pip install commitizen
+
+# Make commits interactively
+cz commit
+```
+
+**Git commit template:**
+```bash
+# Set up the commit template
+git config --local commit.template .gitmessage
+```
 
 ### 3. Testing Your Changes
 
@@ -169,6 +223,8 @@ git push origin feature/your-feature-name
 - ✅ Update documentation alongside code
 - ✅ Be respectful and constructive in discussions
 - ✅ Follow the existing patterns and conventions
+- ✅ Use conventional commit messages for clear history
+- ✅ Update VERSION file for releases
 
 ### Don'ts
 - ❌ Don't commit sensitive information
@@ -176,6 +232,41 @@ git push origin feature/your-feature-name
 - ❌ Don't add unnecessary dependencies
 - ❌ Don't ignore CI/CD failures
 - ❌ Don't submit incomplete work
+- ❌ Don't manually create releases (use Release Please)
+
+## 🚀 Release Process
+
+Releases are automated using [Release Please](https://github.com/google-github-actions/release-please-action):
+
+1. **Commit with Conventional Commits** - Your commits determine the version bump:
+   - `fix:` bumps patch version (1.0.0 → 1.0.1)
+   - `feat:` bumps minor version (1.0.0 → 1.1.0)
+   - `feat!:` or `BREAKING CHANGE:` bumps major version (1.0.0 → 2.0.0)
+
+2. **Release Please creates a PR** - Automatically when commits are pushed to main
+
+3. **Review and merge the release PR** - This triggers:
+   - Version bump in VERSION and setup.sh
+   - CHANGELOG.md update
+   - Git tag creation
+   - GitHub release creation
+
+4. **No manual intervention needed** - The process is fully automated
+
+### Version Bumping with Commitizen
+
+For manual version management during development:
+
+```bash
+# Check current version
+cat VERSION
+
+# Bump version interactively
+cz bump
+
+# Create a release commit
+cz bump --changelog
+```
 
 ## 🎯 Priority Areas
 

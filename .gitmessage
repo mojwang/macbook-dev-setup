@@ -1,0 +1,43 @@
+# <type>(<scope>): <subject>
+# 
+# <body>
+# 
+# <footer>
+
+# Type should be one of the following:
+# - feat: A new feature
+# - fix: A bug fix
+# - docs: Documentation only changes
+# - style: Changes that do not affect the meaning of the code
+# - refactor: A code change that neither fixes a bug nor adds a feature
+# - perf: A code change that improves performance
+# - test: Adding missing tests or correcting existing tests
+# - build: Changes that affect the build system or external dependencies
+# - ci: Changes to our CI configuration files and scripts
+# - chore: Other changes that don't modify src or test files
+# - revert: Reverts a previous commit
+
+# Scope should be one of the following:
+# - setup: Main setup script changes
+# - dotfiles: Dotfile configurations
+# - homebrew: Brewfile and package management
+# - scripts: Component scripts in scripts/
+# - docs: Documentation files
+# - tests: Test suite changes
+# - vscode: VS Code configurations
+# - zsh: Shell configuration modules
+
+# Subject should be:
+# - Written in the imperative mood
+# - Not capitalized
+# - No period at the end
+# - Max 50 characters
+
+# Body should:
+# - Explain what and why vs. how
+# - Wrap at 72 characters
+# - Can use multiple paragraphs
+
+# Footer should contain:
+# - Breaking changes: BREAKING CHANGE: description
+# - Issue references: Closes #123, Fixes #456

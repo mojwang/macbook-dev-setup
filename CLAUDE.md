@@ -31,6 +31,19 @@ This is a macOS development environment setup repository designed for Apple Sili
 brew update && brew upgrade  # Manual Homebrew update
 ```
 
+### Git Commit Helpers
+```bash
+./scripts/setup-git-hooks.sh # Set up conventional commit hooks
+./scripts/commit-helper.sh   # Interactive commit message creator
+./scripts/commit-helper.sh --quick # Quick mode with fewer prompts
+
+# Shell aliases (after running setup):
+gci                          # Interactive commit helper
+gcft "message"               # Quick feat commit
+gcfs scope "message"         # Scoped feat commit
+commit-help                  # Show commit format reference
+```
+
 ### Package Synchronization
 The `--sync` flag detects and installs new packages added to configuration files:
 - Checks `homebrew/Brewfile` for new formulae/casks
@@ -57,6 +70,8 @@ The `--sync` flag detects and installs new packages added to configuration files
   - `setup-dotfiles.sh`: Deploys dotfiles with automatic backups
   - `setup-applications.sh`: Installs macOS desktop applications
   - `setup-macos.sh`: Configures macOS system preferences
+  - `setup-git-hooks.sh`: Configures conventional commit hooks
+  - `commit-helper.sh`: Interactive conventional commit creator
 
 ### Key Configuration Files
 - `homebrew/Brewfile`: Package definitions (formulae, casks, VS Code extensions)
@@ -67,6 +82,7 @@ The `--sync` flag detects and installs new packages added to configuration files
   - `10-languages.zsh`: Language version managers (NVM, pyenv, rbenv)
   - `20-tools.zsh`: Modern CLI tools configuration
   - `30-aliases.zsh`: Git, Docker, and utility aliases
+  - `35-commit-aliases.zsh`: Conventional commit shortcuts
   - `40-functions.zsh`: Custom shell functions
   - `50-environment.zsh`: Environment variables and settings
   - `99-local.zsh`: Local customizations (gitignored)

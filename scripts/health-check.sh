@@ -168,6 +168,20 @@ main() {
     check_config "$HOME/.ssh/config" "" "SSH configuration"
     echo ""
     
+    # Git hooks (if in a git repository)
+    if [[ -d ".git" ]]; then
+        print_step "Checking Git hooks..."
+        ((TOTAL_CHECKS++))
+        if [[ -f ".git/hooks/commit-msg" ]]; then
+            print_success "Conventional commit hooks: Installed"
+            ((PASSED_CHECKS++))
+        else
+            print_info "Conventional commit hooks: Not installed (run ./scripts/setup-git-hooks.sh)"
+            ((PASSED_CHECKS++))  # Not a failure, just informational
+        fi
+        echo ""
+    fi
+    
     # Git configuration validation
     print_step "Checking Git configuration..."
     local git_name=$(git config --global user.name 2>/dev/null || echo "")

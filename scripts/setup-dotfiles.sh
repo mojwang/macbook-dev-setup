@@ -157,5 +157,26 @@ fi
 print_success "Dotfiles setup completed"
 echo ""
 echo "Backup created at: $backup_dir"
+
+# Offer to set up git hooks for contributors
+if [ -d ".git" ] && [ ! -f ".git/hooks/commit-msg" ]; then
+    echo ""
+    print_info "Want to set up conventional commits for this repository?"
+    echo "This will:"
+    echo "  • Configure git commit template"
+    echo "  • Add commit message validation"
+    echo "  • Enable commit helper tools"
+    echo ""
+    read -p "Set up git hooks? [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if ./scripts/setup-git-hooks.sh; then
+            print_success "Git hooks configured!"
+        else
+            print_warning "Git hooks setup failed, but continuing..."
+        fi
+    fi
+fi
+
 echo ""
 echo "To apply changes immediately, run: source ~/.zshrc"

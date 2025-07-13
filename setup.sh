@@ -3,6 +3,9 @@
 # Development Environment Setup Script
 # High-performance setup with intelligent dry-run delegation
 # For macOS Apple Silicon
+# Version: 1.0.0
+
+VERSION="1.0.0"
 
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
@@ -313,7 +316,13 @@ sync_packages() {
             print_dry_run "Would install missing npm packages from node/global-packages.txt"
         else
             # Get list of installed global packages
-            local installed_npm=$(npm list -g --depth=0 --json 2>/dev/null | jq -r '.dependencies | keys[]' 2>/dev/null || echo "")
+            local installed_npm=""
+            if command_exists jq; then
+                installed_npm=$(npm list -g --depth=0 --json 2>/dev/null | jq -r '.dependencies | keys[]' 2>/dev/null || echo "")
+            else
+                # Fallback without jq - parse npm list output
+                installed_npm=$(npm list -g --depth=0 2>/dev/null | grep -E '^├──|^└──' | awk '{print $2}' | cut -d'@' -f1 || echo "")
+            fi
             
             # Read desired packages and install missing ones
             while IFS= read -r package; do
@@ -358,8 +367,51 @@ sync_packages() {
 
 # Fast prerequisite validation with parallel checks
 validate_prerequisites() {
-    print_step "Validating prerequisites (parallel)..."
+    print_step "Validating prerequisites..."
     
+    # Check for required system commands first
+    local required_commands=(
+        "curl"      # For downloading files
+        "git"       # For version control
+        "grep"      # For text processing
+        "sed"       # For text manipulation
+        "awk"       # For text processing
+        "sudo"      # For system-level changes
+        "defaults"  # For macOS settings
+        "killall"   # For restarting services
+        "xcode-select" # For developer tools
+    )
+    
+    local missing_commands=()
+    for cmd in "${required_commands[@]}"; do
+        if ! command_exists "$cmd"; then
+            missing_commands+=("$cmd")
+        fi
+    done
+    
+    if [[ ${#missing_commands[@]} -gt 0 ]]; then
+        print_error "Missing required system commands:"
+        for cmd in "${missing_commands[@]}"; do
+            echo "  - $cmd"
+        done
+        echo ""
+        print_error "Please install Xcode Command Line Tools:"
+        echo "  xcode-select --install"
+        exit 1
+    fi
+    
+    # Check if Xcode Command Line Tools are installed
+    if ! xcode-select -p &>/dev/null; then
+        print_error "Xcode Command Line Tools not installed"
+        echo ""
+        echo "Please install them by running:"
+        echo "  xcode-select --install"
+        echo ""
+        echo "Then restart the setup script."
+        exit 1
+    fi
+    
+    # Check for required files
     local required_files=(
         "scripts/install-homebrew.sh"
         "scripts/install-packages.sh"
@@ -372,9 +424,7 @@ validate_prerequisites() {
     )
     
     if [[ "$DRY_RUN" == true ]]; then
-        for file in "${required_files[@]}"; do
-            print_dry_run "Would check: $file"
-        done
+        print_dry_run "Would validate system commands and files"
         print_success "Prerequisites validation passed (dry run)"
         return 0
     fi
@@ -390,6 +440,26 @@ validate_prerequisites() {
     if [[ $errors -gt 0 ]]; then
         print_error "Prerequisites validation failed. Please ensure all required files are present."
         exit 1
+    fi
+    
+    # Check disk space (require at least 5GB free)
+    local free_space_gb=$(df -g / | awk 'NR==2 {print $4}')
+    if [[ $free_space_gb -lt 5 ]]; then
+        print_warning "Low disk space: ${free_space_gb}GB free (recommended: 5GB+)"
+        read -p "Continue anyway? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    fi
+    
+    # Check for sudo access
+    if ! sudo -n true 2>/dev/null; then
+        print_info "This script will require sudo access for some operations."
+        if ! sudo -v; then
+            print_error "Failed to obtain sudo access"
+            exit 1
+        fi
     fi
     
     print_success "Prerequisites validation passed"

@@ -1,0 +1,45 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        with:
+          release-type: simple
+          package-name: macbook-dev-setup
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Commit message prefixes that trigger releases
+          include-component-in-tag: false
+          changelog-types: |
+            [
+              {"type": "feat", "section": "Features", "hidden": false},
+              {"type": "fix", "section": "Bug Fixes", "hidden": false},
+              {"type": "perf", "section": "Performance Improvements", "hidden": false},
+              {"type": "revert", "section": "Reverts", "hidden": false},
+              {"type": "docs", "section": "Documentation", "hidden": false},
+              {"type": "style", "section": "Styles", "hidden": true},
+              {"type": "chore", "section": "Miscellaneous Chores", "hidden": true},
+              {"type": "refactor", "section": "Code Refactoring", "hidden": false},
+              {"type": "test", "section": "Tests", "hidden": true},
+              {"type": "build", "section": "Build System", "hidden": true},
+              {"type": "ci", "section": "Continuous Integration", "hidden": true}
+            ]
+          
+          # Version files to update
+          extra-files: |
+            - path: VERSION
+              type: plain
+            - path: setup.sh
+              type: shell
+              glob: "VERSION=*"
