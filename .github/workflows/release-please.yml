@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,7 +18,9 @@ jobs:
         with:
           release-type: simple
           package-name: macbook-dev-setup
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT if GITHUB_TOKEN doesn't have permission to create PRs
+          # Create a PAT with repo and workflow scopes, then add it as RELEASE_TOKEN secret
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           
           # Commit message prefixes that trigger releases
           include-component-in-tag: false
