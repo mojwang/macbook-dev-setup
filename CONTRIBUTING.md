@@ -27,6 +27,17 @@ Thank you for your interest in contributing! This guide will help you get starte
 3. **Add tests** for new functionality
 4. **Update documentation** as needed
 5. **Test your changes** thoroughly
+6. **Ensure all CI checks pass** before requesting review
+
+#### Branch Protection
+
+The `main` branch is protected with the following rules:
+- **No force pushes** or deletions allowed
+- **Status checks must pass** (tests, documentation validation, security scan)
+- **Pull request approval required** (except for repository admin)
+- **Branches must be up to date** before merging
+
+See [Branch Protection Guide](docs/branch-protection.md) for detailed information.
 
 ## 📋 Development Process
 
@@ -65,7 +76,12 @@ git checkout -b feature/your-feature-name
 
 # Validate scripts with shellcheck
 shellcheck scripts/*.sh
+
+# Run pre-push validation (recommended before pushing)
+./scripts/pre-push-check.sh
 ```
+
+**Note**: GitHub Actions will run these same checks. Running them locally first saves time.
 
 ### 4. Submitting Your Changes
 
@@ -136,9 +152,14 @@ git push origin feature/your-feature-name
 ## 🔍 Code Review Process
 
 1. **Automated checks** run via GitHub Actions
+   - `test` - Full test suite
+   - `validate-documentation` - Markdown validation
+   - `security-scan` - Secret detection
+   - `all-checks-pass` - Summary check
 2. **Manual review** by maintainers
 3. **Feedback addressed** through commits
-4. **Approval required** before merging
+4. **Approval required** before merging (1 reviewer minimum)
+5. **All status checks must pass** before merge is allowed
 
 ## 📜 Guidelines
 

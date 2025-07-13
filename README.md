@@ -285,7 +285,9 @@ If you encounter issues:
 
 ## 🤝 Contributing
 
-Feel free to submit improvements via pull requests!
+Feel free to submit improvements via pull requests! Please review our:
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute
+- [Branch Protection](docs/branch-protection.md) - Repository workflow and protection rules
 
 ## 📄 License
 
