@@ -309,11 +309,11 @@ sync_packages() {
     fi
     
     # Sync global npm packages
-    if command_exists npm && [[ -f "node/global-packages.txt" ]]; then
+    if command_exists npm && [[ -f "nodejs-config/global-packages.txt" ]]; then
         print_info "Syncing global npm packages..."
         
         if [[ "$DRY_RUN" == true ]]; then
-            print_dry_run "Would install missing npm packages from node/global-packages.txt"
+            print_dry_run "Would install missing npm packages from nodejs-config/global-packages.txt"
         else
             # Get list of installed global packages
             local installed_npm=""
@@ -335,7 +335,7 @@ sync_packages() {
                         ((sync_failed++))
                     fi
                 fi
-            done < "node/global-packages.txt"
+            done < "nodejs-config/global-packages.txt"
             
             print_success "npm package sync completed"
         fi
@@ -418,7 +418,7 @@ validate_prerequisites() {
         "scripts/setup-dotfiles.sh"
         "scripts/setup-applications.sh"
         "homebrew/Brewfile"
-        "node/global-packages.txt"
+        "nodejs-config/global-packages.txt"
         "python/requirements.txt"
         "dotfiles/.config/nvim/init.lua"
     )
@@ -769,7 +769,7 @@ main() {
     if command_exists nvm || [[ "$DRY_RUN" == true ]]; then
         lang_commands+=(
             "source ~/.zshrc 2>/dev/null || true; nvm install node; nvm use node"
-            "npm install -g \$(cat node/global-packages.txt | tr '\\n' ' ')"
+            "npm install -g \$(cat nodejs-config/global-packages.txt | tr '\\n' ' ')"
         )
     fi
     

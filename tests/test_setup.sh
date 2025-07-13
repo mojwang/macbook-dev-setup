@@ -75,7 +75,7 @@ assert_true "grep -q './scripts/setup-vscode-extensions.sh' '$ROOT_DIR/setup.sh'
 
 it "should sync npm packages in sync_packages"
 assert_true "grep -q 'npm list -g --depth=0 --json' '$ROOT_DIR/setup.sh'" "sync_packages should check installed npm packages"
-assert_true "grep -q 'node/global-packages.txt' '$ROOT_DIR/setup.sh'" "sync_packages should read global-packages.txt"
+assert_true "grep -q 'nodejs-config/global-packages.txt' '$ROOT_DIR/setup.sh'" "sync_packages should read global-packages.txt"
 
 it "should sync Python packages in sync_packages"
 assert_true "grep -q 'pip install -r python/requirements.txt' '$ROOT_DIR/setup.sh'" "sync_packages should install Python requirements"

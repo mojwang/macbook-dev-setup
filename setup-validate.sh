@@ -208,7 +208,7 @@ validate_directories() {
 # Validate file contents
 validate_file_contents() {
     print_step "Validating file contents..."
-    if [[ -f "node/global-packages.txt" ]]; then
+    if [[ -f "nodejs-config/global-packages.txt" ]]; then
         print_dry_run "Would validate Node.js package list syntax"
     fi
     if [[ -f "python/requirements.txt" ]]; then
@@ -307,7 +307,7 @@ validate_file_contents_enhanced() {
     print_step "Validating file contents (enhanced)..."
     
     # Validate Node.js packages
-    if [[ -f "node/global-packages.txt" ]]; then
+    if [[ -f "nodejs-config/global-packages.txt" ]]; then
         print_dry_run "Would validate Node.js package names in global-packages.txt"
         # In a real implementation, we'd check each package name format
     fi
@@ -567,7 +567,7 @@ validate_prerequisites() {
         "scripts/setup-applications.sh"
         "scripts/setup-macos.sh"
         "homebrew/Brewfile"
-        "node/global-packages.txt"
+        "nodejs-config/global-packages.txt"
         "python/requirements.txt"
         "dotfiles/.config/nvim/init.lua"
     )
@@ -677,7 +677,7 @@ main() {
         fi
         execute_command "nvm install node" "Install latest Node.js version"
         execute_command "nvm use node" "Set Node.js as default"
-        execute_command "npm install -g \$(cat node/global-packages.txt | tr '\\n' ' ')" "Install global npm packages"
+        execute_command "npm install -g \$(cat nodejs-config/global-packages.txt | tr '\\n' ' ')" "Install global npm packages"
     else
         print_warning "NVM not found, skipping Node.js setup"
     fi

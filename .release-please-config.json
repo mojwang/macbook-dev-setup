@@ -1,7 +1,7 @@
 {
   "packages": {
     ".": {
-      "releaseType": "node",
+      "releaseType": "simple",
       "packageName": "macbook-dev-setup",
       "includeComponentInTag": false,
       "changelogSections": [

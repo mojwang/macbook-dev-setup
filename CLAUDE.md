@@ -48,7 +48,7 @@ commit-help                  # Show commit format reference
 The `--sync` flag detects and installs new packages added to configuration files:
 - Checks `homebrew/Brewfile` for new formulae/casks
 - Syncs VS Code extensions from `vscode/extensions.txt`
-- Installs missing global npm packages from `node/global-packages.txt`
+- Installs missing global npm packages from `nodejs-config/global-packages.txt`
 - Updates Python packages from `python/requirements.txt`
 - Use `--sync --minimal` to sync only essential packages from `Brewfile.minimal`
 
@@ -87,7 +87,7 @@ The `--sync` flag detects and installs new packages added to configuration files
   - `50-environment.zsh`: Environment variables and settings
   - `99-local.zsh`: Local customizations (gitignored)
 - `dotfiles/.gitconfig`: Git configuration with diff-so-fancy integration
-- `node/global-packages.txt`: Global npm packages to install
+- `nodejs-config/global-packages.txt`: Global npm packages to install
 - `python/requirements.txt`: Python packages to install
 - `vscode/settings.json`: VS Code user settings
 - `vscode/extensions.txt`: VS Code extensions list
