@@ -1,0 +1,29 @@
+{
+  "packages": {
+    ".": {
+      "releaseType": "simple",
+      "packageName": "macbook-dev-setup",
+      "includeComponentInTag": false,
+      "changelogSections": [
+        {"type": "feat", "section": "Features"},
+        {"type": "fix", "section": "Bug Fixes"},
+        {"type": "perf", "section": "Performance Improvements"},
+        {"type": "revert", "section": "Reverts"},
+        {"type": "docs", "section": "Documentation"},
+        {"type": "refactor", "section": "Code Refactoring"}
+      ],
+      "extraFiles": [
+        {
+          "type": "plain-text",
+          "path": "VERSION"
+        },
+        {
+          "type": "generic",
+          "path": "setup.sh",
+          "glob": "VERSION=\"*\""
+        }
+      ]
+    }
+  },
+  "skipLabeling": true
+}
