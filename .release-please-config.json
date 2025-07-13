@@ -18,7 +18,7 @@
       ],
       "extra-files": [
         {
-          "type": "plain-text",
+          "type": "plain",
           "path": "VERSION"
         },
         {
