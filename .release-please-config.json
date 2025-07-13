@@ -17,10 +17,7 @@
         {"type": "refactor", "section": "Code Refactoring"}
       ],
       "extra-files": [
-        {
-          "type": "plain",
-          "path": "VERSION"
-        },
+        "VERSION",
         {
           "type": "generic",
           "path": "setup.sh",
