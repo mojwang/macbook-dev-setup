@@ -1,10 +1,14 @@
 {
+  "release-type": "simple",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
   "packages": {
     ".": {
-      "releaseType": "simple",
-      "packageName": "macbook-dev-setup",
-      "includeComponentInTag": false,
-      "changelogSections": [
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "simple",
+      "package-name": "macbook-dev-setup",
+      "include-component-in-tag": false,
+      "changelog-sections": [
         {"type": "feat", "section": "Features"},
         {"type": "fix", "section": "Bug Fixes"},
         {"type": "perf", "section": "Performance Improvements"},
@@ -12,7 +16,7 @@
         {"type": "docs", "section": "Documentation"},
         {"type": "refactor", "section": "Code Refactoring"}
       ],
-      "extraFiles": [
+      "extra-files": [
         {
           "type": "plain-text",
           "path": "VERSION"
@@ -25,5 +29,5 @@
       ]
     }
   },
-  "skipLabeling": true
+  "skip-labeling": true
 }

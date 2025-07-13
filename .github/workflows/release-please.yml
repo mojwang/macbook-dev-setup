@@ -14,7 +14,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         with:
           # Use a PAT if GITHUB_TOKEN doesn't have permission to create PRs
           # Create a PAT with repo and workflow scopes, then add it as RELEASE_TOKEN secret
