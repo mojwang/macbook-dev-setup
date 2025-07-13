@@ -1,0 +1,39 @@
+# Minimal Brewfile - Essential Development Tools Only
+# Use with: ./setup.sh --sync --minimal
+
+# Core version control
+brew "git"
+brew "gh"                    # GitHub CLI
+
+# Essential programming languages
+brew "node"
+brew "python"
+
+# Modern CLI essentials
+brew "bat"                   # Enhanced cat
+brew "eza"                   # Enhanced ls
+brew "fzf"                   # Fuzzy finder
+brew "ripgrep"               # Enhanced grep
+
+# Development utilities
+brew "jq"                    # JSON processor
+brew "wget"
+brew "curl"
+brew "tldr"                  # Simplified man pages
+
+# Text editors
+brew "vim"
+brew "neovim"
+
+# Terminal enhancements
+brew "starship"              # Modern prompt
+brew "tmux"                  # Terminal multiplexer
+
+# Essential applications (casks)
+cask "visual-studio-code"    # Primary code editor
+cask "iterm2"                # Terminal emulator
+cask "docker"                # Container platform
+cask "rectangle"             # Window management
+
+# Note: VS Code extensions are managed separately
+# Run: ./scripts/setup-vscode-extensions.sh

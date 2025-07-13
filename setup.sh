@@ -9,6 +9,7 @@ source "$(dirname "$0")/lib/common.sh"
 
 # Global variables
 UPDATE_MODE=false
+SYNC_MODE=false
 PARALLEL_JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 CONFIG_FILE="$ROOT_DIR/config/setup.yaml"
 RUN_HEALTH_CHECK=false
@@ -26,10 +27,11 @@ Development Environment Setup Script
 Usage: $0 [OPTIONS]
 
 Options:
-    -d, --dry-run       Show what would be done without executing (delegates to fast test script)
+    -d, --dry-run       Show what would be done without executing (delegates to setup-validate.sh)
     -v, --verbose       Enable verbose output
     -l, --log FILE      Write logs to specified file
     -u, --update        Update and upgrade existing packages and tools
+    -s, --sync          Sync packages from configuration files (Brewfile, extensions.txt, etc.)
     -j, --jobs N        Set number of parallel jobs (default: $PARALLEL_JOBS)
     -c, --config FILE   Use custom configuration file (default: config/setup.yaml)
     --check             Run health check after installation
@@ -56,6 +58,8 @@ Examples:
     $0 --minimal                    # Essential tools only
     $0 --config my-config.yaml      # Use custom configuration
     $0 --profile web_developer      # Use web developer profile
+    $0 --sync                       # Sync new packages from config files
+    $0 --sync --update              # Sync new packages then update all
     $0 --update --check             # Update everything and verify
     $0 --health                     # Just run health check
 
@@ -87,6 +91,10 @@ parse_args() {
                 ;;
             -u|--update)
                 UPDATE_MODE=true
+                shift
+                ;;
+            -s|--sync)
+                SYNC_MODE=true
                 shift
                 ;;
             -j|--jobs)
@@ -247,6 +255,104 @@ update_packages() {
         execute_parallel "${update_commands[@]}"
         print_success "All package updates completed"
     fi
+}
+
+# Sync packages from configuration files
+sync_packages() {
+    print_step "Syncing packages from configuration files..."
+    
+    local sync_commands=()
+    local sync_failed=0
+    
+    # Sync Homebrew packages
+    if command_exists brew; then
+        print_info "Checking Brewfile for new packages..."
+        
+        local brewfile="homebrew/Brewfile"
+        if [[ "$MINIMAL_INSTALL" == true ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
+            brewfile="homebrew/Brewfile.minimal"
+            print_info "Using minimal Brewfile"
+        fi
+        
+        if [[ -f "$brewfile" ]]; then
+            # Check what's missing
+            if ! brew bundle check --file="$brewfile" &>/dev/null; then
+                print_info "Installing missing Homebrew packages..."
+                if [[ "$DRY_RUN" == true ]]; then
+                    print_dry_run "Would run: brew bundle --file=$brewfile"
+                else
+                    if ! brew bundle --file="$brewfile"; then
+                        print_warning "Some Homebrew packages failed to install"
+                        ((sync_failed++))
+                    fi
+                fi
+            else
+                print_success "All Homebrew packages are already installed"
+            fi
+        fi
+    fi
+    
+    # Sync VS Code extensions
+    if command_exists code && [[ -f "vscode/extensions.txt" ]]; then
+        print_info "Syncing VS Code extensions..."
+        if [[ "$DRY_RUN" == true ]]; then
+            print_dry_run "Would run: ./scripts/setup-vscode-extensions.sh"
+        else
+            if ! ./scripts/setup-vscode-extensions.sh; then
+                print_warning "Some VS Code extensions failed to install"
+                ((sync_failed++))
+            fi
+        fi
+    fi
+    
+    # Sync global npm packages
+    if command_exists npm && [[ -f "node/global-packages.txt" ]]; then
+        print_info "Syncing global npm packages..."
+        
+        if [[ "$DRY_RUN" == true ]]; then
+            print_dry_run "Would install missing npm packages from node/global-packages.txt"
+        else
+            # Get list of installed global packages
+            local installed_npm=$(npm list -g --depth=0 --json 2>/dev/null | jq -r '.dependencies | keys[]' 2>/dev/null || echo "")
+            
+            # Read desired packages and install missing ones
+            while IFS= read -r package; do
+                [[ -z "$package" || "$package" =~ ^[[:space:]]*# ]] && continue
+                
+                if ! echo "$installed_npm" | grep -q "^$package$"; then
+                    print_info "Installing npm package: $package"
+                    if ! npm install -g "$package"; then
+                        print_warning "Failed to install npm package: $package"
+                        ((sync_failed++))
+                    fi
+                fi
+            done < "node/global-packages.txt"
+            
+            print_success "npm package sync completed"
+        fi
+    fi
+    
+    # Sync Python packages
+    if command_exists pip && [[ -f "python/requirements.txt" ]]; then
+        print_info "Syncing Python packages..."
+        
+        if [[ "$DRY_RUN" == true ]]; then
+            print_dry_run "Would run: pip install -r python/requirements.txt"
+        else
+            if ! pip install -r python/requirements.txt; then
+                print_warning "Some Python packages failed to install"
+                ((sync_failed++))
+            fi
+        fi
+    fi
+    
+    if [[ $sync_failed -eq 0 ]]; then
+        print_success "Package sync completed successfully"
+    else
+        print_warning "Package sync completed with $sync_failed warnings"
+    fi
+    
+    return $sync_failed
 }
 
 
@@ -444,15 +550,21 @@ main() {
     # Parse command line arguments
     parse_args "$@"
     
-    # Performance optimization: delegate dry-runs to the fast test script
+    # Validate flag combinations
+    if [[ "$UPDATE_MODE" == true ]] && [[ "$MINIMAL_INSTALL" == true ]]; then
+        print_warning "Note: --minimal flag affects --sync operations, not --update"
+        print_info "--update will update ALL installed packages regardless of --minimal"
+    fi
+    
+    # Performance optimization: delegate dry-runs to the fast validation script
     if [[ "$DRY_RUN" == true ]]; then
-        if [[ -f "setup-test.sh" ]]; then
-            echo -e "${BLUE}» Delegating to fast dry-run script for optimal performance${NC}"
-            echo -e "${YELLOW}Running setup-test.sh --dry-run for 6x faster execution${NC}"
+        if [[ -f "setup-validate.sh" ]]; then
+            echo -e "${BLUE}» Delegating to fast validation script for optimal performance${NC}"
+            echo -e "${YELLOW}Running setup-validate.sh for 6x faster execution${NC}"
             echo ""
-            exec ./setup-test.sh "$@"
+            exec ./setup-validate.sh "$@"
         else
-            print_warning "setup-test.sh not found, running dry-run with overhead"
+            print_warning "setup-validate.sh not found, running dry-run with overhead"
         fi
     fi
     
@@ -462,13 +574,31 @@ main() {
         print_step "Logging to: $LOG_FILE"
     fi
     
-    # Handle update mode
-    if [[ "$UPDATE_MODE" == true ]]; then
+    # Handle sync and update modes (can be combined)
+    if [[ "$SYNC_MODE" == true ]] || [[ "$UPDATE_MODE" == true ]]; then
         echo -e "${BLUE}"
-        echo "↻ OPTIMIZED UPDATE MODE"
-        echo "======================="
+        if [[ "$SYNC_MODE" == true ]] && [[ "$UPDATE_MODE" == true ]]; then
+            echo "↻ SYNC & UPDATE MODE"
+            echo "===================="
+        elif [[ "$SYNC_MODE" == true ]]; then
+            echo "↻ PACKAGE SYNC MODE"
+            echo "==================="
+        else
+            echo "↻ OPTIMIZED UPDATE MODE"
+            echo "======================="
+        fi
         echo -e "${NC}"
-        update_packages
+        
+        # Run sync first if requested
+        if [[ "$SYNC_MODE" == true ]]; then
+            sync_packages
+        fi
+        
+        # Then run update if requested
+        if [[ "$UPDATE_MODE" == true ]]; then
+            update_packages
+        fi
+        
         show_performance_stats
         exit 0
     fi
@@ -525,7 +655,7 @@ main() {
     echo "» High-Performance Development Environment Setup"
     echo "================================================="
     echo "Using $PARALLEL_JOBS parallel jobs for optimal performance"
-    echo "For testing/validation, use: ./setup-test.sh --dry-run"
+    echo "For testing/validation, use: ./setup-validate.sh --dry-run"
     echo -e "${NC}"
     
     # Validate prerequisites

@@ -37,10 +37,10 @@ This repository includes two scripts optimized for different use cases:
 - **Use for**: Actual environment setup, production deployments, CI/CD
 - **Features**: Parallel processing (16 cores), optimized package management
 - **Performance**: 6x faster I/O operations, 30-50% faster overall setup
-- **Dry-run**: Automatically delegates to `setup-test.sh` for optimal performance
+- **Dry-run**: Automatically delegates to `setup-validate.sh` for optimal performance
 - **Safety**: Never runs in dry-run mode, always performs real setup
 
-### 🧪 `setup-test.sh` - Testing & Validation Only
+### 🧪 `setup-validate.sh` - Testing & Validation Only
 - **Use for**: Testing, validation, dry-runs, development iteration
 - **Features**: Never performs actual setup, pure validation mode
 - **Performance**: 6x faster execution, minimal overhead
@@ -183,7 +183,7 @@ Examples:
 dev-setup/
 ├── README.md                   # This file
 ├── setup.sh                    # Main setup script
-├── setup-test.sh               # Fast validation script
+├── setup-validate.sh           # Fast validation script
 ├── lib/
 │   └── common.sh               # Shared functions library
 ├── scripts/

@@ -58,3 +58,7 @@ private/
 homebrew/Brewfile.lock.json
 # GPG signing configured
 health-report.txt
+
+# Local zsh customizations
+dotfiles/.config/zsh/99-local.zsh
+dotfiles/.config/zsh/migrated

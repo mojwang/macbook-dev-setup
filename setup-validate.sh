@@ -11,6 +11,7 @@ DRY_RUN=false
 VERBOSE=false
 LOG_FILE=""
 UPDATE_MODE=false
+SYNC_MODE=false
 CONFIG_FILE=""
 MINIMAL_INSTALL=false
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -74,7 +75,7 @@ Quick Actions:
     --health            Run health check and exit
     --test              Run test suite and exit
 
-Note: This script is for testing and validation ONLY. It never performs actual setup.
+Note: This script is for validation and dry-runs ONLY. It never performs actual setup.
 For production setup, use setup.sh
 
 Examples:
@@ -115,6 +116,14 @@ parse_args() {
                 ;;
             --minimal)
                 MINIMAL_INSTALL=true
+                shift
+                ;;
+            -u|--update)
+                UPDATE_MODE=true
+                shift
+                ;;
+            -s|--sync)
+                SYNC_MODE=true
                 shift
                 ;;
             --show-config)
