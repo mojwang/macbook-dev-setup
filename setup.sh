@@ -5,7 +5,7 @@
 # For macOS Apple Silicon
 # Version: 0.1.0
 
-VERSION="0.1.0" # x-release-please-version
+VERSION="1.0.1" # x-release-please-version
 
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
