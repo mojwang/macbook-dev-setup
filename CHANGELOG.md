@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/mojwang/macbook-dev-setup/compare/v1.0.0...v1.0.1) (2025-07-14)
+
+
+### Bug Fixes
+
+* configure semantic-release to use PAT for branch protection bypass ([5a3fffa](https://github.com/mojwang/macbook-dev-setup/commit/5a3fffa93397580ea70c6a7a963e137551c9bd6d))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
