@@ -1,62 +1,64 @@
 #!/bin/bash
 
-# Install Homebrew with error handling
-set -e
+# Install Homebrew with error handling and security verification
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Load common library
+source "$(dirname "$0")/../lib/common.sh"
 
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
+# Homebrew installation configuration
+readonly HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+readonly TEMP_DIR="$(mktemp -d)"
+readonly INSTALL_SCRIPT="$TEMP_DIR/install.sh"
+
+# Cleanup on exit
+cleanup() {
+    rm -rf "$TEMP_DIR"
 }
-
-print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
+trap cleanup EXIT
 
 # Check if Homebrew is already installed
-if command -v brew &> /dev/null; then
+if command_exists brew; then
     print_success "Homebrew is already installed"
+    brew_version=$(brew --version | head -n1)
+    print_info "Current version: $brew_version"
     exit 0
 fi
 
-# Download and verify Homebrew install script
-INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-TEMP_SCRIPT="/tmp/homebrew_install.sh"
+print_step "Downloading Homebrew installation script..."
 
-echo "Downloading Homebrew installation script..."
-if ! curl -fsSL "$INSTALL_SCRIPT_URL" -o "$TEMP_SCRIPT"; then
-    print_error "Failed to download Homebrew installation script"
-    exit 1
+# Download installation script with retry
+if ! download_with_retry "$HOMEBREW_INSTALL_URL" "$INSTALL_SCRIPT"; then
+    die "Failed to download Homebrew installation script after multiple attempts"
 fi
 
 # Basic verification - check if script contains expected content
-if ! grep -q "Homebrew" "$TEMP_SCRIPT"; then
-    print_error "Downloaded script doesn't appear to be the Homebrew installer"
-    rm -f "$TEMP_SCRIPT"
-    exit 1
+if ! grep -q "Homebrew" "$INSTALL_SCRIPT"; then
+    die "Downloaded script doesn't appear to be the Homebrew installer"
 fi
+
+# Additional security check - verify script size is reasonable (should be ~20-50KB)
+script_size=$(stat -f%z "$INSTALL_SCRIPT" 2>/dev/null || stat -c%s "$INSTALL_SCRIPT" 2>/dev/null || echo 0)
+if [[ $script_size -lt 10000 ]] || [[ $script_size -gt 100000 ]]; then
+    die "Homebrew installer size ($script_size bytes) is outside expected range (10KB-100KB)"
+fi
+
+print_success "Homebrew installer downloaded and verified"
 
 # Install Homebrew
-echo "Installing Homebrew..."
-if ! /bin/bash "$TEMP_SCRIPT"; then
-    print_error "Homebrew installation failed"
-    rm -f "$TEMP_SCRIPT"
-    exit 1
+print_step "Installing Homebrew..."
+print_info "This may take a few minutes and will ask for your password"
+
+# Ensure output is flushed before running interactive installer
+printf "\n"
+
+if ! /bin/bash "$INSTALL_SCRIPT"; then
+    die "Homebrew installation failed"
 fi
 
-# Cleanup temporary script
-rm -f "$TEMP_SCRIPT"
+print_success "Homebrew core installation completed"
 
-# Add Homebrew to PATH for Apple Silicon
-if [[ $(uname -m) == "arm64" ]]; then
+# Determine Homebrew path based on architecture
+if check_apple_silicon; then
     BREW_PATH="/opt/homebrew/bin/brew"
     SHELL_ENV_CMD='eval "$(/opt/homebrew/bin/brew shellenv)"'
 else
@@ -65,24 +67,64 @@ else
 fi
 
 # Add to shell profile if not already present
-if [[ -f ~/.zprofile ]] && ! grep -q "$SHELL_ENV_CMD" ~/.zprofile; then
-    echo "$SHELL_ENV_CMD" >> ~/.zprofile
-elif [[ ! -f ~/.zprofile ]]; then
-    echo "$SHELL_ENV_CMD" >> ~/.zprofile
+print_step "Configuring shell environment..."
+shell_profiles=(~/.zprofile ~/.bash_profile ~/.profile)
+
+for profile in "${shell_profiles[@]}"; do
+    if [[ -f "$profile" ]]; then
+        if ! grep -q "brew shellenv" "$profile"; then
+            echo "$SHELL_ENV_CMD" >> "$profile"
+            print_info "Added Homebrew to $profile"
+        fi
+    fi
+done
+
+# Create .zprofile if it doesn't exist
+if [[ ! -f ~/.zprofile ]]; then
+    echo "$SHELL_ENV_CMD" > ~/.zprofile
+    print_info "Created ~/.zprofile with Homebrew configuration"
 fi
 
-# Source the environment for current session
-if [[ -x "$BREW_PATH" ]]; then
-    eval "$($BREW_PATH shellenv)"
+# Configure PATH for current session
+print_step "Configuring Homebrew environment..."
+
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    # Apple Silicon path
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    brew_path="/opt/homebrew"
+elif [[ -f "/usr/local/bin/brew" ]]; then
+    # Intel Mac path
+    eval "$(/usr/local/bin/brew shellenv)"
+    brew_path="/usr/local"
 else
-    print_error "Homebrew installation verification failed"
-    exit 1
+    die "Unable to find Homebrew installation"
+fi
+
+# Verify installation
+if command_exists brew; then
+    print_success "Homebrew installed successfully"
+    brew_version=$(brew --version | head -n1)
+    print_info "Version: $brew_version"
+    print_info "Location: $brew_path"
+else
+    die "Homebrew installation verification failed"
 fi
 
 # Update Homebrew
-if ! brew update; then
+print_step "Updating Homebrew..."
+if brew update --quiet; then
+    print_success "Homebrew updated successfully"
+else
     print_warning "Failed to update Homebrew, but installation was successful"
-    exit 0
 fi
 
-print_success "Homebrew installed and updated successfully"
+# Run initial brew doctor to check for issues
+print_step "Running brew doctor to check system..."
+if brew doctor; then
+    print_success "Homebrew system check passed"
+else
+    print_warning "Homebrew reported some issues - they may not be critical"
+fi
+
+print_success "Homebrew setup completed successfully!"
+echo ""

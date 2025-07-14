@@ -1,0 +1,144 @@
+# Development Environment Setup Configuration
+# This file allows you to customize which tools and components are installed
+
+# Core settings
+settings:
+  # Enable verbose output by default
+  verbose: false
+  # Create logs by default
+  log_file: ""
+  # Number of parallel jobs
+  parallel_jobs: 8
+
+# Component selection - set to false to skip installation
+components:
+  # Core tools
+  homebrew: true
+  git: true
+  
+  # Programming languages
+  languages:
+    nodejs: true
+    python: true
+    go: true
+    rust: true
+    java: false  # Disabled by default due to size
+    ruby: true
+  
+  # Version managers
+  version_managers:
+    nvm: true
+    pyenv: true
+    rbenv: true
+  
+  # Databases
+  databases:
+    postgresql: true
+    mysql: false  # Optional
+    redis: true
+    sqlite: true
+  
+  # Cloud tools
+  cloud:
+    aws_cli: true
+    azure_cli: false  # Optional
+    google_cloud_sdk: false  # Optional
+    
+  # Container tools
+  containers:
+    docker: true
+    kubernetes:
+      kubectl: true
+      helm: true
+      minikube: false  # Optional, uses resources
+    
+  # Development tools
+  dev_tools:
+    vscode: true
+    neovim: true
+    postman: true
+    insomnia: false  # Alternative to Postman
+    tableplus: true
+    
+  # Shell enhancements
+  shell:
+    oh_my_zsh: false  # Optional, some prefer minimal
+    starship: true
+    fzf: true
+    bat: true
+    eza: true
+    ripgrep: true
+    
+  # Applications
+  applications:
+    browsers:
+      chrome: true
+      firefox: true
+      brave: false  # Optional
+      edge: false   # Optional
+    communication:
+      slack: true
+      discord: false  # Optional
+    productivity:
+      notion: true
+      1password: true
+      raycast: true
+      rectangle: true
+
+# Custom packages - add your own formulae and casks
+custom:
+  formulae: []
+    # - htop
+    # - tree
+    # - wget
+  
+  casks: []
+    # - iterm2
+    # - sublime-text
+    # - jetbrains-toolbox
+  
+  npm_packages: []
+    # - typescript
+    # - eslint
+    # - prettier
+  
+  python_packages: []
+    # - black
+    # - pytest
+    # - jupyter
+
+# Feature flags
+features:
+  # Automatically configure Git with system name
+  auto_configure_git: true
+  # Set up macOS system preferences
+  configure_macos: true
+  # Install VS Code extensions
+  install_vscode_extensions: true
+  # Configure shell aliases
+  setup_aliases: true
+  # Create restore points
+  create_restore_points: true
+
+# Profiles - predefined configurations for different roles
+# Uncomment the profile you want to use, or create your own
+profiles:
+  # web_developer:
+  #   languages: [nodejs, python]
+  #   databases: [postgresql, redis]
+  #   tools: [vscode, postman]
+  
+  # data_scientist:
+  #   languages: [python, r]
+  #   tools: [jupyter, rstudio]
+  #   custom_python: [pandas, numpy, scikit-learn]
+  
+  # devops_engineer:
+  #   languages: [python, go]
+  #   cloud: [aws_cli, terraform, ansible]
+  #   containers: [docker, kubernetes]
+  
+  # mobile_developer:
+  #   languages: [nodejs, java]
+  #   tools: [android-studio, xcode]
+  #   custom_casks: [flutter]

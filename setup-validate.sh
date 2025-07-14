@@ -11,6 +11,10 @@ DRY_RUN=false
 VERBOSE=false
 LOG_FILE=""
 UPDATE_MODE=false
+SYNC_MODE=false
+CONFIG_FILE=""
+MINIMAL_INSTALL=false
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Colors for output
 RED='\033[0;31m'
@@ -22,27 +26,27 @@ NC='\033[0m' # No Color
 
 # Helper functions
 print_step() {
-    echo -e "${BLUE}🔧 $1${NC}"
+    echo -e "${BLUE}→ $1${NC}"
     log_message "STEP: $1"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✓ $1${NC}"
     log_message "SUCCESS: $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}! $1${NC}"
     log_message "WARNING: $1"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}✗ $1${NC}"
     log_message "ERROR: $1"
 }
 
 print_dry_run() {
-    echo -e "${PURPLE}🔍 [DRY RUN] $1${NC}"
+    echo -e "${PURPLE}◊ [DRY RUN] $1${NC}"
     log_message "DRY_RUN: $1"
 }
 
@@ -62,15 +66,29 @@ Options:
     -d, --dry-run       Show what would be done without executing
     -v, --verbose       Enable verbose output
     -l, --log FILE      Write logs to specified file
+    -c, --config FILE   Use custom configuration file (default: config/setup.yaml)
+    --minimal           Test minimal installation only
+    --show-config       Display configuration and exit
     -h, --help          Show this help message
 
-Note: This script is for testing and validation ONLY. It never performs actual setup.
+Quick Actions:
+    --health            Run health check and exit
+    --test              Run test suite and exit
+
+Note: This script is for validation and dry-runs ONLY. It never performs actual setup.
 For production setup, use setup.sh
 
 Examples:
     $0 --dry-run        # Fast preview (recommended)
     $0                  # Validate environment and prerequisites
     $0 -v -l test.log   # Verbose validation with logging
+    $0 --minimal        # Test minimal setup only
+    $0 --config custom.yaml  # Use custom configuration
+
+Related Scripts:
+    ./setup.sh              # Main setup script
+    ./scripts/health-check.sh   # System health verification
+    ./tests/run_tests.sh    # Run test suite
 
 EOF
     exit 0
@@ -91,6 +109,38 @@ parse_args() {
             -l|--log)
                 LOG_FILE="$2"
                 shift 2
+                ;;
+            -c|--config)
+                CONFIG_FILE="$2"
+                shift 2
+                ;;
+            --minimal)
+                MINIMAL_INSTALL=true
+                shift
+                ;;
+            -u|--update)
+                UPDATE_MODE=true
+                shift
+                ;;
+            -s|--sync)
+                SYNC_MODE=true
+                shift
+                ;;
+            --show-config)
+                if [[ -f "$ROOT_DIR/lib/config.sh" ]]; then
+                    source "$ROOT_DIR/lib/config.sh"
+                    check_config_file
+                    print_config_summary
+                else
+                    print_error "Configuration library not found"
+                fi
+                exit 0
+                ;;
+            --health)
+                exec ./scripts/health-check.sh
+                ;;
+            --test)
+                exec ./tests/run_tests.sh
                 ;;
             -h|--help)
                 show_help
@@ -158,7 +208,7 @@ validate_directories() {
 # Validate file contents
 validate_file_contents() {
     print_step "Validating file contents..."
-    if [[ -f "node/global-packages.txt" ]]; then
+    if [[ -f "nodejs-config/global-packages.txt" ]]; then
         print_dry_run "Would validate Node.js package list syntax"
     fi
     if [[ -f "python/requirements.txt" ]]; then
@@ -257,7 +307,7 @@ validate_file_contents_enhanced() {
     print_step "Validating file contents (enhanced)..."
     
     # Validate Node.js packages
-    if [[ -f "node/global-packages.txt" ]]; then
+    if [[ -f "nodejs-config/global-packages.txt" ]]; then
         print_dry_run "Would validate Node.js package names in global-packages.txt"
         # In a real implementation, we'd check each package name format
     fi
@@ -517,7 +567,7 @@ validate_prerequisites() {
         "scripts/setup-applications.sh"
         "scripts/setup-macos.sh"
         "homebrew/Brewfile"
-        "node/global-packages.txt"
+        "nodejs-config/global-packages.txt"
         "python/requirements.txt"
         "dotfiles/.config/nvim/init.lua"
     )
@@ -549,7 +599,7 @@ main() {
     fi
     
     echo -e "${PURPLE}"
-    echo "🔍 TESTING & VALIDATION MODE - No changes will be made"
+    echo "◊ TESTING & VALIDATION MODE - No changes will be made"
     echo "======================================================"
     echo -e "${NC}"
     
@@ -575,7 +625,7 @@ main() {
     fi
     
     echo -e "${BLUE}"
-    echo "🧪 Development Environment Testing & Validation"
+    echo "» Development Environment Testing & Validation"
     echo "==============================================="
     echo -e "${NC}"
     
@@ -589,6 +639,7 @@ main() {
     validate_file_contents_enhanced
     validate_script_dependencies
     validate_dependency_chains
+    validate_git_configuration
     validate_post_installation_state
     
     # Validate prerequisites
@@ -626,7 +677,7 @@ main() {
         fi
         execute_command "nvm install node" "Install latest Node.js version"
         execute_command "nvm use node" "Set Node.js as default"
-        execute_command "npm install -g \$(cat node/global-packages.txt | tr '\\n' ' ')" "Install global npm packages"
+        execute_command "npm install -g \$(cat nodejs-config/global-packages.txt | tr '\\n' ' ')" "Install global npm packages"
     else
         print_warning "NVM not found, skipping Node.js setup"
     fi
@@ -654,7 +705,7 @@ main() {
     
     # Completion message
     echo -e "${GREEN}"
-    echo "🧪 Testing & Validation Complete!"
+    echo "✓ Testing & Validation Complete!"
     echo "=================================="
     echo -e "${NC}"
     echo "The above shows what would be installed/configured."
@@ -670,6 +721,7 @@ main() {
     echo "✓ Enhanced syntax checking completed"
     echo "✓ Script dependencies validated"
     echo "✓ Dependency chains analyzed"
+    echo "✓ Git configuration validated"
     echo "✓ Post-installation state validated"
     echo "✓ Prerequisites checked"
     echo "✓ Installation steps validated"

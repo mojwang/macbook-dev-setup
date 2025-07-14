@@ -37,33 +37,16 @@ else
 fi
 
 # VS Code extensions
-EXTENSIONS_FILE="vscode/extensions.txt"
-if command -v code &> /dev/null; then
-    if [[ -f "$EXTENSIONS_FILE" ]]; then
-        echo "Installing VS Code extensions..."
-        failed_extensions=()
-        
-        while IFS= read -r extension; do
-            # Skip empty lines and comments
-            [[ -z "$extension" || "$extension" =~ ^[[:space:]]*# ]] && continue
-            
-            echo "Installing extension: $extension"
-            if ! code --install-extension "$extension" --force; then
-                failed_extensions+=("$extension")
-                print_warning "Failed to install extension: $extension"
-            fi
-        done < "$EXTENSIONS_FILE"
-        
-        if [[ ${#failed_extensions[@]} -eq 0 ]]; then
-            print_success "All VS Code extensions installed successfully"
-        else
-            print_warning "Some extensions failed to install: ${failed_extensions[*]}"
-        fi
+# Use the optimized extension installer script
+if [[ -f "scripts/setup-vscode-extensions.sh" ]]; then
+    echo "Setting up VS Code extensions..."
+    if ./scripts/setup-vscode-extensions.sh; then
+        print_success "VS Code extensions configured"
     else
-        print_warning "VS Code extensions file not found at $EXTENSIONS_FILE"
+        print_error "Failed to configure VS Code extensions"
     fi
 else
-    print_warning "VS Code not found, skipping extension installation"
+    print_warning "VS Code extension setup script not found"
 fi
 
 # VS Code settings setup

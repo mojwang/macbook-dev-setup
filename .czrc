@@ -1,0 +1,15 @@
+{
+  "commitizen": {
+    "name": "cz_conventional_commits",
+    "version": "3.0.0",
+    "tag_format": "v$version",
+    "update_changelog_on_bump": true,
+    "version_files": [
+      "VERSION",
+      "setup.sh:VERSION="
+    ],
+    "bump_message": "bump: version $current_version → $new_version",
+    "changelog_incremental": true,
+    "changelog_start_rev": "v0.1.0"
+  }
+}

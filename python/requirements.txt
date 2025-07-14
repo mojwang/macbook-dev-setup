@@ -9,6 +9,7 @@ flake8
 mypy
 pytest
 coverage
+pre-commit  # Git hooks framework
 
 # Jupyter Ecosystem for Interactive Development
 jupyter
@@ -21,6 +22,7 @@ ipywidgets
 requests
 pyyaml
 click
+commitizen  # Conventional commits helper
 
 # Data science basics (commonly used)
 # Uncomment if needed:
