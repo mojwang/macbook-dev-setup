@@ -20,6 +20,9 @@ jobs:
           # Create a PAT with repo and workflow scopes, then add it as RELEASE_TOKEN secret
           token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           
-          # Use config files for release configuration
-          config-file: .release-please-config.json
-          manifest-file: .release-please-manifest.json
+          # Simple release configuration
+          release-type: simple
+          package-name: macbook-dev-setup
+          extra-files: |
+            VERSION
+            setup.sh
