@@ -9,6 +9,15 @@ set -e
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
+# Add missing print_section function if not defined
+if ! type print_section &>/dev/null; then
+    print_section() {
+        echo ""
+        echo -e "${BLUE}→ $1${NC}"
+        echo "$(echo "$1" | sed 's/./-/g')"
+    }
+fi
+
 # Check if Warp is installed
 check_warp_installed() {
     if [[ "$TERM_PROGRAM" != "WarpTerminal" ]] && ! command -v warp &> /dev/null; then

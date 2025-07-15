@@ -91,6 +91,24 @@ install_packages() {
                     skipped_fonts+=("$cask")
                     continue
                 fi
+                
+                # Check if font files exist even if not installed via Homebrew
+                local font_pattern=""
+                case "$cask" in
+                    "font-anonymice-nerd-font")
+                        font_pattern="AnonymiceProNerdFont"
+                        ;;
+                    "font-symbols-only-nerd-font")
+                        font_pattern="SymbolsNerdFont"
+                        ;;
+                esac
+                
+                if [[ -n "$font_pattern" ]] && ls ~/Library/Fonts/*${font_pattern}* &>/dev/null 2>&1; then
+                    print_warning "Font files for $cask already exist in ~/Library/Fonts/"
+                    print_info "Skipping to avoid conflicts. To reinstall, remove existing font files first."
+                    skipped_fonts+=("$cask (existing files)")
+                    continue
+                fi
             elif brew list --cask "$cask" &>/dev/null; then
                 echo "Cask $cask already installed, skipping..."
                 continue
