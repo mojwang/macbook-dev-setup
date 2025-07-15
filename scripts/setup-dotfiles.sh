@@ -5,6 +5,9 @@
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
+# Load backup manager
+source "$(dirname "$0")/../lib/backup-manager.sh"
+
 print_step "Setting up dotfiles..."
 
 # Check if dotfiles directory exists
@@ -12,16 +15,16 @@ if [[ ! -d "$DOTFILES_DIR" ]]; then
     die "Dotfiles directory not found at $DOTFILES_DIR"
 fi
 
-# Create backup directory
-backup_dir="$HOME/.dotfiles_backup_$TIMESTAMP"
-mkdir -p "$backup_dir"
+# Create organized backup for dotfiles
+backup_dir=$(create_backup "dotfiles" "$HOME" "Dotfiles backup before setup")
 print_info "Created backup directory: $backup_dir"
 
-# Backup existing dotfiles
-backup_item ~/.zshrc "$backup_dir"
-backup_item ~/.gitconfig "$backup_dir"
-backup_item ~/.scripts "$backup_dir"
-backup_item ~/.config/nvim "$backup_dir"
+# Backup existing dotfiles with organization
+backup_organized ~/.zshrc "dotfiles" ".zshrc backup"
+backup_organized ~/.gitconfig "dotfiles" ".gitconfig backup"
+backup_organized ~/.scripts "dotfiles" "scripts backup"
+backup_organized ~/.config/nvim "dotfiles" "Neovim config backup"
+backup_organized ~/.config/zsh "dotfiles" "Zsh config backup"
 
 # Install dotfiles
 install_dotfile() {

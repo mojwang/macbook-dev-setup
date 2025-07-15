@@ -16,6 +16,10 @@ This is a macOS development environment setup repository designed for Apple Sili
 ./setup.sh fix          # Run diagnostics and fix common issues
 ./setup.sh warp         # Configure Warp terminal optimizations
 ./setup.sh help         # Show help message
+
+# Backup management (automatic - runs during setup)
+./setup.sh backup       # List all backups
+./setup.sh backup clean # Manually remove old backups (also automatic)
 ```
 
 ### For Power Users
@@ -36,6 +40,14 @@ The setup script now automatically detects Warp Terminal and offers to optimize 
 - Only installs safe, non-intrusive enhancements by default
 - Asks permission before making changes
 - Enhances git diffs, adds useful workflows, and improves developer experience
+
+### Organized Backup System
+All backups are now centrally organized in `~/.setup-backups/`:
+- **Categorized Structure**: dotfiles, restore-points, configs, scripts
+- **Automatic Cleanup**: Keeps only the 10 most recent backups per category
+- **Migration Support**: Automatically migrates old scattered backups
+- **Latest Symlinks**: Quick access to most recent backups
+- **Metadata Tracking**: Each backup includes timestamp and description
 
 ### Git Commit Helpers
 ```bash

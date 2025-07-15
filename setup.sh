@@ -9,6 +9,9 @@ VERSION="2.0.0"
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
 
+# Load backup manager
+source "$(dirname "$0")/lib/backup-manager.sh"
+
 # Environment variables for power users
 VERBOSE="${SETUP_VERBOSE:-false}"
 LOG_FILE="${SETUP_LOG:-}"
@@ -289,17 +292,29 @@ main_setup() {
     # Create restore point unless disabled
     if [[ "${SETUP_NO_BACKUP:-false}" != "true" ]]; then
         print_step "Creating restore point..."
-        local backup_dir="$HOME/.setup_backup_$(date +%Y%m%d_%H%M%S)"
-        mkdir -p "$backup_dir"
         
-        # Backup key files
-        for file in .zshrc .gitconfig .config/nvim; do
+        # Create organized restore point
+        local restore_point=$(create_backup "restore-points" "$HOME" "Setup restore point")
+        
+        # Backup key files to restore point
+        for file in .zshrc .gitconfig .config/nvim .bashrc .bash_profile; do
             if [[ -e "$HOME/$file" ]]; then
-                cp -r "$HOME/$file" "$backup_dir/" 2>/dev/null || true
+                if [[ -d "$HOME/$file" ]]; then
+                    cp -r "$HOME/$file" "$restore_point/" 2>/dev/null || true
+                else
+                    cp "$HOME/$file" "$restore_point/" 2>/dev/null || true
+                fi
             fi
         done
         
-        print_success "Restore point created: $backup_dir"
+        # Save current package states
+        if command -v brew &>/dev/null; then
+            brew list > "$restore_point/brew-packages.txt" 2>/dev/null || true
+            brew list --cask > "$restore_point/brew-casks.txt" 2>/dev/null || true
+        fi
+        
+        print_success "Restore point created: $restore_point"
+        export RESTORE_POINT="$restore_point"
     fi
     
     # Run prerequisites check
@@ -414,6 +429,33 @@ case "${1:-}" in
             print_info "Creating Warp setup script..."
             # This would be created in the next step
         fi
+        ;;
+    
+    "backup")
+        # Backup management subcommands
+        case "${2:-list}" in
+            "list")
+                list_backups
+                ;;
+            "migrate")
+                print_info "Migrating old backups to organized structure..."
+                migrate_old_backups
+                ;;
+            "clean")
+                print_info "Cleaning old backups..."
+                for category in "${BACKUP_CATEGORIES[@]}"; do
+                    clean_old_backups "$category"
+                done
+                print_success "Backup cleanup complete"
+                ;;
+            *)
+                echo "Usage: ./setup.sh backup [list|clean]"
+                echo "  list    - List all backups (default)"
+                echo "  clean   - Remove old backups exceeding limit"
+                echo ""
+                echo "Note: Backups are created automatically during setup"
+                ;;
+        esac
         ;;
     
     "advanced")
