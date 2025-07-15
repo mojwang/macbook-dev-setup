@@ -1,3 +1,11 @@
+## [2.1.1](https://github.com/mojwang/macbook-dev-setup/compare/v2.1.0...v2.1.1) (2025-07-15)
+
+
+### Bug Fixes
+
+* improve CI test execution performance from 31min to <1min ([d3d43da](https://github.com/mojwang/macbook-dev-setup/commit/d3d43da8977fdc45b59687349f5804c6b401e17f))
+* resolve CI failures and reduce test execution time from 31 minutes to under 1 minute ([42c93cd](https://github.com/mojwang/macbook-dev-setup/commit/42c93cd9e212446ca37bd65c4c29f7379c1643bc))
+
 # [2.1.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.0.1...v2.1.0) (2025-07-15)
 
 

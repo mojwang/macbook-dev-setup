@@ -4,7 +4,7 @@
 # Simplified interface with smart defaults
 # For macOS Apple Silicon
 
-VERSION="2.1.0"
+VERSION="2.1.1"
 
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
