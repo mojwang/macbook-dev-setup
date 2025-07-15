@@ -1,3 +1,56 @@
+# [2.0.0](https://github.com/mojwang/macbook-dev-setup/compare/v1.0.1...v2.0.0) (2025-07-15)
+
+
+### Bug Fixes
+
+* handle font conflicts and missing print_section function ([dcee67c](https://github.com/mojwang/macbook-dev-setup/commit/dcee67c9876f1e06231b741cd3e1ca366eb34dbd))
+
+
+### Features
+
+* add organized backup system with automatic management ([827d37e](https://github.com/mojwang/macbook-dev-setup/commit/827d37ef4af2f483d37338c59083910bdb20aaea))
+* simplify CLI and add automatic Warp Terminal detection ([837d88c](https://github.com/mojwang/macbook-dev-setup/commit/837d88c030abb4c5bafa884d00d788aba2f94713))
+
+
+### BREAKING CHANGES
+
+* Command-line interface completely redesigned
+
+Simplified command structure:
+- Reduced from 16+ complex flags to just 5 simple commands
+- `./setup.sh` - Smart setup that auto-detects fresh vs update
+- `./setup.sh preview` - Show what would be done (replaces --dry-run)
+- `./setup.sh minimal` - Essential tools only
+- `./setup.sh fix` - Run diagnostics
+- `./setup.sh warp` - Warp terminal optimizations
+
+Power user features:
+- Environment variables for advanced options (SETUP_VERBOSE, SETUP_JOBS, etc)
+- `./setup.sh advanced` - Interactive menu for all options
+- Backwards compatible through env vars
+
+Automatic Warp Terminal detection:
+- Detects Warp Terminal installation/usage automatically
+- Offers non-intrusive optimizations with user consent
+- Installs delta for enhanced git diffs by default
+- Optional power tools (atuin, mcfly, direnv, navi) with explanations
+- Creates Warp workflows for common development tasks
+- Configures shell specifically for Warp's features
+
+Safety improvements:
+- Only installs safe, non-intrusive tools by default
+- Asks permission before making changes
+- Preserves existing configurations
+- Can be disabled with SETUP_NO_WARP=true
+
+This change makes the setup much more user-friendly while maintaining
+all power features for those who need them. 80% of users now just
+run ./setup.sh with no flags needed.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
 ## [1.0.1](https://github.com/mojwang/macbook-dev-setup/compare/v1.0.0...v1.0.1) (2025-07-14)
 
 
