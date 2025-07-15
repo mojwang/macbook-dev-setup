@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.0.1...v2.1.0) (2025-07-15)
+
+
+### Features
+
+* add automatic alias expansion display in zsh ([4e1899d](https://github.com/mojwang/macbook-dev-setup/commit/4e1899d72a006d31cc3be7bf1c7a18647278d8a9))
+
 ## [2.0.1](https://github.com/mojwang/macbook-dev-setup/compare/v2.0.0...v2.0.1) (2025-07-15)
 
 
