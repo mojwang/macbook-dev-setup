@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/mojwang/macbook-dev-setup/compare/v2.0.0...v2.0.1) (2025-07-15)
+
+
+### Bug Fixes
+
+* resolve glog naming conflict in Warp setup ([9c3dcd6](https://github.com/mojwang/macbook-dev-setup/commit/9c3dcd63af16b1b7520a37bb0d72b1d49ef7f907))
+
 # [2.0.0](https://github.com/mojwang/macbook-dev-setup/compare/v1.0.1...v2.0.0) (2025-07-15)
 
 
