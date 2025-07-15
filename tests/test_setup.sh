@@ -9,76 +9,58 @@ source "$ROOT_DIR/lib/common.sh"
 
 describe "Setup Script Tests"
 
-# Test flag parsing
-it "should parse --sync flag correctly"
-# Create a minimal test version of parse_args
-test_parse_args() {
-    SYNC_MODE=false
-    UPDATE_MODE=false
-    MINIMAL_INSTALL=false
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -s|--sync)
-                SYNC_MODE=true
-                shift
-                ;;
-            -u|--update)
-                UPDATE_MODE=true
-                shift
-                ;;
-            --minimal)
-                MINIMAL_INSTALL=true
-                shift
-                ;;
-            *)
-                shift
-                ;;
-        esac
-    done
-}
+# Test command structure (v2.0)
+it "should use new command-based structure"
+# Test that setup.sh uses commands instead of flags
+setup_content=$(cat "$ROOT_DIR/setup.sh")
+assert_contains "$setup_content" 'case "${1:-}" in' "Command-based structure implemented"
 
-# Test sync flag
-test_parse_args --sync
-assert_equals "true" "$SYNC_MODE" "--sync flag should set SYNC_MODE to true"
-assert_equals "false" "$UPDATE_MODE" "--sync flag should not affect UPDATE_MODE"
+# Test main commands exist
+assert_contains "$setup_content" '"help"|"-h"|"--help")' "Help command exists"
+assert_contains "$setup_content" '"preview")' "Preview command exists"
+assert_contains "$setup_content" '"minimal")' "Minimal command exists"
+assert_contains "$setup_content" '"fix")' "Fix command exists"
+assert_contains "$setup_content" '"warp")' "Warp command exists"
+assert_contains "$setup_content" '"backup")' "Backup command exists"
+assert_contains "$setup_content" '"advanced")' "Advanced command exists"
 
-# Test update flag
-test_parse_args --update
-assert_equals "false" "$SYNC_MODE" "--update flag should not affect SYNC_MODE"
-assert_equals "true" "$UPDATE_MODE" "--update flag should set UPDATE_MODE to true"
+# Test old functionality is integrated
+it "should integrate old flag functionality into new system"
+# --sync is now automatic in update mode
+assert_contains "$setup_content" "Syncing new packages" "Sync functionality integrated in update flow"
 
-# Test combined flags
-test_parse_args --sync --update
-assert_equals "true" "$SYNC_MODE" "--sync --update should set SYNC_MODE to true"
-assert_equals "true" "$UPDATE_MODE" "--sync --update should set UPDATE_MODE to true"
+# --update is now automatic when existing installation detected
+assert_contains "$setup_content" "Updating existing packages" "Update functionality integrated"
 
-# Test minimal with sync
-test_parse_args --sync --minimal
-assert_equals "true" "$SYNC_MODE" "--sync --minimal should set SYNC_MODE to true"
-assert_equals "true" "$MINIMAL_INSTALL" "--sync --minimal should set MINIMAL_INSTALL to true"
+# --dry-run is now preview command
+assert_contains "$setup_content" "preview" "Dry-run replaced by preview command"
+
+# --minimal is now a command
+assert_contains "$setup_content" '"minimal")' "Minimal is now a command"
 
 it "should detect Brewfile.minimal when minimal flag is set"
 assert_file_exists "$ROOT_DIR/homebrew/Brewfile.minimal" "Brewfile.minimal should exist"
 
-it "should have sync_packages function defined in setup.sh"
-# Check if function is defined in the file
+it "should integrate package sync in update flow"
+# In v2.0, sync is integrated into the update flow, not a separate function
 assert_true "[[ -f '$ROOT_DIR/setup.sh' ]]" "setup.sh should exist"
-assert_true "grep -q 'sync_packages()' '$ROOT_DIR/setup.sh'" "sync_packages function should be defined"
+assert_contains "$setup_content" "Syncing new packages" "Sync integrated in update"
 
-it "should handle brew bundle check in sync_packages"
-# Check that sync_packages uses brew bundle check
-assert_true "grep -q 'brew bundle check' '$ROOT_DIR/setup.sh'" "sync_packages should use brew bundle check"
-assert_true "grep -q 'brew bundle --file=' '$ROOT_DIR/setup.sh'" "sync_packages should use brew bundle"
+it "should use brew bundle for package management"
+# In v2.0, brew bundle is called directly in the update flow
+assert_contains "$setup_content" "brew bundle" "Uses brew bundle for packages"
 
-it "should sync VS Code extensions in sync_packages"
-assert_true "grep -q './scripts/setup-vscode-extensions.sh' '$ROOT_DIR/setup.sh'" "sync_packages should call VS Code extension setup"
+it "should support VS Code setup"
+# VS Code is set up through setup-applications.sh
+assert_contains "$setup_content" "setup-applications.sh" "Calls applications setup"
 
-it "should sync npm packages in sync_packages"
-assert_true "grep -q 'npm list -g --depth=0 --json' '$ROOT_DIR/setup.sh'" "sync_packages should check installed npm packages"
-assert_true "grep -q 'nodejs-config/global-packages.txt' '$ROOT_DIR/setup.sh'" "sync_packages should read global-packages.txt"
+it "should have npm package configuration"
+# npm packages are managed through the package scripts
+assert_file_exists "$ROOT_DIR/nodejs-config/global-packages.txt" "Global packages list exists"
 
-it "should sync Python packages in sync_packages"
-assert_true "grep -q 'pip install -r python/requirements.txt' '$ROOT_DIR/setup.sh'" "sync_packages should install Python requirements"
+it "should have Python requirements file"
+# Python packages are managed through requirements.txt
+assert_file_exists "$ROOT_DIR/python/requirements.txt" "Python requirements exists"
 
 describe "Modular Zsh Configuration Tests"
 
@@ -111,22 +93,27 @@ assert_contains "$(cat $ROOT_DIR/.gitignore)" "99-local.zsh" ".gitignore should 
 
 describe "Documentation Tests"
 
-it "should document --sync flag in help text"
-assert_contains "$(grep -A 20 'show_help()' $ROOT_DIR/setup.sh | head -40)" "--sync" "Help should document --sync flag"
+it "should document new command structure in help"
+help_output=$(./setup.sh help 2>&1)
+assert_contains "$help_output" "preview" "Help documents preview command"
+assert_contains "$help_output" "minimal" "Help documents minimal command"
+assert_contains "$help_output" "fix" "Help documents fix command"
 
-it "should have sync examples in help"
-assert_contains "$(grep -A 50 'Examples:' $ROOT_DIR/setup.sh | head -20)" "--sync" "Examples should include --sync usage"
-
-it "should document sync in CLAUDE.md"
-assert_contains "$(cat $ROOT_DIR/CLAUDE.md)" "--sync" "CLAUDE.md should document --sync flag"
-assert_contains "$(cat $ROOT_DIR/CLAUDE.md)" "Package Synchronization" "CLAUDE.md should have sync section"
+it "should document new commands in CLAUDE.md"
+CLAUDE_content=$(cat $ROOT_DIR/CLAUDE.md)
+assert_contains "$CLAUDE_content" "./setup.sh preview" "CLAUDE.md documents preview command"
+assert_contains "$CLAUDE_content" "./setup.sh minimal" "CLAUDE.md documents minimal command"
+assert_contains "$CLAUDE_content" "./setup.sh fix" "CLAUDE.md documents fix command"
+assert_contains "$CLAUDE_content" "Package Synchronization" "CLAUDE.md explains sync is automatic"
 assert_contains "$(cat $ROOT_DIR/CLAUDE.md)" "Brewfile.minimal" "CLAUDE.md should document minimal Brewfile"
 
-describe "Flag Validation Tests"
+describe "Command Validation Tests"
 
-it "should validate conflicting flag combinations"
-assert_contains "$(grep -A 20 'main()' $ROOT_DIR/setup.sh | head -30)" 'UPDATE_MODE" == true' "Should validate update with minimal"
+it "should handle minimal mode in both fresh and update states"
+# In v2.0, minimal is a command that works with both fresh and update states
+assert_contains "$setup_content" '"minimal")' "Minimal command exists"
+assert_contains "$setup_content" 'is_minimal="${1:-false}"' "Minimal mode parameter in main_setup"
 
-it "should show warning for update with minimal"
-# Check for the warning message
-assert_contains "$(grep -A 5 'UPDATE_MODE.*true.*MINIMAL_INSTALL.*true' $ROOT_DIR/setup.sh)" "print_warning" "Should warn about minimal with update"
+it "should support minimal mode with automatic state detection"
+# Check that minimal mode can be used with smart state detection
+assert_contains "$setup_content" 'Brewfile.minimal' "Supports minimal Brewfile in logic"

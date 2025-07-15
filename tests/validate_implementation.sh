@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Validation script to verify all implementations
+# Comprehensive validation script for v2.0 implementation
 set -e
 
 # Colors
@@ -10,11 +10,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${BLUE}=== Implementation Validation ===${NC}"
+echo -e "${BLUE}=== macOS Dev Setup v2.0 Implementation Validation ===${NC}"
 echo ""
 
 # Track issues
 ISSUES=()
+WARNINGS=()
 
 # 1. Verify simplified command structure
 echo -e "${BLUE}1. Checking simplified command structure...${NC}"
@@ -146,24 +147,130 @@ for script in "${scripts_to_check[@]}"; do
     fi
 done
 
+# 11. Check backup system implementation
+echo -e "\n${BLUE}11. Checking backup system implementation...${NC}"
+if [[ -f "lib/backup-manager.sh" ]]; then
+    echo -e "${GREEN}✓ Backup manager exists${NC}"
+    
+    # Check backup functions
+    if grep -q "create_backup()" lib/backup-manager.sh && \
+       grep -q "clean_old_backups()" lib/backup-manager.sh && \
+       grep -q "migrate_old_backups()" lib/backup-manager.sh; then
+        echo -e "${GREEN}✓ All backup functions implemented${NC}"
+    else
+        ISSUES+=("Incomplete backup functions")
+        echo -e "${RED}✗ Missing backup functions${NC}"
+    fi
+    
+    # Check backup integration in setup.sh
+    if grep -q "source.*backup-manager.sh" setup.sh && \
+       grep -q "create_backup" setup.sh; then
+        echo -e "${GREEN}✓ Backup system integrated${NC}"
+    else
+        ISSUES+=("Backup system not integrated")
+        echo -e "${RED}✗ Backup integration issues${NC}"
+    fi
+else
+    ISSUES+=("Backup manager missing")
+    echo -e "${RED}✗ Backup manager not found${NC}"
+fi
+
+# 12. Validate fix/diagnostics implementation
+echo -e "\n${BLUE}12. Checking diagnostics implementation...${NC}"
+if grep -q "run_diagnostics()" setup.sh; then
+    echo -e "${GREEN}✓ Diagnostics function exists${NC}"
+    
+    # Check diagnostic checks
+    if grep -q "Checking prerequisites" setup.sh && \
+       grep -q "Checking Homebrew" setup.sh && \
+       grep -q "Checking shell" setup.sh; then
+        echo -e "${GREEN}✓ Comprehensive diagnostics${NC}"
+    else
+        WARNINGS+=("Diagnostics may be incomplete")
+        echo -e "${YELLOW}⚠ Some diagnostic checks missing${NC}"
+    fi
+else
+    ISSUES+=("Diagnostics function missing")
+    echo -e "${RED}✗ No diagnostics implementation${NC}"
+fi
+
+# 13. Check commit helper integration
+echo -e "\n${BLUE}13. Checking commit helper tools...${NC}"
+if [[ -f "scripts/commit-helper.sh" ]] && [[ -f "scripts/setup-git-hooks.sh" ]]; then
+    echo -e "${GREEN}✓ Commit helper scripts exist${NC}"
+    
+    # Check commit aliases
+    if [[ -f "dotfiles/.config/zsh/35-commit-aliases.zsh" ]]; then
+        echo -e "${GREEN}✓ Commit aliases configured${NC}"
+    else
+        WARNINGS+=("Commit aliases file missing")
+        echo -e "${YELLOW}⚠ Commit aliases not found${NC}"
+    fi
+else
+    WARNINGS+=("Commit helper tools incomplete")
+    echo -e "${YELLOW}⚠ Some commit tools missing${NC}"
+fi
+
+# 14. Performance optimizations check
+echo -e "\n${BLUE}14. Checking performance optimizations...${NC}"
+# Check parallel processing
+if grep -q "PARALLEL_JOBS" setup.sh && grep -q "SETUP_JOBS" setup.sh; then
+    echo -e "${GREEN}✓ Parallel processing support${NC}"
+else
+    WARNINGS+=("Parallel processing not fully implemented")
+    echo -e "${YELLOW}⚠ Parallel jobs support incomplete${NC}"
+fi
+
+# Check lazy loading
+if grep -q "nvm()" dotfiles/.config/zsh/10-languages.zsh; then
+    echo -e "${GREEN}✓ Lazy loading implemented${NC}"
+else
+    WARNINGS+=("Lazy loading not found")
+    echo -e "${YELLOW}⚠ Performance optimizations missing${NC}"
+fi
+
 # Summary
 echo -e "\n${BLUE}=== Validation Summary ===${NC}"
+echo ""
+
 if [[ ${#ISSUES[@]} -eq 0 ]]; then
-    echo -e "${GREEN}✅ All implementations validated successfully!${NC}"
+    echo -e "${GREEN}✅ Core implementation validated successfully!${NC}"
     echo ""
     echo "Key features verified:"
-    echo "• Simplified command structure (5 commands)"
+    echo "• Simplified command structure (7 commands)"
     echo "• Automatic Warp detection with user consent"
     echo "• Safe font conflict handling"
     echo "• Missing function fallbacks"
     echo "• Smart setup state detection"
     echo "• Environment variable support"
+    echo "• Organized backup system"
+    echo "• Diagnostics and fix command"
     echo "• Backwards compatibility maintained"
+    
+    if [[ ${#WARNINGS[@]} -gt 0 ]]; then
+        echo ""
+        echo -e "${YELLOW}⚠ Warnings (${#WARNINGS[@]}):${NC}"
+        for warning in "${WARNINGS[@]}"; do
+            echo -e "${YELLOW}  - $warning${NC}"
+        done
+        echo ""
+        echo "These are non-critical issues that won't prevent setup from working."
+    fi
+    
     exit 0
 else
-    echo -e "${RED}❌ Found ${#ISSUES[@]} issues:${NC}"
+    echo -e "${RED}❌ Found ${#ISSUES[@]} critical issues:${NC}"
     for issue in "${ISSUES[@]}"; do
         echo -e "${RED}  - $issue${NC}"
     done
+    
+    if [[ ${#WARNINGS[@]} -gt 0 ]]; then
+        echo ""
+        echo -e "${YELLOW}Also found ${#WARNINGS[@]} warnings:${NC}"
+        for warning in "${WARNINGS[@]}"; do
+            echo -e "${YELLOW}  - $warning${NC}"
+        done
+    fi
+    
     exit 1
 fi

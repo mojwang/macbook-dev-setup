@@ -120,10 +120,11 @@ backup_organized() {
     update_latest_symlink "$category" "$backup_dir"
     
     # Clean old backups
-    clean_old_backups "$category"
+    clean_old_backups "$category" >&2
     
-    print_info "Backed up: $source → $backup_dir/$item_name"
-    echo "$backup_dir/$item_name"
+    print_info "Backed up: $source → $backup_dir/$item_name" >&2
+    # Return the backup directory path
+    echo "$backup_dir"
 }
 
 # Update latest symlink
@@ -132,6 +133,7 @@ update_latest_symlink() {
     local backup_dir="$2"
     
     local latest_link="$BACKUP_ROOT/latest/$category"
+    mkdir -p "$(dirname "$latest_link")"
     rm -f "$latest_link"
     ln -s "$backup_dir" "$latest_link"
 }
@@ -150,12 +152,12 @@ clean_old_backups() {
     
     if (( backup_count > MAX_BACKUPS )); then
         local to_remove=$((backup_count - MAX_BACKUPS))
-        print_info "Removing $to_remove old backup(s) from $category"
+        print_info "Removing $to_remove old backup(s) from $category" >&2
         
         # Remove oldest backups
         ls -1t "$category_dir" | tail -n "$to_remove" | while read -r old_backup; do
             rm -rf "$category_dir/$old_backup"
-            print_info "Removed old backup: $old_backup"
+            print_info "Removed old backup: $old_backup" >&2
         done
     fi
 }
@@ -254,6 +256,44 @@ EOF
                 ((migrated++))
                 print_success "Migrated: $old_backup → $new_dir"
             fi
+        fi
+    done
+    
+    # Migrate generic .backup and .bak files
+    for old_backup in ~/*.backup ~/*.bak; do
+        if [[ -f "$old_backup" ]]; then
+            local basename=$(basename "$old_backup")
+            local name_without_ext="${basename%.*}"
+            local timestamp=$(date +%Y%m%d_%H%M%S)
+            
+            # Determine category based on filename
+            local category="configs"
+            if [[ "$name_without_ext" == *"zshrc"* ]] || [[ "$name_without_ext" == *"bashrc"* ]] || [[ "$name_without_ext" == *"profile"* ]]; then
+                category="dotfiles"
+            elif [[ "$name_without_ext" == *"script"* ]] || [[ "$name_without_ext" == *.sh ]]; then
+                category="scripts"
+            fi
+            
+            local new_dir="$BACKUP_ROOT/$category/${timestamp}_migrated"
+            mkdir -p "$new_dir"
+            
+            # Move the file
+            mv "$old_backup" "$new_dir/$basename"
+            
+            # Create metadata
+            cat > "$new_dir/metadata.json" << EOF
+{
+    "timestamp": "$timestamp",
+    "date": "$(date)",
+    "category": "$category",
+    "description": "Migrated from $old_backup",
+    "original_file": "$basename",
+    "migrated": true
+}
+EOF
+            
+            ((migrated++))
+            print_success "Migrated: $old_backup → $new_dir"
         fi
     done
     

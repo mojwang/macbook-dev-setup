@@ -33,6 +33,7 @@ Commands:
     minimal    Install essential tools only
     fix        Run diagnostics and fix common issues
     warp       Configure Warp terminal optimizations
+    backup     Manage setup backups
     advanced   Interactive mode for advanced options
     help       Show this help message
 
