@@ -248,7 +248,7 @@ alias bench="hyperfine"
 alias loc="tokei"
 
 # Enhanced git log for Warp blocks
-glog() {
+glog_fancy() {
     git log --graph --pretty=format:'%C(yellow)%h%C(reset) %C(blue)%d%C(reset) %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)' --abbrev-commit -20
 }
 
