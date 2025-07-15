@@ -8,28 +8,34 @@ This is a macOS development environment setup repository designed for Apple Sili
 
 ## Key Commands
 
-### Testing and Validation
+### Simple Setup Commands (v2.0)
 ```bash
-./setup-validate.sh          # Run validation without system modifications
-./setup.sh --dry-run         # Preview installation (delegates to setup-validate.sh)
-./setup-validate.sh --verbose # Detailed validation output
+./setup.sh              # Smart setup - detects what needs to be done
+./setup.sh preview      # Show what would be installed/updated
+./setup.sh minimal      # Install essential tools only  
+./setup.sh fix          # Run diagnostics and fix common issues
+./setup.sh warp         # Configure Warp terminal optimizations
+./setup.sh help         # Show help message
 ```
 
-### Full Setup
+### For Power Users
 ```bash
-./setup.sh                   # Run full environment setup
-./setup.sh --verbose         # Verbose output during setup
-./setup.sh --log setup.log   # Log all operations to file
-./setup.sh --minimal         # Install essential packages only
+# Use environment variables instead of flags
+SETUP_VERBOSE=1 ./setup.sh      # Verbose output
+SETUP_JOBS=8 ./setup.sh         # Custom parallel jobs
+SETUP_LOG=file.log ./setup.sh   # Log to file
+SETUP_NO_WARP=true ./setup.sh   # Skip Warp auto-detection
+
+# Advanced interactive mode
+./setup.sh advanced     # Interactive menu for all options
 ```
 
-### Package Management
-```bash
-./setup.sh --sync            # Sync new packages from config files
-./setup.sh --update          # Update existing packages
-./setup.sh --sync --update   # Sync new packages then update all
-brew update && brew upgrade  # Manual Homebrew update
-```
+### Automatic Warp Detection
+The setup script now automatically detects Warp Terminal and offers to optimize your setup:
+- Detects if you're using Warp or have it installed
+- Only installs safe, non-intrusive enhancements by default
+- Asks permission before making changes
+- Enhances git diffs, adds useful workflows, and improves developer experience
 
 ### Git Commit Helpers
 ```bash
