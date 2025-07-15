@@ -31,10 +31,10 @@ jobs:
           shellcheck "$script" || true
         done
     
-    - name: Test dry-run
+    - name: Test preview mode
       run: |
-        echo "Testing setup script in dry-run mode..."
-        ./setup.sh --dry-run
+        echo "Testing setup script in preview mode..."
+        ./setup.sh preview
     
     - name: Test health check
       run: |
