@@ -102,3 +102,18 @@ tmpd() {
     echo "Created temporary directory: $tmp_dir"
     cd "$tmp_dir"
 }
+
+# Show expanded aliases before execution
+# This function runs before each command is executed
+preexec() {
+    # Get the actual command that will be executed
+    local cmd="$1"
+    local expanded_cmd="$2"
+    
+    # Check if the command contains an alias
+    # If the typed command differs from the expanded command, show the expansion
+    if [[ "$cmd" != "$expanded_cmd" ]]; then
+        # Display the expanded command in a dimmed color
+        print -P "%F{240}→ $expanded_cmd%f"
+    fi
+}

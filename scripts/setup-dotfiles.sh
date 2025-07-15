@@ -66,6 +66,20 @@ else
     install_dotfile "dotfiles/.gitconfig" ~/.gitconfig ".gitconfig settings"
 fi
 
+# Setup Zsh modular configuration
+if [[ -d "dotfiles/.config/zsh" ]]; then
+    echo "Setting up Zsh modular configuration..."
+    mkdir -p ~/.config/zsh
+    
+    if cp -r dotfiles/.config/zsh/* ~/.config/zsh/ 2>/dev/null; then
+        print_success "Zsh modular configuration installed"
+    else
+        print_warning "Failed to install Zsh modular configuration"
+    fi
+else
+    print_warning "Zsh configuration directory not found"
+fi
+
 # Setup Neovim configuration
 if [[ -d "dotfiles/.config/nvim" ]]; then
     echo "Setting up Neovim configuration..."
