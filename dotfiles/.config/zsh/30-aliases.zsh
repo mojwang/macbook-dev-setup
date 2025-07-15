@@ -7,14 +7,20 @@ alias ga="git add"
 alias gc="git commit"
 alias gp="git push"
 alias gl="git log --oneline"
-alias gd="git diff"
+# Enhanced git diff with delta if available
+if command -v delta &> /dev/null; then
+    alias gd="git diff | delta"
+    alias gdiff="git diff | delta"
+else
+    alias gd="git diff"
+fi
 alias gb="git branch"
 alias gco="git checkout"
 alias gpl="git pull"
 alias gf="git fetch"
 alias gm="git merge"
 alias gr="git rebase"
-alias gst="git stash"
+alias gstash="git stash"
 
 # Text editor aliases
 if command -v nvim &> /dev/null; then
@@ -29,9 +35,6 @@ alias home="cd ~"
 alias reload="source ~/.zshrc"
 alias copy="rsync -ahr --progress"
 alias cls="clear"
-alias ..="cd .."
-alias ...="cd ../.."
-alias ....="cd ../../.."
 alias .....="cd ../../../.."
 
 # Docker aliases
@@ -44,7 +47,6 @@ if command -v docker &> /dev/null; then
     alias drm="docker rm"
     alias drmi="docker rmi"
     alias dlog="docker logs -f"
-    alias dex="docker exec -it"
 fi
 
 # Safety aliases

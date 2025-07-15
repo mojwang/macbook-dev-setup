@@ -247,10 +247,6 @@ alias bench="hyperfine"
 # Code statistics
 alias loc="tokei"
 
-# Enhanced git log for Warp blocks
-glog_fancy() {
-    git log --graph --pretty=format:'%C(yellow)%h%C(reset) %C(blue)%d%C(reset) %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)' --abbrev-commit -20
-}
 
 # Quick API testing with httpie and jq
 api() {
@@ -355,8 +351,13 @@ alias lm="eza -la --sort=modified"
 
 # Git shortcuts optimized for Warp
 alias gst="git status -sb"
-alias glog="git log --oneline --graph -20"
-alias gdiff="git diff | delta"
+alias glog="git log --graph --pretty=format:'%C(yellow)%h%C(reset) %C(blue)%d%C(reset) %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)' --abbrev-commit -20"
+# Enhanced git diff with delta if available
+if command -v delta &> /dev/null; then
+    alias gdiff="git diff | delta"
+else
+    alias gdiff="git diff"
+fi
 
 # Docker shortcuts
 alias dps="docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"

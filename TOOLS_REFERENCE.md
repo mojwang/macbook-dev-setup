@@ -23,7 +23,6 @@
 ### Enhanced Commands
 - `api <METHOD> <URL>` - Make HTTP requests with formatted JSON output
 - `preview <file/dir>` - Smart preview with syntax highlighting
-- `glog_fancy` - Beautiful git log optimized for Warp blocks
 - `project <name>` - Quick project switcher with auto-navigation
 
 ### Warp Workflows
@@ -40,7 +39,7 @@
 - `lt` - Tree view with 2 levels
 - `lm` - List by modification time
 - `gst` - Compact git status
-- `glog` - Pretty git log (last 20 commits)
+- `glog` - Beautiful git log with colors, graph, and relative time
 - `gdiff` - Git diff with delta
 - `dps` - Docker ps with clean format
 - `dlog` - Docker logs with tail
