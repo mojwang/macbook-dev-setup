@@ -7,6 +7,12 @@
 # Note: Strict mode is not set here to allow sourcing from various scripts
 # Individual scripts should set their own error handling as needed
 
+# Prevent multiple sourcing of this file to avoid readonly variable errors
+if [[ -n "${COMMON_LIB_LOADED:-}" ]]; then
+    return 0
+fi
+COMMON_LIB_LOADED=true
+
 # Script information
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[1]}")"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"

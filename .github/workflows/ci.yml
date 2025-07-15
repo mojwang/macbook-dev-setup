@@ -18,7 +18,14 @@ jobs:
     - name: Run tests
       run: |
         echo "Running test suite..."
-        ./tests/run_tests.sh
+        # Use parallel test runner in CI for faster execution
+        if [[ -f ./tests/run_tests_parallel_simple.sh ]]; then
+          echo "Using parallel test runner..."
+          ./tests/run_tests_parallel_simple.sh
+        else
+          echo "Using sequential test runner..."
+          ./tests/run_tests.sh
+        fi
     
     - name: Validate scripts
       run: |
@@ -31,10 +38,10 @@ jobs:
           shellcheck "$script" || true
         done
     
-    - name: Test dry-run
+    - name: Test preview mode
       run: |
-        echo "Testing setup script in dry-run mode..."
-        ./setup.sh --dry-run
+        echo "Testing setup script in preview mode..."
+        ./setup.sh preview
     
     - name: Test health check
       run: |

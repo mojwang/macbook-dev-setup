@@ -364,19 +364,36 @@ run_preview() {
         print_section "Updates Available"
         
         if command -v brew &>/dev/null; then
-            # Quick check for outdated packages
-            local outdated=$(brew outdated --quiet 2>/dev/null | wc -l | xargs)
-            if [[ $outdated -gt 0 ]]; then
-                echo "• Homebrew packages: $outdated updates available"
-                if [[ "$VERBOSE" == "true" ]]; then
-                    echo "Outdated packages:"
-                    brew outdated --quiet 2>/dev/null | head -10 | sed 's/^/  - /'
-                    if [[ $outdated -gt 10 ]]; then
-                        echo "  ... and $((outdated - 10)) more"
-                    fi
-                fi
+            # Skip Homebrew outdated check in CI environment or if explicitly disabled
+            if [[ "${CI:-false}" == "true" ]] || [[ "${SKIP_BREW_OUTDATED:-false}" == "true" ]]; then
+                echo "• Homebrew outdated check skipped (CI environment)"
             else
-                print_success "All Homebrew packages up to date"
+                # Quick check for outdated packages with timeout
+                local outdated=0
+                
+                # Use timeout if available, otherwise skip the check
+                if command -v gtimeout &>/dev/null; then
+                    outdated=$(gtimeout 5s bash -c 'HOMEBREW_NO_AUTO_UPDATE=1 brew outdated --quiet 2>/dev/null | wc -l' | xargs || echo "0")
+                elif command -v timeout &>/dev/null; then
+                    outdated=$(timeout 5s bash -c 'HOMEBREW_NO_AUTO_UPDATE=1 brew outdated --quiet 2>/dev/null | wc -l' | xargs || echo "0")
+                else
+                    # No timeout available, skip the check to avoid hanging
+                    echo "• Homebrew outdated check skipped (no timeout command)"
+                    outdated=-1
+                fi
+                
+                if [[ "$outdated" -gt 0 ]]; then
+                    echo "• Homebrew packages: $outdated updates available"
+                    if [[ "$VERBOSE" == "true" ]]; then
+                        echo "Outdated packages:"
+                        HOMEBREW_NO_AUTO_UPDATE=1 brew outdated --quiet 2>/dev/null | head -10 | sed 's/^/  - /'
+                        if [[ $outdated -gt 10 ]]; then
+                            echo "  ... and $((outdated - 10)) more"
+                        fi
+                    fi
+                elif [[ "$outdated" == "0" ]]; then
+                    print_success "All Homebrew packages up to date"
+                fi
             fi
         fi
     fi
