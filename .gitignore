@@ -40,6 +40,13 @@ logs/
 tmp/
 temp/
 .tmp/
+tests/tmp.*
+tests/failing_test.*
+tests/interrupt_test.*
+tests/timeout_cleanup.*
+tests/trap_test.*
+tests/syntax_test.*
+tests/test_syntax_error.sh
 
 # Backup files
 *.backup

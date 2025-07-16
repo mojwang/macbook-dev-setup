@@ -399,8 +399,8 @@ cleanup() {
     # Any other cleanup tasks
 }
 
-# Set up exit trap
-trap cleanup EXIT
+# Set up signal-safe cleanup trap
+trap cleanup EXIT INT TERM HUP
 
 # Export common variables for child scripts
 export ROOT_DIR

@@ -48,9 +48,10 @@ assert_true "print_info 'Test info' &>/dev/null" "print_info should not error"
 
 # Test backup_item function
 it "should create backups correctly"
-temp_file=$(mktemp)
+temp_file=$(mktemp /tmp/test_file.XXXXXX)
 echo "test content" > "$temp_file"
-temp_backup_dir=$(mktemp -d)
+temp_backup_dir=$(mktemp -d /tmp/test_backup.XXXXXX)
+trap "rm -f '$temp_file'; rm -rf '$temp_backup_dir'" EXIT
 
 backup_result=$(backup_item "$temp_file" "$temp_backup_dir")
 assert_file_exists "$temp_backup_dir/$(basename "$temp_file")" "Backup file should exist"
