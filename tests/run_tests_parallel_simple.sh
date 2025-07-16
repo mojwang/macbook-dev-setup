@@ -73,9 +73,9 @@ run_single_test() {
     fi
 }
 
-# Collect all test files
+# Collect all test files (including those in subdirectories)
 test_files=()
-for test_file in "$TESTS_DIR"/test_*.sh; do
+for test_file in "$TESTS_DIR"/{unit,integration,performance,stress,ci}/test_*.sh "$TESTS_DIR"/test_*.sh; do
     if [[ -f "$test_file" && "$test_file" != "$TESTS_DIR/test_framework.sh" ]]; then
         test_files+=("$test_file")
     fi
