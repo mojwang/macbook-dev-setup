@@ -6,9 +6,19 @@
 TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$TESTS_DIR")"
 
+# Validate directories
+if [[ ! -d "$TESTS_DIR" ]] || [[ "$TESTS_DIR" =~ \.\. ]]; then
+    echo "Error: Invalid TESTS_DIR: $TESTS_DIR" >&2
+    exit 1
+fi
+
 # Source test framework
 source "$TESTS_DIR/test_framework.sh"
-source "$ROOT_DIR/lib/common.sh"
+if [[ -f "$ROOT_DIR/lib/common.sh" ]]; then
+    source "$ROOT_DIR/lib/common.sh"
+else
+    echo "Warning: lib/common.sh not found, some tests may fail" >&2
+fi
 
 describe "CI Environment Tests"
 
@@ -231,14 +241,20 @@ it "should optimize parallel execution for CI"
 
 # Create test files for parallel execution
 for i in {1..5}; do
-    cat > "$TESTS_DIR/test_ci_parallel_$i.sh" <<EOF
+    # Validate file name safety
+    test_file="$TESTS_DIR/test_ci_parallel_$i.sh"
+    if [[ "$test_file" =~ [^\w/.:-] ]]; then
+        echo "Error: Invalid characters in test file path" >&2
+        continue
+    fi
+    cat > "$test_file" <<EOF
 #!/bin/bash
 source "\$(dirname "\$0")/test_framework.sh"
 describe "CI Parallel Test $i"
 it "runs quickly"
 assert_true "true" "Test $i passes"
 EOF
-    chmod +x "$TESTS_DIR/test_ci_parallel_$i.sh"
+    chmod +x "$test_file"
 done
 
 # Run tests with CI settings

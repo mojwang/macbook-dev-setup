@@ -6,9 +6,24 @@
 TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$TESTS_DIR")"
 
+# Validate directories exist and are safe
+if [[ ! -d "$TESTS_DIR" ]] || [[ "$TESTS_DIR" =~ \.\. ]]; then
+    echo "Error: Invalid TESTS_DIR: $TESTS_DIR" >&2
+    exit 1
+fi
+
+if [[ ! -d "$ROOT_DIR" ]] || [[ "$ROOT_DIR" =~ \.\. ]]; then
+    echo "Error: Invalid ROOT_DIR: $ROOT_DIR" >&2
+    exit 1
+fi
+
 # Source test framework
 source "$TESTS_DIR/test_framework.sh"
-source "$ROOT_DIR/lib/common.sh"
+if [[ -f "$ROOT_DIR/lib/common.sh" ]]; then
+    source "$ROOT_DIR/lib/common.sh"
+else
+    echo "Warning: lib/common.sh not found, some tests may fail" >&2
+fi
 
 describe "Performance Tests"
 
@@ -227,7 +242,13 @@ it "should scale well with different job counts"
 
 # Create consistent test load
 for i in {1..16}; do
-    cat > "$TESTS_DIR/test_scale_$i.sh" <<EOF
+    # Validate file name doesn't contain dangerous characters
+    test_file="$TESTS_DIR/test_scale_$i.sh"
+    if [[ "$test_file" =~ [^\w/.:-] ]]; then
+        echo "Error: Invalid characters in test file path" >&2
+        continue
+    fi
+    cat > "$test_file" <<EOF
 #!/bin/bash
 source "\$(dirname "\$0")/test_framework.sh"
 describe "Scale Test $i"
@@ -238,7 +259,7 @@ for j in {1..100}; do
 done
 assert_true "true" "Work completed"
 EOF
-    chmod +x "$TESTS_DIR/test_scale_$i.sh"
+    chmod +x "$test_file"
 done
 
 # Test with different job counts

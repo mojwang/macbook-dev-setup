@@ -9,6 +9,17 @@ TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [[ -z "${ROOT_DIR:-}" ]]; then
     ROOT_DIR="$(dirname "$TESTS_DIR")"
 fi
+
+# Validate critical paths exist
+if [[ ! -d "$TESTS_DIR" ]]; then
+    echo "Error: TESTS_DIR does not exist: $TESTS_DIR" >&2
+    exit 1
+fi
+
+if [[ ! -d "$ROOT_DIR" ]]; then
+    echo "Error: ROOT_DIR does not exist: $ROOT_DIR" >&2
+    exit 1
+fi
 TEST_RESULTS=()
 TEST_COUNT=0
 PASSED_COUNT=0
