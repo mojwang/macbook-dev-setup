@@ -59,6 +59,7 @@ SETUP_NO_WARP=true ./setup.sh     # Skip Warp terminal detection
 ./scripts/health-check.sh    # Verify installation
 ./scripts/update.sh          # Update everything
 ./scripts/pre-push-check.sh  # Run before pushing
+./scripts/organize-tests.sh  # Organize test files by category
 ```
 
 ## Documentation
