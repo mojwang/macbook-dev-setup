@@ -95,11 +95,11 @@ When new tools are added to the repository:
 # Pull latest changes
 git pull
 
-# Sync new packages
-./setup.sh --sync
+# Run setup to install new tools
+./setup.sh
 
-# Or sync minimal packages only
-./setup.sh --sync --minimal
+# Or install minimal packages only
+./setup.sh minimal
 ```
 
 ## Health Monitoring
