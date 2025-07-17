@@ -7,7 +7,21 @@
 TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Configuration
-MAX_JOBS="${TEST_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
+# Get CPU count first
+CPU_COUNT=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
+
+# Validate TEST_JOBS if provided
+if [[ -n "${TEST_JOBS:-}" ]]; then
+    # Check if it's a valid positive number
+    if [[ "$TEST_JOBS" =~ ^[0-9]+$ ]] && (( TEST_JOBS > 0 && TEST_JOBS <= 32 )); then
+        MAX_JOBS="$TEST_JOBS"
+    else
+        echo "Invalid TEST_JOBS value: $TEST_JOBS. Using CPU count." >&2
+        MAX_JOBS="$CPU_COUNT"
+    fi
+else
+    MAX_JOBS="$CPU_COUNT"
+fi
 
 # Limit jobs in CI to prevent resource exhaustion
 if [[ -n "${CI:-}" ]] || [[ -n "${GITHUB_ACTIONS:-}" ]]; then
@@ -93,7 +107,7 @@ job_count=0
 for test_file in "${test_files[@]}"; do
     # Wait if we've reached max jobs
     while true; do
-        local current_jobs=$(jobs -r 2>/dev/null | wc -l | tr -d ' ')
+        current_jobs=$(jobs -r 2>/dev/null | wc -l | tr -d ' ')
         # Handle case where jobs command fails
         if [[ -z "$current_jobs" ]]; then
             current_jobs=0

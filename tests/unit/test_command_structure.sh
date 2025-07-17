@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test script for new command structure
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 source "$(dirname "$0")/../lib/common.sh"
 
 describe "Command Structure Tests"
