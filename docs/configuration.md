@@ -24,7 +24,7 @@ tap "user/repo"
 Use `homebrew/Brewfile.minimal` for essential tools only:
 
 ```bash
-./setup.sh --minimal
+./setup.sh minimal
 ```
 
 To customize the minimal setup, edit `homebrew/Brewfile.minimal`.
@@ -49,7 +49,9 @@ The Zsh configuration is modular. Files in `~/.config/zsh/`:
 - `10-languages.zsh` - Programming language managers
 - `20-tools.zsh` - CLI tool configurations
 - `30-aliases.zsh` - Command aliases
+- `35-commit-aliases.zsh` - Git commit shortcuts
 - `40-functions.zsh` - Shell functions
+- `45-warp.zsh` - Warp terminal optimizations (if detected)
 - `50-environment.zsh` - Environment variables
 - `99-local.zsh` - Your personal customizations (gitignored)
 
@@ -146,7 +148,8 @@ profiles:
 Use a profile:
 
 ```bash
-./setup.sh --profile web_developer
+# Note: Profile support is planned for future releases
+# Currently use minimal/full installation modes
 ```
 
 ### Environment-specific Configs
@@ -159,6 +162,40 @@ if [[ "$(hostname)" == "work-laptop" ]]; then
     export HTTP_PROXY="http://proxy.company.com:8080"
     source ~/.work-config
 fi
+```
+
+## Warp Terminal Configuration
+
+### Automatic Detection and Setup
+
+The setup script automatically detects if you're using Warp Terminal and offers to:
+- Install delta for enhanced git diffs
+- Configure shell integrations
+- Set up optimal workflows
+
+```bash
+# Configure Warp optimizations
+./setup.sh warp
+```
+
+### Warp Power Tools
+
+When Warp is detected, you can optionally install:
+- **atuin** - Advanced shell history with sync
+- **direnv** - Directory-specific environment variables
+- **mcfly** - Smart command history search
+- **navi** - Interactive command cheatsheet
+
+### Manual Warp Configuration
+
+To enable Warp features manually:
+
+```bash
+# Create Warp config file
+touch ~/.config/zsh/45-warp.zsh
+
+# Add Warp-specific settings
+echo 'export WARP_ENABLE_WAYLAND=1' >> ~/.config/zsh/45-warp.zsh
 ```
 
 ## Tool-specific Configuration
@@ -206,8 +243,18 @@ echo "3.11.0" > .python-version
 Your configurations are automatically backed up before updates:
 
 ```bash
-ls ~/.setup_restore/
+# View all backups
+ls ~/.setup-backups/
+
+# View latest backups
+ls -la ~/.setup-backups/latest/
 ```
+
+The backup system organizes files by category:
+- `dotfiles/` - Shell configurations
+- `configs/` - Application settings
+- `restore-points/` - Full system snapshots
+- `scripts/` - Custom scripts
 
 ### Manual Backup
 

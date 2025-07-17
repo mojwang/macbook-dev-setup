@@ -10,7 +10,7 @@ git clone https://github.com/mojwang/macbook-dev-setup.git
 cd macbook-dev-setup
 
 # Preview what will be installed
-./setup.sh --dry-run
+./setup.sh preview
 
 # Run setup
 ./setup.sh
@@ -29,6 +29,29 @@ Essential development tools for:
 - **Modern CLI**: Enhanced terminal tools (bat, eza, fzf, ripgrep)
 
 [See full tool list →](docs/tools.md)
+
+## Setup Commands
+
+```bash
+./setup.sh               # Standard installation
+./setup.sh preview       # Preview changes without installing
+./setup.sh minimal       # Install essential tools only
+./setup.sh fix           # Run diagnostics and fix common issues
+./setup.sh warp          # Configure Warp terminal optimizations
+./setup.sh backup        # View backups
+./setup.sh backup clean  # Clean old backups
+./setup.sh help          # Show help message
+```
+
+## Power User Options
+
+```bash
+# Use environment variables for advanced control
+SETUP_VERBOSE=1 ./setup.sh        # Verbose output
+SETUP_JOBS=8 ./setup.sh           # Custom parallel jobs (default: CPU count)
+SETUP_LOG=setup.log ./setup.sh    # Log output to file
+SETUP_NO_WARP=true ./setup.sh     # Skip Warp terminal detection
+```
 
 ## Common Tasks
 

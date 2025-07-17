@@ -98,8 +98,8 @@ git pull
 # Sync new packages
 ./setup.sh --sync
 
-# Or sync and update
-./setup.sh --sync --update
+# Or sync minimal packages only
+./setup.sh --sync --minimal
 ```
 
 ## Health Monitoring
@@ -150,32 +150,55 @@ brew reinstall tool-name
 Backups are created automatically:
 - Before major updates
 - Before uninstalling
-- In `~/.setup_restore/` directory
+- During setup operations
+- In `~/.setup-backups/` directory (organized by category)
 
-### Manual Backup
+### Backup Organization
+
+The new backup system organizes files into categories:
+- `dotfiles/` - Shell configurations and dotfiles
+- `restore-points/` - Full system restore points
+- `configs/` - Application configurations
+- `scripts/` - Custom scripts
+- `latest/` - Symlinks to most recent backups
+
+Automatic cleanup keeps only the 10 most recent backups per category.
+
+### Managing Backups
 
 ```bash
-# Create full backup
-./scripts/backup.sh
+# View all backups
+./setup.sh backup
 
-# Backup specific configs
-cp ~/.zshrc ~/.zshrc.backup.$(date +%Y%m%d)
-cp -r ~/.config ~/.config.backup.$(date +%Y%m%d)
+# Clean old backups (keeps 10 most recent per category)
+./setup.sh backup clean
+
+# Manual backup of specific files
+./scripts/backup-manager.sh create dotfiles "Manual backup before changes"
+
+# View backup details
+ls -la ~/.setup-backups/
+tree ~/.setup-backups/latest/
 ```
 
 ### List Restore Points
 
 ```bash
-./scripts/rollback.sh --list
+# List all backups by category
+ls -la ~/.setup-backups/restore-points/
+
+# View latest backup in each category
+ls -la ~/.setup-backups/latest/
+
+# Check backup metadata
+cat ~/.setup-backups/restore-points/*/metadata.json | jq .
 ```
 
-Output:
-```
-Available restore points:
-1. 2024-01-15_10:30:00 - Before update
-2. 2024-01-10_14:20:00 - Before uninstall
-3. 2024-01-05_09:15:00 - Manual backup
-```
+Each backup includes:
+- Timestamp
+- Description
+- File list
+- Metadata about the backup operation
 
 ### Restore from Backup
 
@@ -377,15 +400,19 @@ Add to crontab:
 
 ### Maintenance Notifications
 
-Create `~/.config/zsh/40-functions.zsh`:
+Create `~/.config/zsh/99-maintenance.zsh`:
 ```bash
 maintenance-reminder() {
-    local last_update=$(stat -f %m ~/.setup_restore/*/metadata.json | tail -1)
-    local now=$(date +%s)
-    local days=$(( (now - last_update) / 86400 ))
+    # Check latest backup in any category
+    local latest_backup=$(find ~/.setup-backups -name "metadata.json" -type f -exec stat -f %m {} \; 2>/dev/null | sort -n | tail -1)
     
-    if [[ $days -gt 7 ]]; then
-        echo "⚠️  It's been $days days since last update. Run: ./scripts/update.sh"
+    if [[ -n "$latest_backup" ]]; then
+        local now=$(date +%s)
+        local days=$(( (now - latest_backup) / 86400 ))
+        
+        if [[ $days -gt 7 ]]; then
+            echo "⚠️  It's been $days days since last backup. Run: ./scripts/update.sh"
+        fi
     fi
 }
 
