@@ -14,9 +14,12 @@ macbook-dev-setup/
 ├── scripts/
 │   ├── install-*.sh           # Component installers
 │   ├── setup-*.sh             # Configuration scripts
+│   ├── backup-manager.sh      # Centralized backup system
 │   ├── health-check.sh        # System verification
 │   ├── update.sh              # Update automation
 │   ├── pre-push-check.sh      # Git pre-push validation
+│   ├── commit-helper.sh       # Interactive commit creator
+│   ├── setup-git-hooks.sh     # Conventional commit setup
 │   └── setup-branch-protection.sh # GitHub branch rules
 ├── dotfiles/
 │   ├── .zshrc                 # Modular shell config loader
@@ -64,9 +67,11 @@ macbook-dev-setup/
 - Comprehensive error handling
 
 **Backups:**
-- Automatic restore points
-- Dotfiles backed up before replacement
-- Rollback capability
+- Centralized backup system in ~/.setup-backups/
+- Organized by category (dotfiles, configs, restore-points, scripts)
+- Automatic cleanup (keeps 10 most recent per category)
+- Latest symlinks for quick access
+- Metadata tracking with timestamps and descriptions
 
 **Idempotency:**
 - Scripts can be run multiple times safely
@@ -103,12 +108,15 @@ macbook-dev-setup/
 
 Main orchestrator that:
 1. Validates environment
-2. Installs Homebrew
-3. Runs component scripts in parallel
-4. Reports results
+2. Detects Warp Terminal
+3. Installs Homebrew
+4. Runs component scripts in parallel
+5. Reports results
 
 Key features:
-- Flag parsing with multiple options
+- Simplified command interface (preview, minimal, fix, warp, backup)
+- Environment variable support for power users
+- Automatic Warp Terminal detection and optimization
 - Performance monitoring
 - Logging support
 
@@ -133,8 +141,19 @@ Shared library providing:
 - Error handling
 - Progress indicators
 - Backup utilities
+- Warp Terminal detection
+- Command validation
 
 Used by all scripts for consistency.
+
+### scripts/backup-manager.sh
+
+Centralized backup system that:
+- Creates categorized backups
+- Maintains metadata
+- Auto-cleans old backups
+- Provides latest symlinks
+- Supports migration from old backup locations
 
 ## Installation Flow
 
@@ -207,25 +226,26 @@ Files loaded in order:
 2. `10-*` - Language managers
 3. `20-*` - Tool configurations
 4. `30-*` - Aliases
-5. `40-*` - Functions
-6. `50-*` - Environment
-7. `90-99` - Local overrides
+5. `35-*` - Commit aliases (git shortcuts)
+6. `40-*` - Functions
+7. `45-*` - Warp Terminal config (if detected)
+8. `50-*` - Environment
+9. `90-99` - Local overrides
 
-### Profile Support
+### Command Interface Evolution
 
-```yaml
-# config/setup.yaml
-profiles:
-  default:
-    include_all: true
-  minimal:
-    brew:
-      brewfile: "homebrew/Brewfile.minimal"
-  custom:
-    brew:
-      additional:
-        - my-tool
-```
+V2.0 simplified from 16+ flags to 5 commands:
+- `preview` - Dry run to see changes
+- `minimal` - Essential tools only
+- `fix` - Diagnostics and fixes
+- `warp` - Warp Terminal setup
+- `backup` - Backup management
+
+Power users can use environment variables:
+- `SETUP_VERBOSE=1` - Verbose output
+- `SETUP_JOBS=n` - Custom parallel jobs
+- `SETUP_LOG=file` - Log to file
+- `SETUP_NO_WARP=true` - Skip Warp detection
 
 ## Error Handling
 
