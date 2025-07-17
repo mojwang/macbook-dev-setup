@@ -33,7 +33,7 @@ cd macbook-dev-setup
 See what will be installed without making changes:
 
 ```bash
-./setup.sh --dry-run
+./setup.sh preview
 ```
 
 ### 3. Run Setup
@@ -42,14 +42,23 @@ See what will be installed without making changes:
 # Standard installation
 ./setup.sh
 
-# With detailed output
-./setup.sh --verbose
-
-# With logging
-./setup.sh --log setup.log
-
 # Minimal installation (essential tools only)
-./setup.sh --minimal
+./setup.sh minimal
+
+# Fix common issues automatically
+./setup.sh fix
+
+# Configure Warp terminal optimizations
+./setup.sh warp
+
+# View backup management options
+./setup.sh backup
+
+# Power user options (environment variables)
+SETUP_VERBOSE=1 ./setup.sh        # Verbose output
+SETUP_JOBS=8 ./setup.sh           # Custom parallel jobs
+SETUP_LOG=setup.log ./setup.sh    # Log to file
+SETUP_NO_WARP=true ./setup.sh     # Skip Warp detection
 ```
 
 ### 4. Reload Your Shell
@@ -152,8 +161,14 @@ To speed up installation:
 
 | Command | Description |
 |---------|-------------|
-| `./setup.sh --dry-run` | Preview changes |
-| `./setup.sh --sync` | Install newly added tools |
+| `./setup.sh` | Run standard setup |
+| `./setup.sh preview` | Preview what will be installed |
+| `./setup.sh minimal` | Install essential tools only |
+| `./setup.sh fix` | Run diagnostics and fix issues |
+| `./setup.sh warp` | Configure Warp terminal |
+| `./setup.sh backup` | Manage backups |
+| `./setup.sh backup clean` | Remove old backups |
+| `./setup.sh help` | Show help message |
 | `./scripts/health-check.sh` | Verify installation |
 | `./scripts/update.sh` | Update all tools |
 | `./scripts/pre-push-check.sh` | Pre-commit validation |
