@@ -187,7 +187,7 @@ for test_file in "${test_files[@]}"; do
     
     # Launch test in background
     run_single_test "$test_file" &
-    local test_pid=$!
+    test_pid=$!
     CHILD_PIDS+=("$test_pid")
     ((job_count++))
 done
