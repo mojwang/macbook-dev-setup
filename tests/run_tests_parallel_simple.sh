@@ -9,6 +9,13 @@ TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Configuration
 MAX_JOBS="${TEST_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
 
+# Limit jobs in CI to prevent resource exhaustion
+if [[ -n "${CI:-}" ]] || [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    if (( MAX_JOBS > 3 )); then
+        MAX_JOBS=3
+    fi
+fi
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -85,7 +92,15 @@ done
 job_count=0
 for test_file in "${test_files[@]}"; do
     # Wait if we've reached max jobs
-    while (( $(jobs -r | wc -l) >= MAX_JOBS )); do
+    while true; do
+        local current_jobs=$(jobs -r 2>/dev/null | wc -l | tr -d ' ')
+        # Handle case where jobs command fails
+        if [[ -z "$current_jobs" ]]; then
+            current_jobs=0
+        fi
+        if (( current_jobs < MAX_JOBS )); then
+            break
+        fi
         sleep 0.1
     done
     
