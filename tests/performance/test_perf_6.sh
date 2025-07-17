@@ -1,5 +1,5 @@
 #!/bin/bash
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 describe "Performance Test 6"
 it "completes quickly"
 # Simulate some work

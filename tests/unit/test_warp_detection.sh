@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test script for Warp Terminal detection and setup
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 source "$(dirname "$0")/../lib/common.sh"
 
 # Mock the check_and_setup_warp function from setup.sh

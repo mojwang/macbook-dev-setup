@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test that migration from old flags to new commands is documented
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 
 describe "Migration Guide Tests"
 

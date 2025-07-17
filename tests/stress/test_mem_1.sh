@@ -1,5 +1,5 @@
 #!/bin/bash
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 describe "Memory Test 1"
 it "uses minimal memory"
 # Create some data but not excessive

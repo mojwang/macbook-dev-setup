@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test new simplified command structure
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 
 # Add missing functions if not defined
 if ! type test_case &>/dev/null; then

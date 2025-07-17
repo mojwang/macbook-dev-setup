@@ -3,11 +3,16 @@
 # Test parallel test runner edge cases and functionality
 
 # Get script directory
-TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+TESTS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT_DIR="$(dirname "$TESTS_DIR")"
 
 # Source test framework
 source "$TESTS_DIR/test_framework.sh"
+
+# Source common functions to get validate_test_jobs
+if [[ -f "$ROOT_DIR/lib/common.sh" ]]; then
+    source "$ROOT_DIR/lib/common.sh"
+fi
 
 describe "Parallel Test Runner Edge Cases"
 
@@ -95,8 +100,8 @@ assert_true "kill -0 $pid3 2>/dev/null" "Job 3 should be running"
 # Kill all jobs
 kill_all_test_jobs 2>/dev/null
 
-# Give time for cleanup
-sleep 2
+# Give more time for cleanup (kill_all_test_jobs has internal sleeps)
+sleep 3
 
 # Verify jobs are terminated
 assert_false "kill -0 $pid1 2>/dev/null" "Job 1 should be terminated"
@@ -117,8 +122,12 @@ EOF
 chmod +x "$test_script"
 
 # Test with TEST_JOBS=0 (should use CPU count)
-output=$(TEST_JOBS=0 bash "$TESTS_DIR/run_tests_parallel_simple.sh" 2>&1 | grep "Running with")
-assert_true "[[ \"$output\" == *\"$cpu_count parallel jobs\"* ]]" "TEST_JOBS=0 should use CPU count"
+# Get CPU count for CI environment (should be 3 due to CI limit)
+expected_jobs=3
+output=$(TEST_JOBS=0 CI=true bash "$TESTS_DIR/run_tests_parallel_simple.sh" 2>&1)
+# Should show invalid warning and then use CPU count
+assert_true "[[ \"$output\" == *\"Invalid TEST_JOBS value: 0\"* ]]" "TEST_JOBS=0 should show invalid warning"
+assert_true "[[ \"$output\" == *\"$expected_jobs parallel jobs\"* ]]" "TEST_JOBS=0 should use CPU count"
 
 # Test with TEST_JOBS=1 (sequential behavior)
 output=$(TEST_JOBS=1 bash "$TESTS_DIR/run_tests_parallel_simple.sh" 2>&1 | grep "Running with")

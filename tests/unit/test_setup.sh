@@ -2,7 +2,7 @@
 
 # Tests for setup.sh functionality
 # Source test framework
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 
 # Source common library for testing
 source "$ROOT_DIR/lib/common.sh"

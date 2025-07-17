@@ -1,5 +1,5 @@
 #!/bin/bash
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 describe "Scale Test 3"
 it "has consistent workload"
 # Simulate consistent work
