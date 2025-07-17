@@ -25,8 +25,25 @@ fi
 
 # Limit jobs in CI to prevent resource exhaustion
 if [[ -n "${CI:-}" ]] || [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-    if (( MAX_JOBS > 3 )); then
-        MAX_JOBS=3
+    # Further reduce parallelism in CI to prevent fork exhaustion
+    if (( MAX_JOBS > 2 )); then
+        MAX_JOBS=2
+    fi
+fi
+
+# Check process limits and adjust if needed
+if command -v ulimit >/dev/null 2>&1; then
+    PROC_LIMIT=$(ulimit -u 2>/dev/null || echo "unlimited")
+    if [[ "$PROC_LIMIT" != "unlimited" ]] && [[ "$PROC_LIMIT" =~ ^[0-9]+$ ]]; then
+        # Reserve processes for system and test operations
+        AVAILABLE_PROCS=$((PROC_LIMIT - 50))
+        if (( AVAILABLE_PROCS < MAX_JOBS * 10 )); then
+            NEW_MAX=$((AVAILABLE_PROCS / 10))
+            if (( NEW_MAX < MAX_JOBS && NEW_MAX > 0 )); then
+                echo -e "${YELLOW}Reducing parallel jobs from $MAX_JOBS to $NEW_MAX due to process limits${NC}"
+                MAX_JOBS=$NEW_MAX
+            fi
+        fi
     fi
 fi
 
@@ -58,17 +75,32 @@ run_single_test() {
     local output_file="$TEST_OUTPUT_DIR/$test_name.out"
     local result_file="$TEST_OUTPUT_DIR/$test_name.result"
     
-    # Run test in isolated subshell
+    # Run test in isolated subshell with proper process group
     (
+        # Set process group to ensure all children can be cleaned up
+        set -m
+        
+        # Set up timeout and cleanup
+        test_timeout=30
+        test_start=$(date +%s)
+        
         # Unset COMMON_LIB_LOADED to ensure clean environment
         unset COMMON_LIB_LOADED
         
-        # Source framework and run test
-        source "$TESTS_DIR/test_framework.sh"
-        source "$test_file"
+        # Source framework and run test with timeout check
+        if source "$TESTS_DIR/test_framework.sh" 2>/dev/null; then
+            # Run with timeout
+            timeout "$test_timeout" bash -c "source '$test_file'" || {
+                echo "Test timed out after ${test_timeout}s"
+                exit 124
+            }
+        else
+            echo "Failed to source test framework"
+            exit 1
+        fi
         
         # Save results
-        echo "$TEST_COUNT:$PASSED_COUNT:$FAILED_COUNT" > "$result_file"
+        echo "${TEST_COUNT:-0}:${PASSED_COUNT:-0}:${FAILED_COUNT:-1}" > "$result_file"
     ) > "$output_file" 2>&1
     
     local exit_code=$?
@@ -102,30 +134,94 @@ for test_file in "$TESTS_DIR"/{unit,integration,performance,stress,ci}/test_*.sh
     fi
 done
 
+# Track all child PIDs for cleanup
+CHILD_PIDS=()
+
+# Cleanup function to kill all child processes
+cleanup_children() {
+    local pids=("${CHILD_PIDS[@]}")
+    if [[ ${#pids[@]} -gt 0 ]]; then
+        echo -e "\n${YELLOW}Cleaning up ${#pids[@]} child processes...${NC}"
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill -TERM "$pid" 2>/dev/null || true
+            fi
+        done
+        # Give processes time to terminate gracefully
+        sleep 1
+        # Force kill any remaining
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill -KILL "$pid" 2>/dev/null || true
+            fi
+        done
+    fi
+}
+
+# Set up cleanup on exit
+trap cleanup_children EXIT INT TERM
+
 # Run tests in parallel with job control
 job_count=0
 for test_file in "${test_files[@]}"; do
-    # Wait if we've reached max jobs
+    # Wait if we've reached max jobs  
     while true; do
-        current_jobs=$(jobs -r 2>/dev/null | wc -l | tr -d ' ')
-        # Handle case where jobs command fails
-        if [[ -z "$current_jobs" ]]; then
-            current_jobs=0
-        fi
+        # Count only our direct children, not all jobs
+        current_jobs=0
+        for pid in "${CHILD_PIDS[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                ((current_jobs++))
+            fi
+        done
+        
         if (( current_jobs < MAX_JOBS )); then
             break
         fi
-        sleep 0.1
+        sleep 0.2
     done
+    
+    # Add small delay in CI to prevent fork storms
+    if [[ -n "${CI:-}" ]]; then
+        sleep 0.05
+    fi
     
     # Launch test in background
     run_single_test "$test_file" &
+    local test_pid=$!
+    CHILD_PIDS+=("$test_pid")
     ((job_count++))
 done
 
-# Wait for all tests to complete
+# Wait for all tests to complete with timeout
 echo -e "\n${CYAN}Waiting for ${job_count} test files to complete...${NC}"
-wait
+
+# Maximum wait time (5 minutes)
+MAX_WAIT_TIME=300
+start_wait=$(date +%s)
+
+while true; do
+    active_count=0
+    for pid in "${CHILD_PIDS[@]}"; do
+        if kill -0 "$pid" 2>/dev/null; then
+            ((active_count++))
+        fi
+    done
+    
+    if [[ $active_count -eq 0 ]]; then
+        break
+    fi
+    
+    # Check timeout
+    current_time=$(date +%s)
+    elapsed=$((current_time - start_wait))
+    if [[ $elapsed -gt $MAX_WAIT_TIME ]]; then
+        echo -e "\n${RED}Timeout waiting for tests to complete!${NC}"
+        cleanup_children
+        exit 124
+    fi
+    
+    sleep 1
+done
 
 # Calculate totals
 TOTAL_TESTS=0

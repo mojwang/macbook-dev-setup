@@ -1,2 +1,8 @@
 #!/bin/bash
-exit 0  # Success
+# Test error chain - success case
+source "$(dirname "$0")/../test_framework.sh"
+
+describe "Error Chain Test 1"
+it "should succeed"
+assert_true "true" "This test should pass"
+exit 0
