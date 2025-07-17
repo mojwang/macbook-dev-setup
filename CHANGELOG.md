@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/mojwang/macbook-dev-setup/compare/v2.1.1...v2.1.2) (2025-07-17)
+
+
+### Bug Fixes
+
+* remove legacy --sync flag references from documentation ([1dc0a1b](https://github.com/mojwang/macbook-dev-setup/commit/1dc0a1b1977c0c65ebb602693ffb0d8cb0df8399))
+
 ## [2.1.1](https://github.com/mojwang/macbook-dev-setup/compare/v2.1.0...v2.1.1) (2025-07-15)
 
 
