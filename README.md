@@ -56,7 +56,6 @@ SETUP_NO_WARP=true ./setup.sh     # Skip Warp terminal detection
 ## Common Tasks
 
 ```bash
-./setup.sh --sync            # Install new tools added to config
 ./scripts/health-check.sh    # Verify installation
 ./scripts/update.sh          # Update everything
 ./scripts/pre-push-check.sh  # Run before pushing

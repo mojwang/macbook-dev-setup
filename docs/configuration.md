@@ -34,10 +34,14 @@ To customize the minimal setup, edit `homebrew/Brewfile.minimal`.
 After adding packages to Brewfile:
 
 ```bash
-./setup.sh --sync
+# Pull changes if needed
+git pull
+
+# Run setup to install new packages
+./setup.sh
 ```
 
-This installs only the new packages without updating existing ones.
+The setup script automatically detects and installs new packages.
 
 ## Dotfile Customization
 
@@ -51,7 +55,7 @@ The Zsh configuration is modular. Files in `~/.config/zsh/`:
 - `30-aliases.zsh` - Command aliases
 - `35-commit-aliases.zsh` - Git commit shortcuts
 - `40-functions.zsh` - Shell functions
-- `45-warp.zsh` - Warp terminal optimizations (if detected)
+- `45-warp.zsh` - Warp terminal optimizations (created automatically when Warp is detected)
 - `50-environment.zsh` - Environment variables
 - `99-local.zsh` - Your personal customizations (gitignored)
 

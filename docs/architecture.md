@@ -50,7 +50,7 @@ macbook-dev-setup/
 - 30-50% faster than sequential execution
 
 **Smart Delegation:**
-- `setup.sh --dry-run` delegates to `setup-validate.sh`
+- `setup.sh preview` delegates to `setup-validate.sh`
 - Validation script skips unnecessary operations
 - 6x faster for dry runs
 
