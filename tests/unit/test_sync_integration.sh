@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Integration tests for sync functionality and new v2.0 features
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 
 describe "Sync and Integration Tests"
 

@@ -3,7 +3,7 @@
 # Unit tests for lib/common.sh
 
 # Source test framework
-source "$(dirname "$0")/test_framework.sh"
+source "$(dirname "$0")/../test_framework.sh"
 
 # Source the library to test
 source "$ROOT_DIR/lib/common.sh"
