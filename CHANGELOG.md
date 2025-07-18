@@ -1,3 +1,20 @@
+# [2.2.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.1.2...v2.2.0) (2025-07-18)
+
+
+### Bug Fixes
+
+* address security and reliability concerns from code review ([eb5da05](https://github.com/mojwang/macbook-dev-setup/commit/eb5da050d550c0d269d3c35a436dd8f518e67c2f))
+* implement missing test functions and remove empty test files ([dd51463](https://github.com/mojwang/macbook-dev-setup/commit/dd5146329aa6dead444827299ff4d22de80fe724))
+* prevent resource exhaustion and orphaned processes in CI ([9e45c86](https://github.com/mojwang/macbook-dev-setup/commit/9e45c86c75ce6f9d70c882a988957366d1568a11))
+* remove 'local' keyword outside of function in test runner ([0c0ca50](https://github.com/mojwang/macbook-dev-setup/commit/0c0ca5065ea678f95eedbebedcd8c69e101629f1))
+* resolve remaining CI test failures and path issues ([bd7eb96](https://github.com/mojwang/macbook-dev-setup/commit/bd7eb96c49ddb8dd90d9b1a99c300f5da7dff716))
+* resolve test failures and security issues ([e910433](https://github.com/mojwang/macbook-dev-setup/commit/e910433aff8c6f897d7d994faf259df9f7f81984))
+
+
+### Features
+
+* add test organization script to improve test management ([1c75874](https://github.com/mojwang/macbook-dev-setup/commit/1c758749c9c00fb0d2aaff31fccf53d660aba2f1))
+
 ## [2.1.2](https://github.com/mojwang/macbook-dev-setup/compare/v2.1.1...v2.1.2) (2025-07-17)
 
 
