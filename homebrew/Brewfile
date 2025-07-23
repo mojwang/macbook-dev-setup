@@ -28,6 +28,7 @@ brew "fd"                    # Enhanced find
 brew "fzf"                   # Fuzzy finder
 brew "ripgrep"               # Enhanced grep
 brew "zoxide"                # Smart cd
+brew "zsh-autosuggestions"   # Fish-like autosuggestions for zsh
 
 # Development utilities
 brew "jq"                    # JSON processor
