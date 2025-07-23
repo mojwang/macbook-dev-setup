@@ -98,6 +98,35 @@ Settings are in `vscode/settings.json`. To customize:
 2. Use VS Code's UI for personal preferences
 3. Add extensions to `vscode/extensions.txt`
 
+### Terminal Font Configuration
+
+The setup automatically configures a consistent font (AnonymicePro Nerd Font Mono) across all terminal applications:
+
+- **Warp**: Automatically detected and configured
+- **iTerm2**: Font set in preferences
+- **Terminal.app**: Font applied to Basic profile
+- **VS Code**: Terminal font configured in settings
+
+To use a different font:
+
+1. Install your preferred Nerd Font:
+   ```bash
+   brew search font | grep nerd
+   brew install font-your-choice-nerd-font
+   ```
+
+2. Update the font configuration:
+   ```bash
+   # Edit the setup script
+   vim scripts/setup-terminal-fonts.sh
+   # Change FONT_NAME variable to your preference
+   ```
+
+3. Re-run font configuration:
+   ```bash
+   ./scripts/setup-terminal-fonts.sh
+   ```
+
 ## Environment Variables
 
 ### System-wide Variables

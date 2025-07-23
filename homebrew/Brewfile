@@ -19,6 +19,7 @@ brew "go"
 brew "rust"
 brew "php"
 brew "composer"
+brew "openjdk"               # Java Development Kit
 
 # Modern CLI replacements
 brew "bat"                   # Enhanced cat

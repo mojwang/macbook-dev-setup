@@ -244,6 +244,44 @@ assert_empty() {
     fi
 }
 
+assert_not_empty() {
+    local value="$1"
+    local message="${2:-Value should not be empty}"
+    
+    ((TEST_COUNT++))
+    
+    if [[ -n "$value" ]]; then
+        echo -e "${GREEN}✓${NC} $message"
+        ((PASSED_COUNT++))
+        return 0
+    else
+        echo -e "${RED}✗${NC} $message"
+        echo "  Value was empty"
+        ((FAILED_COUNT++))
+        return 1
+    fi
+}
+
+assert_not_contains() {
+    local haystack="$1"
+    local needle="$2"
+    local message="${3:-String should not contain substring}"
+    
+    ((TEST_COUNT++))
+    
+    if [[ "$haystack" != *"$needle"* ]]; then
+        echo -e "${GREEN}✓${NC} $message"
+        ((PASSED_COUNT++))
+        return 0
+    else
+        echo -e "${RED}✗${NC} $message"
+        echo "  String: $haystack"
+        echo "  Should not contain: $needle"
+        ((FAILED_COUNT++))
+        return 1
+    fi
+}
+
 test_case() {
     local test_name="$1"
     echo -e "\n  ${YELLOW}Test:${NC} $test_name"
@@ -272,15 +310,22 @@ print_test_summary() {
     print_summary
 }
 
+# Alias for print_summary for compatibility
+summarize() {
+    print_summary
+}
+
 # Export functions for use in test files
 export -f assert_equals
 export -f assert_true
 export -f assert_false
 export -f assert_contains
+export -f assert_not_contains
 export -f assert_file_exists
 export -f assert_directory_exists
 export -f assert_command_exists
 export -f assert_empty
+export -f assert_not_empty
 export -f describe
 export -f it
 export -f test_case
@@ -290,3 +335,4 @@ export -f fail_test
 export -f mock_command
 export -f cleanup_mocks
 export -f print_test_summary
+export -f summarize
