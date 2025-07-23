@@ -86,3 +86,10 @@ fi
 if command -v rbenv 1>/dev/null 2>&1; then
     eval "$(rbenv init - zsh)"
 fi
+
+# Java/OpenJDK configuration
+if [ -d "$HOMEBREW_PREFIX/opt/openjdk" ]; then
+    export PATH="$HOMEBREW_PREFIX/opt/openjdk/bin:$PATH"
+    export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk"
+    export CPPFLAGS="-I$HOMEBREW_PREFIX/opt/openjdk/include"
+fi
