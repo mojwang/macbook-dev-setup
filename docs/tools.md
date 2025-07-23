@@ -20,6 +20,7 @@ Complete list of tools installed by this setup.
 - **[Rust](https://www.rust-lang.org/)** - Rust programming language
 - **[Ruby](https://www.ruby-lang.org/)** - via rbenv
 - **[PHP](https://www.php.net/)** - PHP with Composer
+- **[OpenJDK](https://openjdk.java.net/)** - Java Development Kit
 
 ## Development Tools
 

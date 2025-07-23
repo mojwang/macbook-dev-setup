@@ -346,6 +346,9 @@ main_setup() {
         print_step "Configuring applications..."
         ./scripts/setup-applications.sh
         
+        print_step "Configuring terminal fonts..."
+        ./scripts/setup-terminal-fonts.sh
+        
         print_step "Configuring macOS settings..."
         ./scripts/setup-macos.sh
         
