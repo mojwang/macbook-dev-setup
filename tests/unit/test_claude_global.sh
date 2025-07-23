@@ -1,7 +1,16 @@
 #!/bin/bash
 
 # Test script for global Claude configuration setup
-source "$(dirname "$0")/../test_framework.sh"
+
+# Check if test framework exists
+TEST_FRAMEWORK="$(dirname "$0")/../test_framework.sh"
+if [[ ! -f "$TEST_FRAMEWORK" ]]; then
+    echo "Error: Test framework not found at $TEST_FRAMEWORK" >&2
+    echo "Please ensure the test framework is available before running tests." >&2
+    exit 1
+fi
+
+source "$TEST_FRAMEWORK"
 
 # Create a temporary test environment
 TEST_HOME="$(mktemp -d)"
@@ -105,6 +114,32 @@ chmod 600 "$TEST_CLAUDE_MD"
 chmod 644 "$TEST_CLAUDE_MD"
 perms=$(stat -f %Lp "$TEST_CLAUDE_MD" 2>/dev/null || stat -c %a "$TEST_CLAUDE_MD" 2>/dev/null)
 assert_equals "644" "$perms"
+
+# Test 8: Non-interactive mode handling
+test_case "Non-interactive mode skips prompts"
+# Modify existing file
+echo "Existing content" > "$TEST_CLAUDE_MD"
+echo "New template content" > "$TEST_TEMPLATE"
+# Simulate CI environment
+export CI=true
+# In CI mode, should not update the file
+assert_equals "Existing content" "$(cat "$TEST_CLAUDE_MD")"
+unset CI
+
+# Test 9: Version metadata handling
+test_case "Version metadata is added to installed file"
+rm -f "$TEST_CLAUDE_MD"
+# Simulate installation with metadata
+{
+    echo "# Claude Global Config Version: 1.0.0"
+    echo "# Last Updated: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "# Source: macbook-dev-setup/config/global-claude.md"
+    echo ""
+    cat "$TEST_TEMPLATE"
+} > "$TEST_CLAUDE_MD"
+assert_true "grep -q '^# Claude Global Config Version:' '$TEST_CLAUDE_MD'"
+assert_true "grep -q '^# Last Updated:' '$TEST_CLAUDE_MD'"
+assert_true "grep -q '^# Source:' '$TEST_CLAUDE_MD'"
 
 # Summary
 echo ""
