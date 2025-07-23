@@ -343,6 +343,9 @@ main_setup() {
         print_step "Setting up dotfiles..."
         ./scripts/setup-dotfiles.sh
         
+        print_step "Setting up global Claude configuration..."
+        ./scripts/setup-claude-global.sh
+        
         print_step "Configuring applications..."
         ./scripts/setup-applications.sh
         
@@ -375,6 +378,11 @@ main_setup() {
         print_step "Updating configurations..."
         if [[ -f "./scripts/setup-dotfiles.sh" ]]; then
             ./scripts/setup-dotfiles.sh --update
+        fi
+        
+        print_step "Updating global Claude configuration..."
+        if [[ -f "./scripts/setup-claude-global.sh" ]]; then
+            ./scripts/setup-claude-global.sh
         fi
     fi
     
