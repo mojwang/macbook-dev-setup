@@ -60,3 +60,10 @@ fi
 if command -v starship &> /dev/null; then
     eval "$(starship init zsh)"
 fi
+
+# Zsh autosuggestions
+if [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+    source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    # Optional: customize suggestion color (default is grayed out)
+    # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
+fi

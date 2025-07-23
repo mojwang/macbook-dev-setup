@@ -124,3 +124,15 @@ The `--sync` flag detects and installs new packages added to configuration files
 - All scripts use `set -e` for fail-fast behavior
 - Timeout protection (30s) for potentially hanging commands
 - Git is configured with security-conscious settings (fsckObjects enabled)
+
+## Setup Script Maintenance
+
+When adding new functionality or capabilities to this project, always check if the setup script needs updating:
+
+1. **New tools/packages**: Add to `homebrew/Brewfile` (or `Brewfile.minimal` for essentials)
+2. **Configuration files**: Update relevant scripts in `/scripts/` directory
+3. **Shell integrations**: Add to appropriate `.config/zsh/` module
+4. **Test changes**: Run `./setup.sh preview` to verify changes
+5. **Update documentation**: Document new features in this file if needed
+
+After any changes, run the setup script to ensure everything works correctly.
