@@ -1,3 +1,15 @@
+# [2.4.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.3.0...v2.4.0) (2025-07-23)
+
+
+### Bug Fixes
+
+* improve global CLAUDE.md setup for CI environments ([abc9988](https://github.com/mojwang/macbook-dev-setup/commit/abc998830730cc0b0c3ebc96127081e36346f81e))
+
+
+### Features
+
+* add global CLAUDE.md provisioning and zsh-autosuggestions ([07bc1e7](https://github.com/mojwang/macbook-dev-setup/commit/07bc1e7b6aa2fbfa8866842ec294f9338deab6ee))
+
 # [2.3.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.2.0...v2.3.0) (2025-07-23)
 
 
