@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.2.0...v2.3.0) (2025-07-23)
+
+
+### Features
+
+* add OpenJDK installation and consistent terminal font configuration ([c594f47](https://github.com/mojwang/macbook-dev-setup/commit/c594f4708cda3b546962d4e38c9f2ceb90bc9d26))
+
 # [2.2.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.1.2...v2.2.0) (2025-07-18)
 
 
