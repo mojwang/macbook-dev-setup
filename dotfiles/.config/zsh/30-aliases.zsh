@@ -37,6 +37,9 @@ alias copy="rsync -ahr --progress"
 alias cls="clear"
 alias .....="cd ../../../.."
 
+# Help system alias
+alias devhelp="$HOME/repos/personal/macbook-dev-setup/setup.sh info"
+
 # Docker aliases
 if command -v docker &> /dev/null; then
     alias d="docker"
