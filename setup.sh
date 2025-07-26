@@ -347,6 +347,9 @@ main_setup() {
         print_step "Setting up global Claude configuration..."
         ./scripts/setup-claude-global.sh
         
+        print_step "Setting up Claude MCP servers..."
+        ./scripts/setup-claude-mcp.sh
+        
         print_step "Configuring applications..."
         ./scripts/setup-applications.sh
         
@@ -384,6 +387,11 @@ main_setup() {
         print_step "Updating global Claude configuration..."
         if [[ -f "./scripts/setup-claude-global.sh" ]]; then
             ./scripts/setup-claude-global.sh
+        fi
+        
+        print_step "Updating Claude MCP servers..."
+        if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
+            ./scripts/setup-claude-mcp.sh --update
         fi
     fi
     
