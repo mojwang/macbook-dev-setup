@@ -15,6 +15,7 @@ This is a macOS development environment setup repository designed for Apple Sili
 ./setup.sh minimal      # Install essential tools only  
 ./setup.sh fix          # Run diagnostics and fix common issues
 ./setup.sh warp         # Configure Warp terminal optimizations
+./setup.sh info         # Learn about installed tools, aliases & features
 ./setup.sh help         # Show help message
 
 # Backup management (automatic - runs during setup)
@@ -32,6 +33,24 @@ SETUP_NO_WARP=true ./setup.sh   # Skip Warp auto-detection
 
 # Advanced interactive mode
 ./setup.sh advanced     # Interactive menu for all options
+```
+
+### Learning About Your Environment
+The `info` command provides comprehensive documentation about installed tools:
+```bash
+./setup.sh info              # Show help categories
+./setup.sh info tools        # List all installed tools with descriptions
+./setup.sh info aliases      # Show all shell aliases
+./setup.sh info functions    # Show custom shell functions
+./setup.sh info features     # Show special features and enhancements
+./setup.sh info examples     # Show usage examples for common tasks
+./setup.sh info search fd    # Search for specific tool/command
+./setup.sh info all          # Show everything (paginated)
+
+# After setup, use the alias:
+devhelp                      # Quick access to info command
+devhelp tools                # Show tools
+devhelp search ripgrep       # Search for ripgrep
 ```
 
 ### Automatic Warp Detection

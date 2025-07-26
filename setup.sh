@@ -34,6 +34,7 @@ Commands:
     fix        Run diagnostics and fix common issues
     warp       Configure Warp terminal optimizations
     backup     Manage setup backups
+    info       Learn about installed tools, aliases & features
     advanced   Interactive mode for advanced options
     help       Show this help message
 
@@ -468,6 +469,16 @@ case "${1:-}" in
                 echo "Note: Backups are created automatically during setup"
                 ;;
         esac
+        ;;
+    
+    "info")
+        # Run the help script with any additional arguments
+        if [[ -f "scripts/setup-help.sh" ]]; then
+            ./scripts/setup-help.sh "$2" "$3"
+        else
+            print_error "Info script not found at scripts/setup-help.sh"
+            exit 1
+        fi
         ;;
     
     "advanced")
