@@ -219,10 +219,11 @@ search_command() {
         echo ""
     fi
     
-    # Search in Brewfile
-    if grep -qi "$query" "$HOME/repos/personal/macbook-dev-setup/homebrew/Brewfile" 2>/dev/null; then
+    # Search in Brewfile - use ROOT_DIR from common.sh
+    local brewfile_path="${ROOT_DIR:-$(dirname "$0")/..}/homebrew/Brewfile"
+    if [[ -f "$brewfile_path" ]] && grep -qi "$query" "$brewfile_path" 2>/dev/null; then
         echo -e "${YELLOW}Found in Brewfile:${NC}"
-        grep -i "$query" "$HOME/repos/personal/macbook-dev-setup/homebrew/Brewfile" | sed 's/^/  /'
+        grep -i "$query" "$brewfile_path" | sed 's/^/  /'
         echo ""
     fi
 }

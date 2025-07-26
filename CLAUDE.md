@@ -68,6 +68,24 @@ All backups are now centrally organized in `~/.setup-backups/`:
 - **Latest Symlinks**: Quick access to most recent backups
 - **Metadata Tracking**: Each backup includes timestamp and description
 
+### Claude MCP Servers
+```bash
+./scripts/setup-claude-mcp.sh        # Install and configure MCP servers
+./scripts/setup-claude-mcp.sh --check   # Check MCP server status
+./scripts/setup-claude-mcp.sh --update  # Update MCP servers
+./scripts/setup-claude-mcp.sh --remove  # Remove MCP configuration
+
+# After setup, use MCP servers in Claude Code:
+/mcp                         # Access MCP servers in Claude Code
+claude mcp list              # List configured MCP servers
+```
+
+MCP servers installed:
+- **filesystem**: Secure file operations with configurable access controls
+- **memory**: In-memory key-value storage for temporary data
+- **git**: Tools to read, search, and manipulate Git repositories
+- **fetch**: Web content fetching and conversion for efficient LLM usage
+
 ### Git Commit Helpers
 ```bash
 ./scripts/setup-git-hooks.sh # Set up conventional commit hooks
@@ -151,7 +169,8 @@ When adding new functionality or capabilities to this project, always check if t
 1. **New tools/packages**: Add to `homebrew/Brewfile` (or `Brewfile.minimal` for essentials)
 2. **Configuration files**: Update relevant scripts in `/scripts/` directory
 3. **Shell integrations**: Add to appropriate `.config/zsh/` module
-4. **Test changes**: Run `./setup.sh preview` to verify changes
-5. **Update documentation**: Document new features in this file if needed
+4. **Claude MCP servers**: Update `setup-claude-mcp.sh` for new MCP servers
+5. **Test changes**: Run `./setup.sh preview` to verify changes
+6. **Update documentation**: Document new features in this file if needed
 
 After any changes, run the setup script to ensure everything works correctly.
