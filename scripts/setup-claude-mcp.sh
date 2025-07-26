@@ -121,8 +121,16 @@ clone_mcp_repository() {
     if [[ ! -d "$temp_dir" ]]; then
         git clone "$MCP_REPO_URL" "$temp_dir"
     else
-        print_info "Repository already exists, updating..."
-        (cd "$temp_dir" && git pull)
+        print_info "Repository already exists, checking status..."
+        
+        # Check if repository is clean before pulling
+        if (cd "$temp_dir" && git diff --quiet && git diff --cached --quiet); then
+            print_info "Repository is clean, updating..."
+            (cd "$temp_dir" && git pull)
+        else
+            print_warning "Repository has uncommitted changes, skipping update"
+            print_info "Using existing repository state"
+        fi
     fi
     
     # Copy root configuration files
@@ -163,8 +171,21 @@ install_mcp_servers() {
     for server in "${NODE_SERVERS[@]}"; do
         if [[ -d "$MCP_OFFICIAL_DIR/$server" ]]; then
             print_info "Building $server server..."
-            (cd "$MCP_OFFICIAL_DIR/$server" && npm install --silent && npm run build)
-            print_success "Built $server server"
+            
+            # Install dependencies
+            if (cd "$MCP_OFFICIAL_DIR/$server" && npm install --silent); then
+                print_info "Dependencies installed for $server"
+                
+                # Build the server
+                if (cd "$MCP_OFFICIAL_DIR/$server" && npm run build); then
+                    print_success "Built $server server"
+                else
+                    print_error "Failed to build $server server"
+                    print_info "Server may still work without build artifacts"
+                fi
+            else
+                print_error "Failed to install dependencies for $server server"
+            fi
         fi
     done
     
@@ -193,16 +214,38 @@ configure_claude_mcp() {
         claude mcp add --scope user memory node "$MCP_OFFICIAL_DIR/memory/dist/index.js" || true
     fi
     
-    # Add git server
+    # Add git server with proper JSON escaping
     if [[ -d "$MCP_OFFICIAL_DIR/git" ]]; then
         print_info "Adding git server..."
-        claude mcp add-json --scope user git "{\"type\": \"stdio\", \"command\": \"uv\", \"args\": [\"--directory\", \"$MCP_OFFICIAL_DIR/git\", \"run\", \"mcp-server-git\"]}" || true
+        # Validate directory path
+        if [[ ! -d "$MCP_OFFICIAL_DIR/git" ]]; then
+            print_error "Git server directory not found: $MCP_OFFICIAL_DIR/git"
+            return 1
+        fi
+        
+        # Build JSON with proper escaping
+        local git_json
+        git_json=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-git"]}' \
+            "$(printf '%s' "$MCP_OFFICIAL_DIR/git" | sed 's/["\]/\\&/g')")
+        
+        claude mcp add-json --scope user git "$git_json" || true
     fi
     
-    # Add fetch server
+    # Add fetch server with proper JSON escaping
     if [[ -d "$MCP_OFFICIAL_DIR/fetch" ]]; then
         print_info "Adding fetch server..."
-        claude mcp add-json --scope user fetch "{\"type\": \"stdio\", \"command\": \"uv\", \"args\": [\"--directory\", \"$MCP_OFFICIAL_DIR/fetch\", \"run\", \"mcp-server-fetch\"]}" || true
+        # Validate directory path
+        if [[ ! -d "$MCP_OFFICIAL_DIR/fetch" ]]; then
+            print_error "Fetch server directory not found: $MCP_OFFICIAL_DIR/fetch"
+            return 1
+        fi
+        
+        # Build JSON with proper escaping
+        local fetch_json
+        fetch_json=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-fetch"]}' \
+            "$(printf '%s' "$MCP_OFFICIAL_DIR/fetch" | sed 's/["\]/\\&/g')")
+        
+        claude mcp add-json --scope user fetch "$fetch_json" || true
     fi
     
     print_success "MCP servers configured"
