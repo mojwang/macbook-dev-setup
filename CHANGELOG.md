@@ -1,3 +1,16 @@
+# [2.6.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.5.0...v2.6.0) (2025-07-26)
+
+
+### Bug Fixes
+
+* add git status check to pyenv updates ([d186742](https://github.com/mojwang/macbook-dev-setup/commit/d186742154e85cc0d87311cb8038e8d3afc12ce2))
+* address CI issues for MCP setup ([2abb590](https://github.com/mojwang/macbook-dev-setup/commit/2abb590bd9fc81af91e6f747d3967564017e94ff))
+
+
+### Features
+
+* add Claude MCP server setup integration ([b697146](https://github.com/mojwang/macbook-dev-setup/commit/b69714631bada3591d34cfd0dae363aaaf8a678a))
+
 # [2.5.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.4.0...v2.5.0) (2025-07-26)
 
 
