@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.4.0...v2.5.0) (2025-07-26)
+
+
+### Features
+
+* add comprehensive help/info system for installed tools ([f6d292c](https://github.com/mojwang/macbook-dev-setup/commit/f6d292c0894e8bfa9436d3902293a5b519e90651))
+
 # [2.4.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.3.0...v2.4.0) (2025-07-23)
 
 
