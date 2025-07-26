@@ -53,5 +53,21 @@ assert_true "grep -q 'check_prerequisites()' '$SCRIPT_PATH'"
 test_case "Script should define configure_claude_mcp function"
 assert_true "grep -q 'configure_claude_mcp()' '$SCRIPT_PATH'"
 
+# Test 6: Script handles paths correctly
+test_case "Script should use MCP_ROOT_DIR variable"
+assert_true "grep -q 'MCP_ROOT_DIR=' '$SCRIPT_PATH'"
+
+# Test 7: Script has proper JSON escaping
+test_case "Script should properly escape JSON"
+assert_true "grep -q 'printf.*sed.*s/\[\"\\\\]/\\\\\\\\&/g' '$SCRIPT_PATH'"
+
+# Test 8: Script checks git status before pull
+test_case "Script should check git status before pull"
+assert_true "grep -q 'git diff --quiet' '$SCRIPT_PATH'"
+
+# Test 9: Script has proper error handling for npm
+test_case "Script should handle npm build failures"
+assert_true "grep -q 'Failed to build.*server' '$SCRIPT_PATH'"
+
 # Print summary
 print_test_summary

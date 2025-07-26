@@ -37,8 +37,20 @@ alias copy="rsync -ahr --progress"
 alias cls="clear"
 alias .....="cd ../../../.."
 
-# Help system alias
-alias devhelp="$HOME/repos/personal/macbook-dev-setup/setup.sh info"
+# Help system alias - dynamically find the setup directory
+if [[ -f "$HOME/repos/personal/macbook-dev-setup/setup.sh" ]]; then
+    alias devhelp="$HOME/repos/personal/macbook-dev-setup/setup.sh info"
+elif command -v setup.sh &>/dev/null; then
+    alias devhelp="setup.sh info"
+else
+    # Try to find setup.sh in common locations
+    for dir in "$HOME/macbook-dev-setup" "$HOME/dev/macbook-dev-setup" "$HOME/projects/macbook-dev-setup"; do
+        if [[ -f "$dir/setup.sh" ]]; then
+            alias devhelp="$dir/setup.sh info"
+            break
+        fi
+    done
+fi
 
 # Docker aliases
 if command -v docker &> /dev/null; then
