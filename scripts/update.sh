@@ -25,6 +25,36 @@ safe_update() {
     fi
 }
 
+# Safe git update with status check
+safe_git_update() {
+    local dir="$1"
+    local description="$2"
+    
+    print_step "Updating $description..."
+    
+    # Check if directory exists
+    if [[ ! -d "$dir" ]]; then
+        print_error "$description directory not found: $dir"
+        ((UPDATE_FAILURES++))
+        return 1
+    fi
+    
+    # Check if repository is clean before pulling
+    if (cd "$dir" && git diff --quiet && git diff --cached --quiet); then
+        if (cd "$dir" && git pull); then
+            print_success "$description updated successfully"
+            return 0
+        else
+            print_error "Failed to update $description"
+            ((UPDATE_FAILURES++))
+            return 1
+        fi
+    else
+        print_warning "$description has uncommitted changes, skipping update"
+        return 0
+    fi
+}
+
 # Main update function
 main() {
     echo -e "${BLUE}"
@@ -123,7 +153,7 @@ main() {
     # Update pyenv
     if command_exists pyenv; then
         if [[ -d "$(pyenv root)/.git" ]]; then
-            safe_update "cd $(pyenv root) && git pull" "pyenv"
+            safe_git_update "$(pyenv root)" "pyenv"
         else
             print_info "pyenv installed via Homebrew, will be updated with brew"
         fi
