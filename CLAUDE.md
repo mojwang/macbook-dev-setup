@@ -6,6 +6,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a macOS development environment setup repository designed for Apple Silicon (ARM64) MacBooks. It provides automated, reproducible setup scripts with a focus on performance and safety.
 
+## Testing Philosophy
+
+This project uses a pragmatic combination of TDD, BDD, and SDD approaches:
+
+### Test-Driven Development (TDD)
+- Default approach for all new code
+- Write unit tests first, then implement
+- Keep tests simple and focused
+
+### Behavior-Driven Development (BDD)
+- Use for user-facing features when it adds clarity
+- Given/When/Then format available in test framework
+- No separate feature files needed - use inline in tests
+
+### Specification-Driven Development (SDD)
+- Document critical contracts and invariants
+- Use `specify`, `invariant`, `precondition`, `postcondition` functions
+- Only for APIs and critical system boundaries
+
+### Example:
+```bash
+#!/bin/bash
+source "$(dirname "$0")/../test_framework.sh"
+
+specify "critical API contract"
+invariant "[[ condition ]]" "System invariant maintained"
+
+it "user-facing feature"
+given "initial state"
+when "user action"
+expect "[[ expected result ]]" "Outcome achieved"
+```
+
 ## Key Commands
 
 ### Simple Setup Commands (v2.0)

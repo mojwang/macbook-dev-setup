@@ -315,6 +315,61 @@ summarize() {
     print_summary
 }
 
+# BDD-style test functions
+given() {
+    echo "  Given: $*"
+}
+
+when() {
+    echo "   When: $*"
+}
+
+expect() {
+    local condition="$1"
+    local message="${2:-Then assertion}"
+    echo "   Then: $message"
+    assert_true "$condition" "$message"
+}
+
+and() {
+    local condition="$1"
+    local message="${2:-And assertion}"
+    echo "    And: $message"
+    assert_true "$condition" "$message"
+}
+
+# SDD-style specification functions
+specify() {
+    local name="$1"
+    echo -e "\n${BLUE}Specification: $name${NC}"
+    echo "=================================="
+}
+
+invariant() {
+    local condition="$1"
+    local message="${2:-Invariant}"
+    echo "  Invariant: $message"
+    assert_true "$condition" "Invariant: $message"
+}
+
+precondition() {
+    local condition="$1"
+    local message="${2:-Precondition}"
+    echo "  Precondition: $message"
+    if ! eval "$condition"; then
+        skip_test "Precondition not met: $message"
+        return 1
+    fi
+    return 0
+}
+
+postcondition() {
+    local condition="$1"
+    local message="${2:-Postcondition}"
+    echo "  Postcondition: $message"
+    assert_true "$condition" "Postcondition: $message"
+}
+
 # Export functions for use in test files
 export -f assert_equals
 export -f assert_true
@@ -336,3 +391,11 @@ export -f mock_command
 export -f cleanup_mocks
 export -f print_test_summary
 export -f summarize
+export -f given
+export -f when
+export -f expect
+export -f and
+export -f specify
+export -f invariant
+export -f precondition
+export -f postcondition
