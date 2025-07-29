@@ -9,7 +9,6 @@ set -e
 source "$(dirname "$0")/../lib/common.sh"
 
 # Load signal safety library
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT_DIR/lib/signal-safety.sh"
 
 # MCP-specific cleanup function
@@ -68,11 +67,21 @@ COMMUNITY_SERVERS=(
     "exa:https://github.com/exa-labs/exa-mcp-server.git"
 )
 
-# Path patterns for build artifacts
-declare -A BUILD_PATHS=(
-    ["node"]="dist/index.js build/index.js index.js"
-    ["python"]="__main__.py main.py src/main.py"
-)
+# Function to get build paths for a server type
+get_build_paths() {
+    local server_type="$1"
+    case "$server_type" in
+        node)
+            echo "dist/index.js build/index.js index.js"
+            ;;
+        python)
+            echo "__main__.py main.py src/main.py"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
 
 # Node.js servers that need npm build
 NODE_SERVERS=(
@@ -237,7 +246,7 @@ build_python_server() {
 
 # Install official MCP servers
 install_official_servers() {
-    print_section "Installing Official MCP Servers"
+    print_info "Installing Official MCP Servers"
     
     # Clone or update the official servers repository
     if ! clone_or_update_repo "$MCP_REPO_URL" "$MCP_OFFICIAL_DIR"; then
@@ -293,7 +302,7 @@ parse_server_info() {
 
 # Install community MCP servers
 install_community_servers() {
-    print_section "Installing Community MCP Servers"
+    print_info "Installing Community MCP Servers"
     
     mkdir -p "$MCP_COMMUNITY_DIR"
     
@@ -340,7 +349,7 @@ find_server_executable() {
     
     if [[ "$server_type" == "node" ]]; then
         # Check common Node.js build output paths
-        for path in ${BUILD_PATHS["node"]}; do
+        for path in $(get_build_paths node); do
             if [[ -f "$server_path/$path" ]]; then
                 echo "$server_path/$path"
                 return 0
@@ -355,7 +364,7 @@ find_server_executable() {
         fi
     elif [[ "$server_type" == "python" ]]; then
         # Check common Python entry points
-        for path in ${BUILD_PATHS["python"]}; do
+        for path in $(get_build_paths python); do
             if [[ -f "$server_path/$path" ]]; then
                 echo "$server_path/$path"
                 return 0
@@ -406,7 +415,7 @@ EOF
 
 # Configure Claude Desktop
 configure_claude_desktop() {
-    print_section "Configuring Claude Desktop"
+    print_info "Configuring Claude Desktop"
     
     # Ensure Claude config directory exists
     mkdir -p "$CLAUDE_CONFIG_DIR"
@@ -506,7 +515,7 @@ print_usage() {
 
 # Check MCP server status
 check_status() {
-    print_section "MCP Server Status"
+    print_info "MCP Server Status"
     
     # Check if config exists
     if [[ ! -f "$CLAUDE_CONFIG_FILE" ]]; then
@@ -556,7 +565,7 @@ check_status() {
 
 # Update all servers
 update_servers() {
-    print_section "Updating MCP Servers"
+    print_info "Updating MCP Servers"
     
     # Update official servers
     if [[ -d "$MCP_OFFICIAL_DIR" ]]; then
@@ -574,7 +583,7 @@ update_servers() {
 
 # Remove MCP configuration
 remove_configuration() {
-    print_section "Removing MCP Configuration"
+    print_info "Removing MCP Configuration"
     
     # Backup current config
     if [[ -f "$CLAUDE_CONFIG_FILE" ]]; then
@@ -641,7 +650,7 @@ main() {
     # Configure Claude Desktop
     configure_claude_desktop
     
-    print_section "Setup Complete!"
+    print_info "Setup Complete!"
     echo ""
     echo "MCP servers have been installed and configured."
     echo ""

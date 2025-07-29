@@ -2,25 +2,73 @@
 # Git, Docker, and utility shortcuts
 
 # Git aliases
+alias g="git"
 alias gs="git status"
 alias ga="git add"
-alias gc="git commit"
 alias gp="git push"
-alias gl="git log --oneline"
+alias gpl="git pull"
+alias gf="git fetch"
 # Enhanced git diff with delta if available
 if command -v delta &> /dev/null; then
     alias gd="git diff | delta"
-    alias gdiff="git diff | delta"
 else
     alias gd="git diff"
 fi
-alias gb="git branch"
+# Use git aliases from .gitconfig for these
+alias gl="git lg"
+alias gla="git lga"
 alias gco="git checkout"
-alias gpl="git pull"
-alias gf="git fetch"
+alias gb="git branch"
 alias gm="git merge"
 alias gr="git rebase"
 alias gstash="git stash"
+
+# Git worktree aliases
+alias gwa="git worktree add"
+alias gwl="git worktree list"
+alias gwr="git worktree remove"
+alias gwp="git worktree prune"
+
+# Smart worktree switcher - finds sibling worktrees
+gwcd() {
+    # If in a repo with worktrees, show them
+    local current_repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
+    if [[ -n "$current_repo" ]]; then
+        # Find all related worktrees (same prefix)
+        local base_name="${current_repo%.*}"  # Remove suffix if any
+        local selected=$(find "$(dirname "$(pwd)")" -maxdepth 1 -type d -name "${base_name}*" | \
+            xargs -I {} bash -c 'echo "{} ($(cd "{}" && git branch --show-current 2>/dev/null || echo "no branch"))"' | \
+            fzf --header="Select worktree:" | \
+            awk '{print $1}')
+        [[ -n "$selected" ]] && cd "$selected"
+    else
+        echo "Not in a git repository"
+    fi
+}
+
+# Quick switch between main and worktrees
+gw() {
+    case "$1" in
+        main)   cd "${PWD%.*}";;           # Go to main (remove suffix)
+        review) cd "${PWD%.*}.review";;    # Go to review worktree
+        hotfix) cd "${PWD%.*}.hotfix";;    # Go to hotfix worktree
+        test)   cd "${PWD%.*}.test";;      # Go to test worktree
+        *)      gwcd;;                     # Interactive selection
+    esac
+}
+
+# Setup standard worktrees for current repo
+setup_worktrees() {
+    local repo_name=$(basename "$(pwd)")
+    echo "Setting up standard worktrees for $repo_name..."
+    
+    # Create standard worktrees as siblings
+    git worktree add ../${repo_name}.review main
+    git worktree add ../${repo_name}.hotfix main
+    
+    echo "Worktrees created:"
+    git worktree list
+}
 
 # Text editor aliases
 if command -v nvim &> /dev/null; then
