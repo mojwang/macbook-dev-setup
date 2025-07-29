@@ -27,6 +27,9 @@ cleanup_test_env() {
     rm -f "$test_backup_root/test.bak" 2>/dev/null
 }
 
+# Set up cleanup trap to ensure cleanup happens on exit or interruption
+trap cleanup_test_env EXIT INT TERM HUP
+
 # Ensure clean start
 cleanup_test_env
 
@@ -219,9 +222,5 @@ if [[ -f "$backup1_file" ]] && [[ -f "$backup2_file" ]]; then
 fi
 
 rm -f "$test_file1" "$test_file2"
-
-# Cleanup
-it "cleaning up test environment"
-cleanup_test_env
 
 print_summary

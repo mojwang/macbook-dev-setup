@@ -5,6 +5,16 @@
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
+# Cleanup function
+cleanup_rollback() {
+    if [[ -n "${temp_requirements:-}" ]] && [[ -f "$temp_requirements" ]]; then
+        rm -f "$temp_requirements"
+    fi
+}
+
+# Set up cleanup trap for all signals
+trap cleanup_rollback EXIT INT TERM HUP
+
 # Show available restore points
 show_restore_points() {
     local restore_dir="$HOME/.setup_restore"
@@ -158,8 +168,6 @@ restore_from_point() {
                 pip3 install -r "$temp_requirements" 2>/dev/null || true
             fi
         fi
-        
-        rm -f "$temp_requirements"
     fi
     
     print_success "Rollback completed!"

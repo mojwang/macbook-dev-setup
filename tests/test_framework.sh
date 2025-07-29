@@ -369,7 +369,6 @@ postcondition() {
     echo "  Postcondition: $message"
     assert_true "$condition" "Postcondition: $message"
 }
-
 # Export functions for use in test files
 export -f assert_equals
 export -f assert_true

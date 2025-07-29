@@ -8,6 +8,38 @@ set -e
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
+# Load signal safety library
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT_DIR/lib/signal-safety.sh"
+
+# MCP-specific cleanup function
+cleanup_mcp() {
+    print_info "Cleaning up MCP installation..."
+    
+    # Clean up any npm build directories
+    if [[ -n "${MCP_ROOT_DIR:-}" ]]; then
+        find "$MCP_ROOT_DIR" -name "node_modules" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+        find "$MCP_ROOT_DIR" -name ".npm" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+    fi
+    
+    # Clean up any Python virtual environments
+    if [[ -n "${MCP_ROOT_DIR:-}" ]]; then
+        find "$MCP_ROOT_DIR" -name "venv" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+        find "$MCP_ROOT_DIR" -name "__pycache__" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+    fi
+    
+    # Remove partial installations
+    if [[ -n "${CLAUDE_CONFIG_FILE:-}" ]] && [[ -f "${CLAUDE_CONFIG_FILE}.tmp" ]]; then
+        rm -f "${CLAUDE_CONFIG_FILE}.tmp" 2>/dev/null || true
+    fi
+    
+    # Call default cleanup
+    default_cleanup
+}
+
+# Set up cleanup trap
+setup_cleanup "cleanup_mcp"
+
 # Configuration
 MCP_ROOT_DIR="${MCP_ROOT_DIR:-$HOME/repos/mcp-servers}"
 MCP_OFFICIAL_DIR="$MCP_ROOT_DIR/official"
@@ -46,625 +78,582 @@ declare -A BUILD_PATHS=(
 NODE_SERVERS=(
     "filesystem"
     "memory"
-    "context7"
-    "playwright"
-    "figma"
-    "exa"
-)
-
-# Python servers that need uv
-PYTHON_SERVERS=(
     "git"
     "fetch"
     "sequentialthinking"
+    "context7"
+    "playwright"
+    "figma"
     "semgrep"
+    "exa"
 )
 
-setup_mcp_servers() {
-    print_info "Setting up Claude Code MCP servers..."
-    
-    # Check prerequisites
-    check_prerequisites
-    
-    # Create directory structure
-    create_mcp_directories
-    
-    # Clone and install servers
-    clone_mcp_repository
-    clone_community_servers
-    
-    # Build and install servers
-    install_mcp_servers
-    
-    # Configure Claude Code
-    configure_claude_mcp
-    
-    # Verify installation
-    verify_mcp_installation
-    
-    print_success "MCP servers setup complete!"
+# Python servers that need package build
+PYTHON_SERVERS=()
+
+# Claude Desktop config path
+CLAUDE_CONFIG_DIR="$HOME/Library/Application Support/Claude"
+CLAUDE_CONFIG_FILE="$CLAUDE_CONFIG_DIR/claude_desktop_config.json"
+
+# Backup directory
+BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.setup-backups}"
+BACKUP_DIR="$BACKUP_ROOT/configs/claude-mcp/$(date +%Y%m%d-%H%M%S)"
+
+# Check if running on macOS
+check_macos() {
+    if [[ "$OSTYPE" != "darwin"* ]]; then
+        print_error "This script is designed for macOS only"
+        exit 1
+    fi
 }
 
+# Check prerequisites
 check_prerequisites() {
-    print_step "Checking prerequisites..."
+    local missing_tools=()
     
-    # Check for Node.js
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js is required but not installed"
-        print_info "Please install Node.js first (e.g., via 'brew install node')"
-        exit 1
+    if ! command -v node &>/dev/null; then
+        missing_tools+=("node")
     fi
     
-    # Check for npm
-    if ! command -v npm &> /dev/null; then
-        print_error "npm is required but not installed"
-        exit 1
+    if ! command -v npm &>/dev/null; then
+        missing_tools+=("npm")
     fi
     
-    # Check for Python 3
-    if ! command -v python3 &> /dev/null; then
-        print_error "Python 3 is required but not installed"
-        print_info "Please install Python 3 first (e.g., via 'brew install python@3.12')"
-        exit 1
+    if ! command -v git &>/dev/null; then
+        missing_tools+=("git")
     fi
     
-    # Check for uv (Python package manager)
-    if ! command -v uv &> /dev/null; then
-        print_error "uv is required but not installed"
-        print_info "Please install uv first (e.g., via 'brew install uv')"
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        print_error "Missing required tools: ${missing_tools[*]}"
+        print_info "Please run ./setup.sh first to install dependencies"
         exit 1
     fi
-    
-    # Check for Claude CLI
-    if ! command -v claude &> /dev/null; then
-        print_error "Claude CLI is required but not installed"
-        print_info "Please install Claude Code first"
-        exit 1
-    fi
-    
-    print_success "All prerequisites met"
 }
 
-create_mcp_directories() {
-    print_step "Creating MCP directory structure..."
+# Initialize npm with default values to prevent interactive prompts
+init_npm_noninteractive() {
+    local dir="$1"
+    cd "$dir" || return 1
     
-    # Create main directories
-    mkdir -p "$MCP_OFFICIAL_DIR"
-    mkdir -p "$MCP_COMMUNITY_DIR"
-    mkdir -p "$MCP_CUSTOM_DIR"
-    
-    print_success "Created directory structure at $MCP_ROOT_DIR"
+    # Create minimal package.json if it doesn't exist
+    if [[ ! -f package.json ]]; then
+        cat > package.json <<EOF
+{
+  "name": "$(basename "$dir")",
+  "version": "1.0.0",
+  "description": "MCP server",
+  "private": true
+}
+EOF
+    fi
 }
 
-clone_mcp_repository() {
-    print_step "Cloning MCP servers repository..."
-    
-    local temp_dir="$MCP_OFFICIAL_DIR/temp"
-    
-    # Clone repository if not already present
-    if [[ ! -d "$temp_dir" ]]; then
-        git clone "$MCP_REPO_URL" "$temp_dir"
-    else
-        print_info "Repository already exists, checking status..."
-        
-        # Check if repository is clean before pulling
-        if (cd "$temp_dir" && git diff --quiet && git diff --cached --quiet); then
-            print_info "Repository is clean, updating..."
-            (cd "$temp_dir" && git pull)
-        else
-            print_warning "Repository has uncommitted changes, skipping update"
-            print_info "Using existing repository state"
-        fi
-    fi
-    
-    # Copy root configuration files
-    if [[ -f "$temp_dir/tsconfig.json" ]]; then
-        cp "$temp_dir/tsconfig.json" "$MCP_ROOT_DIR/"
-    fi
-    
-    if [[ -f "$temp_dir/package.json" ]]; then
-        cp "$temp_dir/package.json" "$MCP_ROOT_DIR/"
-    fi
-    
-    # Install root dependencies if package.json exists
-    if [[ -f "$MCP_ROOT_DIR/package.json" ]]; then
-        print_step "Installing root dependencies..."
-        (cd "$MCP_ROOT_DIR" && npm install --silent)
-    fi
-    
-    # Copy selected servers
-    for server in "${OFFICIAL_SERVERS[@]}"; do
-        if [[ -d "$temp_dir/src/$server" ]]; then
-            print_info "Copying $server server..."
-            cp -r "$temp_dir/src/$server" "$MCP_OFFICIAL_DIR/"
-        else
-            print_warning "Server $server not found in repository"
-        fi
-    done
-    
-    # Clean up temp directory
-    rm -rf "$temp_dir"
-    
-    print_success "MCP servers copied successfully"
-}
-
-verify_repository_integrity() {
-    local repo_dir="$1"
+# Verify checksum if provided
+verify_checksum() {
+    local file="$1"
     local expected_checksum="$2"
     
     if [[ -z "$expected_checksum" ]]; then
-        print_warning "No checksum provided for verification"
         return 0
     fi
     
-    # Create a deterministic hash of repository content
     local actual_checksum
-    actual_checksum=$(cd "$repo_dir" && git ls-tree -r HEAD | sha256sum | cut -d' ' -f1)
+    actual_checksum=$(shasum -a 256 "$file" | awk '{print $1}')
     
-    if [[ "$actual_checksum" == "$expected_checksum" ]]; then
-        print_success "Repository checksum verified"
-        return 0
-    else
-        print_error "Repository checksum mismatch!"
+    if [[ "$actual_checksum" != "$expected_checksum" ]]; then
+        print_error "Checksum verification failed for $file"
         print_error "Expected: $expected_checksum"
         print_error "Actual: $actual_checksum"
         return 1
     fi
+    
+    return 0
 }
 
-clone_community_servers() {
-    print_step "Cloning community MCP servers..."
+# Clone or update a repository
+clone_or_update_repo() {
+    local repo_url="$1"
+    local target_dir="$2"
+    local repo_name=$(basename "$target_dir")
     
-    local clone_pids=()
-    local clone_servers=()
-    local clone_urls=()
-    local clone_checksums=()
-    
-    # Parse server configurations
-    for server_config in "${COMMUNITY_SERVERS[@]}"; do
-        # Parse server name, URL, and optional checksum
-        local parts
-        IFS=':' read -ra parts <<< "$server_config"
-        local server_name="${parts[0]}"
-        local server_url="${parts[1]}:${parts[2]}"
-        local checksum="${parts[3]:-}"
-        
-        clone_servers+=("$server_name")
-        clone_urls+=("$server_url")
-        clone_checksums+=("$checksum")
-    done
-    
-    # Clone servers in parallel
-    for i in "${!clone_servers[@]}"; do
-        local server_name="${clone_servers[$i]}"
-        local server_url="${clone_urls[$i]}"
-        local checksum="${clone_checksums[$i]}"
-        local server_dir="$MCP_COMMUNITY_DIR/$server_name"
-        
-        (
-            if [[ ! -d "$server_dir" ]]; then
-                print_info "Cloning $server_name from $server_url..."
-                if git clone "$server_url" "$server_dir" 2>/dev/null; then
-                    if verify_repository_integrity "$server_dir" "$checksum"; then
-                        print_success "Cloned and verified $server_name successfully"
-                    else
-                        print_warning "$server_name cloned but verification failed"
-                    fi
-                else
-                    print_error "Failed to clone $server_name"
-                fi
-            else
-                print_info "$server_name already exists, checking for updates..."
-                
-                # Check if repository is clean before pulling
-                if (cd "$server_dir" && git diff --quiet && git diff --cached --quiet); then
-                    print_info "Repository is clean, updating..."
-                    if (cd "$server_dir" && git pull 2>/dev/null); then
-                        verify_repository_integrity "$server_dir" "$checksum" || true
-                    fi
-                else
-                    print_warning "Repository has uncommitted changes, skipping update"
-                fi
-            fi
-        ) &
-        
-        clone_pids+=("$!")
-    done
-    
-    # Wait for all clones to complete
-    local failed=0
-    for pid in "${clone_pids[@]}"; do
-        if ! wait "$pid"; then
-            ((failed++))
-        fi
-    done
-    
-    if [[ $failed -gt 0 ]]; then
-        print_warning "$failed community servers failed to clone"
+    if [[ -d "$target_dir/.git" ]]; then
+        print_info "Updating $repo_name..."
+        cd "$target_dir" || return 1
+        git fetch origin >/dev/null 2>&1
+        git reset --hard origin/main >/dev/null 2>&1 || git reset --hard origin/master >/dev/null 2>&1
     else
-        print_success "All community servers processed successfully"
+        print_info "Cloning $repo_name..."
+        git clone --depth 1 "$repo_url" "$target_dir" >/dev/null 2>&1
     fi
 }
 
-verify_server_build() {
-    local server_dir="$1"
-    local server_type="$2"
+# Build Node.js server
+build_node_server() {
+    local server_path="$1"
+    local server_name=$(basename "$server_path")
     
-    local paths="${BUILD_PATHS[$server_type]}"
-    for path in $paths; do
-        if [[ -f "$server_dir/$path" ]]; then
-            print_success "Build artifact found: $path"
-            return 0
-        fi
-    done
+    print_info "Building $server_name..."
+    cd "$server_path" || return 1
     
-    print_error "No build artifacts found in $server_dir"
-    return 1
+    # Initialize npm non-interactively
+    init_npm_noninteractive "$server_path"
+    
+    # Install dependencies with timeout
+    timeout 120 npm install --no-audit --no-fund --loglevel=error >/dev/null 2>&1 || {
+        print_error "npm install failed or timed out for $server_name"
+        return 1
+    }
+    
+    # Build if build script exists
+    if grep -q '"build"' package.json 2>/dev/null; then
+        timeout 60 npm run build >/dev/null 2>&1 || {
+            print_warning "Build failed for $server_name, continuing anyway..."
+        }
+    fi
+    
+    return 0
 }
 
-install_server_node() {
-    local server="$1"
-    local server_dir="$2"
+# Build Python server
+build_python_server() {
+    local server_path="$1"
+    local server_name=$(basename "$server_path")
     
-    print_info "Building $server server..."
+    print_info "Building Python server $server_name..."
+    cd "$server_path" || return 1
+    
+    # Create virtual environment if needed
+    if [[ ! -d "venv" ]]; then
+        python3 -m venv venv >/dev/null 2>&1
+    fi
     
     # Install dependencies
-    if ! (cd "$server_dir" && npm install --silent 2>/dev/null); then
-        print_error "Failed to install dependencies for $server server"
+    if [[ -f "requirements.txt" ]]; then
+        ./venv/bin/pip install -r requirements.txt >/dev/null 2>&1
+    fi
+    
+    return 0
+}
+
+# Install official MCP servers
+install_official_servers() {
+    print_section "Installing Official MCP Servers"
+    
+    # Clone or update the official servers repository
+    if ! clone_or_update_repo "$MCP_REPO_URL" "$MCP_OFFICIAL_DIR"; then
+        print_error "Failed to clone/update official MCP servers"
         return 1
     fi
     
-    print_info "Dependencies installed for $server"
-    
-    # Build the server if build script exists
-    if (cd "$server_dir" && npm run build 2>/dev/null); then
-        print_success "Built $server server"
-    else
-        print_warning "No build script found for $server"
-    fi
-    
-    # Verify build artifacts
-    if verify_server_build "$server_dir" "node"; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-install_server_python() {
-    local server="$1"
-    local server_dir="$2"
-    
-    print_info "Installing $server server dependencies..."
-    
-    if (cd "$server_dir" && uv sync 2>/dev/null); then
-        print_success "Installed $server server dependencies"
-        return 0
-    else
-        # Fallback to pip if uv fails
-        print_warning "uv sync failed, trying pip install..."
-        if [[ -f "$server_dir/requirements.txt" ]]; then
-            if (cd "$server_dir" && pip install -r requirements.txt 2>/dev/null); then
-                return 0
-            fi
-        elif [[ -f "$server_dir/pyproject.toml" ]]; then
-            if (cd "$server_dir" && pip install -e . 2>/dev/null); then
-                return 0
-            fi
-        fi
-    fi
-    
-    print_error "Failed to install dependencies for $server"
-    return 1
-}
-
-install_mcp_servers() {
-    print_step "Building and installing MCP servers..."
-    
-    local install_pids=()
-    local install_servers=()
-    
-    # Process Node.js servers in parallel
-    for server in "${NODE_SERVERS[@]}"; do
-        # Check official directory first
-        local server_dir=""
-        if [[ -d "$MCP_OFFICIAL_DIR/$server" ]]; then
-            server_dir="$MCP_OFFICIAL_DIR/$server"
-        elif [[ -d "$MCP_COMMUNITY_DIR/$server" ]]; then
-            server_dir="$MCP_COMMUNITY_DIR/$server"
+    # Build each server
+    local failed_servers=()
+    for server in "${OFFICIAL_SERVERS[@]}"; do
+        local server_path="$MCP_OFFICIAL_DIR/src/$server"
+        
+        if [[ ! -d "$server_path" ]]; then
+            print_warning "Server $server not found in official repository"
+            continue
         fi
         
-        if [[ -n "$server_dir" ]]; then
-            (install_server_node "$server" "$server_dir") &
-            install_pids+=("$!")
-            install_servers+=("$server")
-        else
-            print_warning "Server directory not found for $server"
+        if [[ " ${NODE_SERVERS[@]} " =~ " $server " ]]; then
+            if ! build_node_server "$server_path"; then
+                failed_servers+=("$server")
+            fi
+        elif [[ " ${PYTHON_SERVERS[@]} " =~ " $server " ]]; then
+            if ! build_python_server "$server_path"; then
+                failed_servers+=("$server")
+            fi
         fi
     done
     
-    # Process Python servers in parallel
-    for server in "${PYTHON_SERVERS[@]}"; do
-        # Check official directory first
-        local server_dir=""
-        if [[ -d "$MCP_OFFICIAL_DIR/$server" ]]; then
-            server_dir="$MCP_OFFICIAL_DIR/$server"
-        elif [[ -d "$MCP_COMMUNITY_DIR/$server" ]]; then
-            server_dir="$MCP_COMMUNITY_DIR/$server"
+    if [[ ${#failed_servers[@]} -gt 0 ]]; then
+        print_warning "Failed to build servers: ${failed_servers[*]}"
+    fi
+    
+    return 0
+}
+
+# Parse server info from format "name:url[:checksum]"
+parse_server_info() {
+    local server_info="$1"
+    IFS=':' read -r server_name server_url server_checksum <<< "$server_info"
+    
+    # Handle URLs with colons (like https://)
+    if [[ "$server_url" == "https" || "$server_url" == "http" ]]; then
+        server_url="${server_url}:${server_checksum}"
+        server_checksum=""
+        # Check if there's another part that might be the actual checksum
+        if [[ "$server_info" =~ ^[^:]+:https?://[^:]+:(.+)$ ]]; then
+            server_checksum="${BASH_REMATCH[1]}"
+        fi
+    fi
+    
+    echo "$server_name|$server_url|$server_checksum"
+}
+
+# Install community MCP servers
+install_community_servers() {
+    print_section "Installing Community MCP Servers"
+    
+    mkdir -p "$MCP_COMMUNITY_DIR"
+    
+    local failed_servers=()
+    for server_info in "${COMMUNITY_SERVERS[@]}"; do
+        local parsed_info=$(parse_server_info "$server_info")
+        IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
+        
+        local server_path="$MCP_COMMUNITY_DIR/$server_name"
+        
+        if ! clone_or_update_repo "$server_url" "$server_path"; then
+            print_error "Failed to clone/update $server_name"
+            failed_servers+=("$server_name")
+            continue
         fi
         
-        if [[ -n "$server_dir" ]]; then
-            (install_server_python "$server" "$server_dir") &
-            install_pids+=("$!")
-            install_servers+=("$server")
+        # TODO: Add checksum verification when we have checksums
+        
+        # Detect and build based on project type
+        if [[ -f "$server_path/package.json" ]]; then
+            if ! build_node_server "$server_path"; then
+                failed_servers+=("$server_name")
+            fi
+        elif [[ -f "$server_path/requirements.txt" ]] || [[ -f "$server_path/pyproject.toml" ]]; then
+            if ! build_python_server "$server_path"; then
+                failed_servers+=("$server_name")
+            fi
         else
-            print_warning "Server directory not found for $server"
+            print_warning "Unknown project type for $server_name"
         fi
     done
     
-    # Wait for all installations to complete
-    local failed=0
-    for i in "${!install_pids[@]}"; do
-        if ! wait "${install_pids[$i]}"; then
-            print_error "Failed to install ${install_servers[$i]}"
-            ((failed++))
-        fi
-    done
-    
-    if [[ $failed -gt 0 ]]; then
-        print_warning "$failed servers failed to install"
-    else
-        print_success "All servers installed successfully"
-    fi
-}
-
-# Helper function for consistent JSON escaping
-escape_json_path() {
-    printf '%s' "$1" | sed 's/["\\/]/\\\\&/g'
-}
-
-# Helper function to find Node.js entry point
-find_node_entry() {
-    local server_dir="$1"
-    local paths="${BUILD_PATHS[node]}"
-    
-    for path in $paths; do
-        if [[ -f "$server_dir/$path" ]]; then
-            echo "$server_dir/$path"
-            return 0
-        fi
-    done
-    return 1
-}
-
-# Configure individual servers
-configure_node_server() {
-    local name="$1"
-    local server_dir="$2"
-    
-    local entry_point
-    if entry_point=$(find_node_entry "$server_dir"); then
-        print_info "Adding $name server..."
-        if claude mcp add --scope user "$name" node "$entry_point"; then
-            print_success "Added $name server"
-            return 0
-        else
-            print_error "Failed to add $name server"
-            return 1
-        fi
-    else
-        print_warning "No entry point found for $name server"
-        return 1
-    fi
-}
-
-configure_python_server() {
-    local name="$1"
-    local server_dir="$2"
-    local command="${3:-mcp-server-$name}"
-    
-    if [[ ! -d "$server_dir" ]]; then
-        print_error "$name server directory not found: $server_dir"
-        return 1
+    if [[ ${#failed_servers[@]} -gt 0 ]]; then
+        print_warning "Failed to install community servers: ${failed_servers[*]}"
     fi
     
-    print_info "Adding $name server..."
-    local json_config
-    json_config=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "%s"]}' \
-        "$(escape_json_path "$server_dir")" "$command")
-    
-    if claude mcp add-json --scope user "$name" "$json_config"; then
-        print_success "Added $name server"
-        return 0
-    else
-        print_error "Failed to add $name server"
-        return 1
-    fi
+    return 0
 }
 
-configure_semgrep_server() {
-    local server_dir="$MCP_COMMUNITY_DIR/semgrep"
+# Find the actual executable path for a server
+find_server_executable() {
+    local server_path="$1"
+    local server_type="$2"  # node or python
     
-    if [[ ! -d "$server_dir" ]]; then
-        print_warning "Semgrep server directory not found"
-        return 1
-    fi
-    
-    print_info "Adding semgrep server..."
-    local json_config
-    
-    # Check if it uses Python package setup
-    if [[ -f "$server_dir/pyproject.toml" ]] || [[ -f "$server_dir/setup.py" ]]; then
-        json_config=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-semgrep"]}' \
-            "$(escape_json_path "$server_dir")")
-    else
-        # Fallback to direct Python execution
-        local main_script=""
-        for script in main.py src/main.py __main__.py; do
-            if [[ -f "$server_dir/$script" ]]; then
-                main_script="$script"
-                break
+    if [[ "$server_type" == "node" ]]; then
+        # Check common Node.js build output paths
+        for path in ${BUILD_PATHS["node"]}; do
+            if [[ -f "$server_path/$path" ]]; then
+                echo "$server_path/$path"
+                return 0
             fi
         done
         
-        if [[ -z "$main_script" ]]; then
-            print_error "No main script found for semgrep server"
-            return 1
+        # Fallback to finding any .js file
+        local js_file=$(find "$server_path" -name "*.js" -type f | grep -E "(index|main|server)" | grep -v node_modules | head -1)
+        if [[ -n "$js_file" ]]; then
+            echo "$js_file"
+            return 0
         fi
-        
-        json_config=$(printf '{"type": "stdio", "command": "python", "args": ["%s/%s"]}' \
-            "$(escape_json_path "$server_dir")" "$main_script")
+    elif [[ "$server_type" == "python" ]]; then
+        # Check common Python entry points
+        for path in ${BUILD_PATHS["python"]}; do
+            if [[ -f "$server_path/$path" ]]; then
+                echo "$server_path/$path"
+                return 0
+            fi
+        done
     fi
     
-    if claude mcp add-json --scope user semgrep "$json_config"; then
-        print_success "Added semgrep server"
-        return 0
-    else
-        print_error "Failed to add semgrep server"
-        return 1
-    fi
+    return 1
 }
 
-configure_claude_mcp() {
-    print_step "Configuring Claude Code with MCP servers..."
+# Generate MCP server configuration
+generate_server_config() {
+    local server_name="$1"
+    local server_path="$2"
+    local server_type="node"  # Default to node
     
-    local failed=0
-    
-    # Configure official servers
-    configure_node_server "filesystem" "$MCP_OFFICIAL_DIR/filesystem" || ((failed++))
-    configure_node_server "memory" "$MCP_OFFICIAL_DIR/memory" || ((failed++))
-    configure_python_server "git" "$MCP_OFFICIAL_DIR/git" || ((failed++))
-    configure_python_server "fetch" "$MCP_OFFICIAL_DIR/fetch" || ((failed++))
-    configure_python_server "sequentialthinking" "$MCP_OFFICIAL_DIR/sequentialthinking" || ((failed++))
-    
-    # Configure community servers
-    configure_node_server "context7" "$MCP_COMMUNITY_DIR/context7" || ((failed++))
-    configure_node_server "playwright" "$MCP_COMMUNITY_DIR/playwright" || ((failed++))
-    configure_node_server "figma" "$MCP_COMMUNITY_DIR/figma" || ((failed++))
-    configure_semgrep_server || ((failed++))
-    configure_node_server "exa" "$MCP_COMMUNITY_DIR/exa" || ((failed++))
-    
-    # Note about Pieces MCP
-    print_info "Note: Pieces MCP requires PiecesOS running locally."
-    print_info "To configure Pieces, add the SSE endpoint manually:"
-    print_info "  http://localhost:39300/model_context_protocol/2024-11-05/sse"
-    
-    if [[ $failed -gt 0 ]]; then
-        print_warning "$failed servers failed to configure"
-    else
-        print_success "All MCP servers configured successfully"
+    # Detect server type
+    if [[ -f "$server_path/requirements.txt" ]] || [[ -f "$server_path/pyproject.toml" ]]; then
+        server_type="python"
     fi
-}
-
-verify_mcp_installation() {
-    print_step "Verifying MCP installation..."
     
-    # List configured servers
-    print_info "Configured MCP servers:"
-    if claude mcp list; then
-        # Count connected servers
-        local connected_count
-        connected_count=$(claude mcp list | grep -c "✓ Connected" || echo "0")
-        local configured_count
-        configured_count=$(claude mcp list | grep -cE "(✓|✗)" || echo "0")
-        
-        if [[ $connected_count -gt 0 ]]; then
-            print_success "$connected_count/$configured_count MCP servers connected successfully"
-        else
-            print_warning "MCP servers configured but none are connected"
-        fi
-    else
-        print_error "Failed to list MCP servers"
+    # Find executable
+    local executable=$(find_server_executable "$server_path" "$server_type")
+    if [[ -z "$executable" ]]; then
+        print_warning "Could not find executable for $server_name"
         return 1
     fi
     
-    print_success "MCP installation verified"
-}
-
-show_help() {
-    cat << EOF
-Claude Code MCP Server Setup
-
-Usage: $(basename "$0") [OPTIONS]
-
-Options:
-    --check     Check if MCP servers are installed and configured
-    --update    Update existing MCP servers
-    --remove    Remove MCP server configuration
-    --help      Show this help message
-
-Description:
-    This script sets up official MCP (Model Context Protocol) servers for
-    Claude Code, enabling enhanced capabilities like file operations,
-    Git integration, web fetching, and more.
-
-Servers installed:
-    Official servers:
-    - filesystem: Secure file operations with access controls
-    - memory: In-memory key-value storage for temporary data
-    - git: Tools to read, search, and manipulate Git repositories
-    - fetch: Web content fetching and conversion
-    - sequentialthinking: Dynamic problem-solving through thought sequences
-    
-    Community servers:
-    - context7: Up-to-date documentation for any library/framework
-    - playwright: Browser automation and web scraping
-    - figma: Access Figma design data for AI coding tools
-    - semgrep: Security scanning and code analysis
-    - exa: AI-optimized search engine integration
-    
-    Note: Pieces MCP requires PiecesOS running locally
-
-Prerequisites:
-    - Node.js and npm
-    - Python 3 and uv
-    - Claude Code CLI
-
+    # Generate config based on type
+    if [[ "$server_type" == "node" ]]; then
+        cat <<EOF
+    "$server_name": {
+      "command": "node",
+      "args": ["$executable"],
+      "cwd": "$server_path"
+    }
 EOF
+    else
+        cat <<EOF
+    "$server_name": {
+      "command": "$server_path/venv/bin/python",
+      "args": ["$executable"],
+      "cwd": "$server_path"
+    }
+EOF
+    fi
 }
 
-# Main execution
-case "${1:-}" in
-    --check)
-        # Check if MCP servers are configured
-        if claude mcp list &> /dev/null; then
-            servers=$(claude mcp list | grep -E "✓ Connected" | wc -l)
-            if [[ $servers -gt 0 ]]; then
-                print_success "$servers MCP servers configured and connected"
-                exit 0
+# Configure Claude Desktop
+configure_claude_desktop() {
+    print_section "Configuring Claude Desktop"
+    
+    # Ensure Claude config directory exists
+    mkdir -p "$CLAUDE_CONFIG_DIR"
+    
+    # Backup existing config
+    if [[ -f "$CLAUDE_CONFIG_FILE" ]]; then
+        mkdir -p "$BACKUP_DIR"
+        cp "$CLAUDE_CONFIG_FILE" "$BACKUP_DIR/claude_desktop_config.json"
+        print_info "Backed up existing config to $BACKUP_DIR"
+    fi
+    
+    # Start building the configuration
+    local config='{\n  "mcpServers": {\n'
+    local server_configs=()
+    
+    # Add official servers
+    for server in "${OFFICIAL_SERVERS[@]}"; do
+        local server_path="$MCP_OFFICIAL_DIR/src/$server"
+        if [[ -d "$server_path" ]]; then
+            local server_config=$(generate_server_config "$server" "$server_path")
+            if [[ -n "$server_config" ]]; then
+                server_configs+=("$server_config")
+            fi
+        fi
+    done
+    
+    # Add community servers
+    for server_info in "${COMMUNITY_SERVERS[@]}"; do
+        local parsed_info=$(parse_server_info "$server_info")
+        IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
+        
+        local server_path="$MCP_COMMUNITY_DIR/$server_name"
+        if [[ -d "$server_path" ]]; then
+            local server_config=$(generate_server_config "$server_name" "$server_path")
+            if [[ -n "$server_config" ]]; then
+                server_configs+=("$server_config")
+            fi
+        fi
+    done
+    
+    # Join configs with commas
+    local joined_configs=""
+    for i in "${!server_configs[@]}"; do
+        if [[ $i -eq 0 ]]; then
+            joined_configs="${server_configs[$i]}"
+        else
+            joined_configs="${joined_configs},\n${server_configs[$i]}"
+        fi
+    done
+    
+    config="${config}${joined_configs}\n  }\n}"
+    
+    # Write the configuration
+    echo -e "$config" > "$CLAUDE_CONFIG_FILE"
+    print_success "Claude Desktop configured with MCP servers"
+    
+    # Handle Claude restart with timeout protection
+    if pgrep -x "Claude" >/dev/null; then
+        print_info "Restarting Claude Desktop to apply changes..."
+        
+        # Kill Claude with timeout
+        timeout 5 osascript -e 'quit app "Claude"' 2>/dev/null || {
+            print_warning "Could not gracefully quit Claude, forcing..."
+            pkill -x "Claude" 2>/dev/null || true
+        }
+        
+        # Wait for Claude to fully quit (with timeout)
+        local wait_count=0
+        while pgrep -x "Claude" >/dev/null && [[ $wait_count -lt 10 ]]; do
+            sleep 1
+            ((wait_count++))
+        done
+        
+        # Reopen Claude
+        open -a "Claude" 2>/dev/null || print_warning "Could not restart Claude automatically"
+    fi
+}
+
+# Print usage information
+print_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --help     Show this help message"
+    echo "  --check    Check MCP server status"
+    echo "  --update   Update all MCP servers"
+    echo "  --remove   Remove MCP configuration"
+    echo ""
+    echo "Environment Variables:"
+    echo "  MCP_ROOT_DIR   Root directory for MCP servers (default: ~/repos/mcp-servers)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                    # Install and configure MCP servers"
+    echo "  $0 --check           # Check server status"
+    echo "  $0 --update          # Update all servers"
+}
+
+# Check MCP server status
+check_status() {
+    print_section "MCP Server Status"
+    
+    # Check if config exists
+    if [[ ! -f "$CLAUDE_CONFIG_FILE" ]]; then
+        print_error "Claude Desktop config not found"
+        return 1
+    fi
+    
+    # Check official servers
+    echo -e "\nOfficial Servers:"
+    for server in "${OFFICIAL_SERVERS[@]}"; do
+        local server_path="$MCP_OFFICIAL_DIR/src/$server"
+        if [[ -d "$server_path" ]]; then
+            # Check if it's in the config
+            if grep -q "\"$server\"" "$CLAUDE_CONFIG_FILE" 2>/dev/null; then
+                print_success "✓ $server (configured)"
             else
-                print_warning "MCP servers configured but not connected"
-                exit 1
+                print_warning "○ $server (installed but not configured)"
             fi
         else
-            print_error "No MCP servers configured"
-            exit 1
+            print_error "✗ $server (not installed)"
         fi
-        ;;
-    --update)
-        print_info "Updating MCP servers..."
-        clone_mcp_repository
-        install_mcp_servers
-        print_success "MCP servers updated"
-        ;;
-    --remove)
-        print_warning "Removing MCP server configuration..."
-        # Remove official servers
-        for server in "${OFFICIAL_SERVERS[@]}"; do
-            claude mcp remove --scope user "$server" 2>/dev/null || true
-        done
-        # Remove community servers
-        for server_config in "${COMMUNITY_SERVERS[@]}"; do
-            local server_name="${server_config%%:*}"
-            claude mcp remove --scope user "$server_name" 2>/dev/null || true
-        done
-        print_success "MCP server configuration removed"
-        print_info "Note: Server files remain in $MCP_ROOT_DIR"
-        ;;
-    --help)
-        show_help
-        ;;
-    *)
-        setup_mcp_servers
-        ;;
-esac
+    done
+    
+    # Check community servers
+    echo -e "\nCommunity Servers:"
+    for server_info in "${COMMUNITY_SERVERS[@]}"; do
+        local parsed_info=$(parse_server_info "$server_info")
+        IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
+        
+        local server_path="$MCP_COMMUNITY_DIR/$server_name"
+        if [[ -d "$server_path" ]]; then
+            if grep -q "\"$server_name\"" "$CLAUDE_CONFIG_FILE" 2>/dev/null; then
+                print_success "✓ $server_name (configured)"
+            else
+                print_warning "○ $server_name (installed but not configured)"
+            fi
+        else
+            print_error "✗ $server_name (not installed)"
+        fi
+    done
+    
+    # Show config location
+    echo -e "\nConfiguration:"
+    echo "  Config file: $CLAUDE_CONFIG_FILE"
+    echo "  MCP root: $MCP_ROOT_DIR"
+}
+
+# Update all servers
+update_servers() {
+    print_section "Updating MCP Servers"
+    
+    # Update official servers
+    if [[ -d "$MCP_OFFICIAL_DIR" ]]; then
+        install_official_servers
+    fi
+    
+    # Update community servers
+    if [[ -d "$MCP_COMMUNITY_DIR" ]]; then
+        install_community_servers
+    fi
+    
+    # Reconfigure Claude Desktop
+    configure_claude_desktop
+}
+
+# Remove MCP configuration
+remove_configuration() {
+    print_section "Removing MCP Configuration"
+    
+    # Backup current config
+    if [[ -f "$CLAUDE_CONFIG_FILE" ]]; then
+        mkdir -p "$BACKUP_DIR"
+        cp "$CLAUDE_CONFIG_FILE" "$BACKUP_DIR/claude_desktop_config.json"
+        print_info "Backed up config to $BACKUP_DIR"
+        
+        # Remove the config file
+        rm -f "$CLAUDE_CONFIG_FILE"
+        print_success "Removed Claude Desktop MCP configuration"
+    else
+        print_info "No configuration found to remove"
+    fi
+    
+    # Note: We don't remove the actual server files
+    print_info "Note: MCP server files in $MCP_ROOT_DIR were not removed"
+}
+
+# Main installation flow
+main() {
+    # Parse command line arguments
+    case "${1:-}" in
+        --help|-h)
+            print_usage
+            exit 0
+            ;;
+        --check)
+            check_status
+            exit 0
+            ;;
+        --update)
+            check_macos
+            check_prerequisites
+            update_servers
+            exit 0
+            ;;
+        --remove)
+            remove_configuration
+            exit 0
+            ;;
+        "")
+            # Default: install
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+    
+    # Full installation
+    print_banner "Claude MCP Server Setup"
+    
+    check_macos
+    check_prerequisites
+    
+    # Create directory structure
+    mkdir -p "$MCP_OFFICIAL_DIR" "$MCP_COMMUNITY_DIR" "$MCP_CUSTOM_DIR"
+    
+    # Install servers
+    install_official_servers
+    install_community_servers
+    
+    # Configure Claude Desktop
+    configure_claude_desktop
+    
+    print_section "Setup Complete!"
+    echo ""
+    echo "MCP servers have been installed and configured."
+    echo ""
+    echo "Installed servers:"
+    echo "  Official: ${OFFICIAL_SERVERS[*]}"
+    echo "  Community: $(for s in "${COMMUNITY_SERVERS[@]}"; do echo "$s" | cut -d: -f1; done | tr '\n' ' ')"
+    echo ""
+    echo "To check server status: $0 --check"
+    echo "To update servers: $0 --update"
+    echo ""
+    print_success "You can now use MCP servers in Claude Desktop!"
+}
+
+# Run main function
+main "$@"

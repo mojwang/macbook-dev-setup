@@ -8,13 +8,32 @@ set -e
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
+# Load signal safety library
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT_DIR/lib/signal-safety.sh"
+
+# Claude global setup specific cleanup
+cleanup_claude_global() {
+    # Clean up any temporary files
+    [[ -n "${backup_file:-}" ]] && [[ -f "${backup_file}.tmp" ]] && rm -f "${backup_file}.tmp" 2>/dev/null || true
+    
+    # Clean up incomplete installations
+    [[ -n "${CLAUDE_GLOBAL_MD:-}" ]] && [[ -f "${CLAUDE_GLOBAL_MD}.tmp" ]] && rm -f "${CLAUDE_GLOBAL_MD}.tmp" 2>/dev/null || true
+    
+    # Call default cleanup
+    default_cleanup
+}
+
+# Set up cleanup trap
+setup_cleanup "cleanup_claude_global"
+
 # Configuration
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
 TEMPLATE_FILE="$(dirname "$0")/../config/global-claude.md"
 
 # Version information
-TEMPLATE_VERSION="1.0.0"
+TEMPLATE_VERSION="1.1.0"
 VERSION_MARKER="# Claude Global Config Version:"
 
 setup_global_claude() {
@@ -98,13 +117,19 @@ setup_global_claude() {
 
 # Function to install template with version metadata
 install_template_with_metadata() {
+    local temp_file="${CLAUDE_GLOBAL_MD}.tmp.$$"
+    
+    # Write to temporary file first for atomic operation
     {
         echo "$VERSION_MARKER $TEMPLATE_VERSION"
         echo "# Last Updated: $(date '+%Y-%m-%d %H:%M:%S')"
         echo "# Source: macbook-dev-setup/config/global-claude.md"
         echo ""
         cat "$TEMPLATE_FILE"
-    } > "$CLAUDE_GLOBAL_MD"
+    } > "$temp_file"
+    
+    # Atomically move the file
+    mv -f "$temp_file" "$CLAUDE_GLOBAL_MD"
 }
 
 # Main execution

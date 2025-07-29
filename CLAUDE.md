@@ -118,6 +118,12 @@ MCP servers installed:
 - **memory**: In-memory key-value storage for temporary data
 - **git**: Tools to read, search, and manipulate Git repositories
 - **fetch**: Web content fetching and conversion for efficient LLM usage
+- **sequentialthinking**: Dynamic problem-solving through iterative thought processes
+- **context7**: Documentation retrieval for any library (community server)
+- **playwright**: Browser automation and testing (community server)
+- **figma**: Figma design context integration (community server)
+- **semgrep**: Code analysis and pattern matching (community server)
+- **exa**: Enhanced search capabilities (community server)
 
 ### Git Commit Helpers
 ```bash
@@ -152,6 +158,11 @@ The `--sync` flag detects and installs new packages added to configuration files
 
 ### Script Organization
 - **Main Scripts**: `setup.sh` (production) and `setup-validate.sh` (validation/dry-run)
+- **Core Libraries** in `/lib/`:
+  - `common.sh`: Shared functions and utilities
+  - `signal-safety.sh`: Signal handling and cleanup framework
+  - `backup-manager.sh`: Centralized backup management
+  - `config.sh`: Configuration management
 - **Component Scripts** in `/scripts/`:
   - `install-homebrew.sh`: Installs Homebrew package manager
   - `install-packages.sh`: Installs packages from Brewfile
@@ -159,7 +170,15 @@ The `--sync` flag detects and installs new packages added to configuration files
   - `setup-applications.sh`: Installs macOS desktop applications
   - `setup-macos.sh`: Configures macOS system preferences
   - `setup-git-hooks.sh`: Configures conventional commit hooks
+  - `setup-claude-mcp.sh`: Installs and configures MCP servers
+  - `setup-terminal-fonts.sh`: Configures terminal fonts
+  - `setup-warp.sh`: Warp terminal specific optimizations
   - `commit-helper.sh`: Interactive conventional commit creator
+  - `cleanup-artifacts.sh`: Periodic maintenance and cleanup
+  - `health-check.sh`: System health verification
+  - `update.sh`: Update all tools and dependencies
+  - `uninstall.sh`: Clean removal with backups
+  - `rollback.sh`: Restore from previous backups
 
 ### Key Configuration Files
 - `homebrew/Brewfile`: Package definitions (formulae, casks, VS Code extensions)
@@ -195,6 +214,107 @@ The `--sync` flag detects and installs new packages added to configuration files
 - Timeout protection (30s) for potentially hanging commands
 - Git is configured with security-conscious settings (fsckObjects enabled)
 
+## Security and Signal Safety
+
+### Signal-Safe Cleanup Requirements
+All scripts that perform system modifications MUST implement signal-safe cleanup:
+
+1. **Source the signal-safety library** at the beginning of the script:
+   ```bash
+   source "$ROOT_DIR/lib/signal-safety.sh"
+   ```
+
+2. **Implement a cleanup function** specific to your script's needs:
+   ```bash
+   cleanup_yourscript() {
+       # Clean up temporary files
+       rm -f "${TEMP_FILE:-}" 2>/dev/null || true
+       
+       # Kill any background processes
+       [[ -n "${CHILD_PID:-}" ]] && kill "$CHILD_PID" 2>/dev/null || true
+       
+       # Remove partial installations
+       [[ -d "${WORK_DIR:-}" ]] && rm -rf "$WORK_DIR" 2>/dev/null || true
+       
+       # Call default cleanup
+       default_cleanup
+   }
+   ```
+
+3. **Register the cleanup function** immediately after defining it:
+   ```bash
+   setup_cleanup "cleanup_yourscript"
+   ```
+
+### Critical Cleanup Areas
+When implementing cleanup, ensure these artifacts are handled:
+
+- **Package Managers**: npm node_modules, Python venvs, Ruby gems
+- **Build Artifacts**: Compiled binaries, object files, cache directories
+- **Temporary Files**: Config backups, download files, lock files
+- **Background Processes**: Any spawned child processes or daemons
+- **Partial Installations**: Incomplete setups that could cause issues
+
+### Security Best Practices
+
+1. **Never leave sensitive data** in temporary files or logs
+2. **Use secure temp directories**: `mktemp -d` with proper permissions
+3. **Validate all inputs** before using in commands
+4. **Avoid eval** unless absolutely necessary
+5. **Quote all variables** to prevent injection: `"$var"` not `$var`
+6. **Set restrictive permissions** on created files: `umask 077`
+7. **Clean up secrets** from memory/disk after use
+
+### Testing Signal Safety
+Always test your cleanup implementation:
+
+```bash
+# Start your script and interrupt it
+./your-script.sh &
+PID=$!
+sleep 2
+kill -INT $PID
+# Verify no artifacts remain
+```
+
+## Testing Framework
+
+### Running Tests
+```bash
+# Run all tests
+./tests/run_tests.sh
+
+# Run specific test suites
+./tests/run_tests.sh unit        # Unit tests only
+./tests/run_tests.sh integration # Integration tests only
+./tests/run_tests.sh ci          # CI-specific tests
+
+# Run tests in parallel (faster)
+./tests/run_tests_parallel.sh
+
+# Run with custom parallelism
+TEST_JOBS=8 ./tests/run_tests.sh
+```
+
+### Test Organization
+- **Unit Tests** (`tests/unit/`): Test individual functions and components
+- **Integration Tests** (`tests/integration/`): Test script interactions
+- **CI Tests** (`tests/ci/`): Tests specific to CI environment
+- **Stress Tests** (`tests/stress/`): Performance and load testing
+- **Performance Tests** (`tests/performance/`): Benchmark and optimization tests
+
+### Writing Tests
+Use the test framework's built-in functions:
+```bash
+it "should describe what it tests"
+assert_equals "expected" "actual" "Test description"
+assert_true "[[ condition ]]" "Condition should be true"
+assert_false "[[ condition ]]" "Condition should be false"
+assert_contains "haystack" "needle" "Should contain substring"
+assert_file_exists "/path/to/file" "File should exist"
+assert_dir_exists "/path/to/dir" "Directory should exist"
+```
+
 ## Setup Script Maintenance
 
 When adding new functionality or capabilities to this project, always check if the setup script needs updating:
@@ -207,3 +327,33 @@ When adding new functionality or capabilities to this project, always check if t
 6. **Update documentation**: Document new features in this file if needed
 
 After any changes, run the setup script to ensure everything works correctly.
+
+## Important Behavioral Guidelines
+
+- Do only what has been asked; nothing more, nothing less
+- Never create files unless absolutely necessary for the task
+- Always prefer editing existing files over creating new ones
+- Never proactively create documentation files (*.md) or README files unless explicitly requested
+- Never commit changes unless explicitly asked to
+- When blocked, ask for clarification rather than making assumptions
+
+## Repository Standards
+
+### Version Management
+- Current version is tracked in `VERSION` file
+- Semantic versioning is enforced via CI/CD
+- Changelog follows Keep a Changelog format
+- Automatic releases via semantic-release
+
+### CI/CD Pipeline
+- GitHub Actions for automated testing
+- Semantic release for version management
+- Branch protection on main branch
+- All PRs require passing tests
+- Claude Code Review integration for AI-assisted reviews
+
+### Code Quality
+- ShellCheck for shell script linting
+- Consistent error handling patterns
+- Comprehensive test coverage
+- Security scanning in CI pipeline
