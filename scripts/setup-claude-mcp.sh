@@ -8,6 +8,38 @@ set -e
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
+# Load signal safety library
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT_DIR/lib/signal-safety.sh"
+
+# MCP-specific cleanup function
+cleanup_mcp() {
+    print_info "Cleaning up MCP installation..."
+    
+    # Clean up any npm build directories
+    if [[ -n "${MCP_ROOT_DIR:-}" ]]; then
+        find "$MCP_ROOT_DIR" -name "node_modules" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+        find "$MCP_ROOT_DIR" -name ".npm" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+    fi
+    
+    # Clean up any Python virtual environments
+    if [[ -n "${MCP_ROOT_DIR:-}" ]]; then
+        find "$MCP_ROOT_DIR" -name "venv" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+        find "$MCP_ROOT_DIR" -name "__pycache__" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+    fi
+    
+    # Remove partial installations
+    if [[ -n "${CLAUDE_CONFIG_FILE:-}" ]] && [[ -f "${CLAUDE_CONFIG_FILE}.tmp" ]]; then
+        rm -f "${CLAUDE_CONFIG_FILE}.tmp" 2>/dev/null || true
+    fi
+    
+    # Call default cleanup
+    default_cleanup
+}
+
+# Set up cleanup trap
+setup_cleanup "cleanup_mcp"
+
 # Configuration
 MCP_ROOT_DIR="${MCP_ROOT_DIR:-$HOME/repos/mcp-servers}"
 MCP_OFFICIAL_DIR="$MCP_ROOT_DIR/official"
