@@ -1,3 +1,31 @@
+# [2.9.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.8.0...v2.9.0) (2025-07-29)
+
+
+### Bug Fixes
+
+* add git status check to pyenv updates ([265c72e](https://github.com/mojwang/macbook-dev-setup/commit/265c72e6e0fe67325d40a4760a34cdba700beaf7))
+* address CI issues for MCP setup ([2e355cd](https://github.com/mojwang/macbook-dev-setup/commit/2e355cdfa44504d2d9655a28c11d466ddd92a0f2))
+* address code review feedback for signal-safe cleanup ([28f7b3e](https://github.com/mojwang/macbook-dev-setup/commit/28f7b3e161880441e49478658941273f6f1de5cb)), closes [#11](https://github.com/mojwang/macbook-dev-setup/issues/11)
+* address security and reliability concerns from code review ([61c79c4](https://github.com/mojwang/macbook-dev-setup/commit/61c79c4e610d0eaa2d60d6ba357889c990b1f758))
+* implement missing test functions and remove empty test files ([099572f](https://github.com/mojwang/macbook-dev-setup/commit/099572fc0ab8b5e8d4d823aedf23a309d98f00a1))
+* improve global CLAUDE.md setup for CI environments ([72bf094](https://github.com/mojwang/macbook-dev-setup/commit/72bf0942bbb62da2947087ca76719fe1963a4216))
+* prevent resource exhaustion and orphaned processes in CI ([ded3f95](https://github.com/mojwang/macbook-dev-setup/commit/ded3f95163c6900a3e1a8f11bfd7619514196e45))
+* remove 'local' keyword outside of function in test runner ([f2b5152](https://github.com/mojwang/macbook-dev-setup/commit/f2b5152e03203413388e8f4db3989ad91971ba9a))
+* remove legacy --sync flag references from documentation ([3ecf127](https://github.com/mojwang/macbook-dev-setup/commit/3ecf1270065e5be9fff550a8d190ca385ef1ec43))
+* resolve remaining CI test failures and path issues ([cc6f032](https://github.com/mojwang/macbook-dev-setup/commit/cc6f032abc31d8da2560d4fa99b2948856a8af79))
+* resolve test failures and security issues ([a20bbcf](https://github.com/mojwang/macbook-dev-setup/commit/a20bbcfdd6fe29a1235d635280831e1ba8646ad9))
+
+
+### Features
+
+* add Claude MCP server setup integration ([7c9182c](https://github.com/mojwang/macbook-dev-setup/commit/7c9182c50b7e9c593b9489d5a8068892eadaef56))
+* add comprehensive help/info system for installed tools ([acb565b](https://github.com/mojwang/macbook-dev-setup/commit/acb565bc9f6da99e7d546d82baacd0536bec86a2))
+* add global CLAUDE.md provisioning and zsh-autosuggestions ([049ff89](https://github.com/mojwang/macbook-dev-setup/commit/049ff8905d5fcbba70853a6f568ad49d2d57e054))
+* add OpenJDK installation and consistent terminal font configuration ([034a49b](https://github.com/mojwang/macbook-dev-setup/commit/034a49b92f4c467ef9eb5f3d5cc59f3eaa2e5f44))
+* add test organization script to improve test management ([94fcbd6](https://github.com/mojwang/macbook-dev-setup/commit/94fcbd617b82c14dbb1050c1b5c9ce0e82f925d8))
+* enhance setup-claude-global.sh with signal safety and security ([af6a105](https://github.com/mojwang/macbook-dev-setup/commit/af6a105f9407fb58430607596a866812c5f696ad))
+* implement signal-safe cleanup and temp file handling ([722b02b](https://github.com/mojwang/macbook-dev-setup/commit/722b02b49fc5efe8713ba159352028882a4bcfa3))
+
 # [2.8.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.7.0...v2.8.0) (2025-07-29)
 
 
