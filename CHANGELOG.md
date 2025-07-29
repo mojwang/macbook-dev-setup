@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.7.0...v2.8.0) (2025-07-29)
+
+
+### Features
+
+* integrate SDD and BDD testing approaches with TDD ([ac596c2](https://github.com/mojwang/macbook-dev-setup/commit/ac596c299f74153e7e3a88933ef13f026efd64a1))
+
 # [2.7.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.6.0...v2.7.0) (2025-07-29)
 
 
