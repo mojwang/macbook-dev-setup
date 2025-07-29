@@ -26,13 +26,20 @@ OFFICIAL_SERVERS=(
     "sequentialthinking"
 )
 
-# List of community servers to install
+# List of community servers to install with optional checksums
+# Format: "name:url[:sha256_checksum]"
 COMMUNITY_SERVERS=(
     "context7:https://github.com/upstash/context7-mcp.git"
     "playwright:https://github.com/microsoft/playwright-mcp.git"
     "figma:https://github.com/GLips/Figma-Context-MCP.git"
     "semgrep:https://github.com/semgrep/mcp.git"
     "exa:https://github.com/exa-labs/exa-mcp-server.git"
+)
+
+# Path patterns for build artifacts
+declare -A BUILD_PATHS=(
+    ["node"]="dist/index.js build/index.js index.js"
+    ["python"]="__main__.py main.py src/main.py"
 )
 
 # Node.js servers that need npm build
@@ -181,45 +188,183 @@ clone_mcp_repository() {
     print_success "MCP servers copied successfully"
 }
 
+verify_repository_integrity() {
+    local repo_dir="$1"
+    local expected_checksum="$2"
+    
+    if [[ -z "$expected_checksum" ]]; then
+        print_warning "No checksum provided for verification"
+        return 0
+    fi
+    
+    # Create a deterministic hash of repository content
+    local actual_checksum
+    actual_checksum=$(cd "$repo_dir" && git ls-tree -r HEAD | sha256sum | cut -d' ' -f1)
+    
+    if [[ "$actual_checksum" == "$expected_checksum" ]]; then
+        print_success "Repository checksum verified"
+        return 0
+    else
+        print_error "Repository checksum mismatch!"
+        print_error "Expected: $expected_checksum"
+        print_error "Actual: $actual_checksum"
+        return 1
+    fi
+}
+
 clone_community_servers() {
     print_step "Cloning community MCP servers..."
     
+    local clone_pids=()
+    local clone_servers=()
+    local clone_urls=()
+    local clone_checksums=()
+    
+    # Parse server configurations
     for server_config in "${COMMUNITY_SERVERS[@]}"; do
-        # Parse server name and URL
-        local server_name="${server_config%%:*}"
-        local server_url="${server_config#*:}"
+        # Parse server name, URL, and optional checksum
+        local parts
+        IFS=':' read -ra parts <<< "$server_config"
+        local server_name="${parts[0]}"
+        local server_url="${parts[1]}:${parts[2]}"
+        local checksum="${parts[3]:-}"
+        
+        clone_servers+=("$server_name")
+        clone_urls+=("$server_url")
+        clone_checksums+=("$checksum")
+    done
+    
+    # Clone servers in parallel
+    for i in "${!clone_servers[@]}"; do
+        local server_name="${clone_servers[$i]}"
+        local server_url="${clone_urls[$i]}"
+        local checksum="${clone_checksums[$i]}"
         local server_dir="$MCP_COMMUNITY_DIR/$server_name"
         
-        print_info "Processing $server_name server..."
+        (
+            if [[ ! -d "$server_dir" ]]; then
+                print_info "Cloning $server_name from $server_url..."
+                if git clone "$server_url" "$server_dir" 2>/dev/null; then
+                    if verify_repository_integrity "$server_dir" "$checksum"; then
+                        print_success "Cloned and verified $server_name successfully"
+                    else
+                        print_warning "$server_name cloned but verification failed"
+                    fi
+                else
+                    print_error "Failed to clone $server_name"
+                fi
+            else
+                print_info "$server_name already exists, checking for updates..."
+                
+                # Check if repository is clean before pulling
+                if (cd "$server_dir" && git diff --quiet && git diff --cached --quiet); then
+                    print_info "Repository is clean, updating..."
+                    if (cd "$server_dir" && git pull 2>/dev/null); then
+                        verify_repository_integrity "$server_dir" "$checksum" || true
+                    fi
+                else
+                    print_warning "Repository has uncommitted changes, skipping update"
+                fi
+            fi
+        ) &
         
-        if [[ ! -d "$server_dir" ]]; then
-            print_info "Cloning $server_name from $server_url..."
-            if git clone "$server_url" "$server_dir"; then
-                print_success "Cloned $server_name successfully"
-            else
-                print_error "Failed to clone $server_name"
-                continue
-            fi
-        else
-            print_info "$server_name already exists, checking for updates..."
-            
-            # Check if repository is clean before pulling
-            if (cd "$server_dir" && git diff --quiet && git diff --cached --quiet); then
-                print_info "Repository is clean, updating..."
-                (cd "$server_dir" && git pull)
-            else
-                print_warning "Repository has uncommitted changes, skipping update"
-            fi
+        clone_pids+=("$!")
+    done
+    
+    # Wait for all clones to complete
+    local failed=0
+    for pid in "${clone_pids[@]}"; do
+        if ! wait "$pid"; then
+            ((failed++))
         fi
     done
     
-    print_success "Community servers processed successfully"
+    if [[ $failed -gt 0 ]]; then
+        print_warning "$failed community servers failed to clone"
+    else
+        print_success "All community servers processed successfully"
+    fi
+}
+
+verify_server_build() {
+    local server_dir="$1"
+    local server_type="$2"
+    
+    local paths="${BUILD_PATHS[$server_type]}"
+    for path in $paths; do
+        if [[ -f "$server_dir/$path" ]]; then
+            print_success "Build artifact found: $path"
+            return 0
+        fi
+    done
+    
+    print_error "No build artifacts found in $server_dir"
+    return 1
+}
+
+install_server_node() {
+    local server="$1"
+    local server_dir="$2"
+    
+    print_info "Building $server server..."
+    
+    # Install dependencies
+    if ! (cd "$server_dir" && npm install --silent 2>/dev/null); then
+        print_error "Failed to install dependencies for $server server"
+        return 1
+    fi
+    
+    print_info "Dependencies installed for $server"
+    
+    # Build the server if build script exists
+    if (cd "$server_dir" && npm run build 2>/dev/null); then
+        print_success "Built $server server"
+    else
+        print_warning "No build script found for $server"
+    fi
+    
+    # Verify build artifacts
+    if verify_server_build "$server_dir" "node"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+install_server_python() {
+    local server="$1"
+    local server_dir="$2"
+    
+    print_info "Installing $server server dependencies..."
+    
+    if (cd "$server_dir" && uv sync 2>/dev/null); then
+        print_success "Installed $server server dependencies"
+        return 0
+    else
+        # Fallback to pip if uv fails
+        print_warning "uv sync failed, trying pip install..."
+        if [[ -f "$server_dir/requirements.txt" ]]; then
+            if (cd "$server_dir" && pip install -r requirements.txt 2>/dev/null); then
+                return 0
+            fi
+        elif [[ -f "$server_dir/pyproject.toml" ]]; then
+            if (cd "$server_dir" && pip install -e . 2>/dev/null); then
+                return 0
+            fi
+        fi
+    fi
+    
+    print_error "Failed to install dependencies for $server"
+    return 1
 }
 
 install_mcp_servers() {
     print_step "Building and installing MCP servers..."
     
-    # Install Node.js servers
+    local install_pids=()
+    local install_servers=()
+    
+    # Process Node.js servers in parallel
     for server in "${NODE_SERVERS[@]}"; do
         # Check official directory first
         local server_dir=""
@@ -230,32 +375,15 @@ install_mcp_servers() {
         fi
         
         if [[ -n "$server_dir" ]]; then
-            print_info "Building $server server..."
-            
-            # Install dependencies
-            if (cd "$server_dir" && npm install --silent); then
-                print_info "Dependencies installed for $server"
-                
-                # Build the server if build script exists
-                if (cd "$server_dir" && npm run build 2>/dev/null); then
-                    print_success "Built $server server"
-                else
-                    # Check if dist/index.js already exists (pre-built)
-                    if [[ -f "$server_dir/dist/index.js" ]] || [[ -f "$server_dir/build/index.js" ]]; then
-                        print_info "$server server appears to be pre-built"
-                    else
-                        print_warning "No build script found for $server, checking for entry point..."
-                    fi
-                fi
-            else
-                print_error "Failed to install dependencies for $server server"
-            fi
+            (install_server_node "$server" "$server_dir") &
+            install_pids+=("$!")
+            install_servers+=("$server")
         else
             print_warning "Server directory not found for $server"
         fi
     done
     
-    # Install Python servers
+    # Process Python servers in parallel
     for server in "${PYTHON_SERVERS[@]}"; do
         # Check official directory first
         local server_dir=""
@@ -266,154 +394,166 @@ install_mcp_servers() {
         fi
         
         if [[ -n "$server_dir" ]]; then
-            print_info "Installing $server server dependencies..."
-            if (cd "$server_dir" && uv sync); then
-                print_success "Installed $server server dependencies"
-            else
-                # Fallback to pip if uv fails
-                print_warning "uv sync failed, trying pip install..."
-                if [[ -f "$server_dir/requirements.txt" ]]; then
-                    (cd "$server_dir" && pip install -r requirements.txt)
-                elif [[ -f "$server_dir/pyproject.toml" ]]; then
-                    (cd "$server_dir" && pip install -e .)
-                fi
-            fi
+            (install_server_python "$server" "$server_dir") &
+            install_pids+=("$!")
+            install_servers+=("$server")
         else
             print_warning "Server directory not found for $server"
         fi
     done
+    
+    # Wait for all installations to complete
+    local failed=0
+    for i in "${!install_pids[@]}"; do
+        if ! wait "${install_pids[$i]}"; then
+            print_error "Failed to install ${install_servers[$i]}"
+            ((failed++))
+        fi
+    done
+    
+    if [[ $failed -gt 0 ]]; then
+        print_warning "$failed servers failed to install"
+    else
+        print_success "All servers installed successfully"
+    fi
+}
+
+# Helper function for consistent JSON escaping
+escape_json_path() {
+    printf '%s' "$1" | sed 's/["\\/]/\\\\&/g'
+}
+
+# Helper function to find Node.js entry point
+find_node_entry() {
+    local server_dir="$1"
+    local paths="${BUILD_PATHS[node]}"
+    
+    for path in $paths; do
+        if [[ -f "$server_dir/$path" ]]; then
+            echo "$server_dir/$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Configure individual servers
+configure_node_server() {
+    local name="$1"
+    local server_dir="$2"
+    
+    local entry_point
+    if entry_point=$(find_node_entry "$server_dir"); then
+        print_info "Adding $name server..."
+        if claude mcp add --scope user "$name" node "$entry_point"; then
+            print_success "Added $name server"
+            return 0
+        else
+            print_error "Failed to add $name server"
+            return 1
+        fi
+    else
+        print_warning "No entry point found for $name server"
+        return 1
+    fi
+}
+
+configure_python_server() {
+    local name="$1"
+    local server_dir="$2"
+    local command="${3:-mcp-server-$name}"
+    
+    if [[ ! -d "$server_dir" ]]; then
+        print_error "$name server directory not found: $server_dir"
+        return 1
+    fi
+    
+    print_info "Adding $name server..."
+    local json_config
+    json_config=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "%s"]}' \
+        "$(escape_json_path "$server_dir")" "$command")
+    
+    if claude mcp add-json --scope user "$name" "$json_config"; then
+        print_success "Added $name server"
+        return 0
+    else
+        print_error "Failed to add $name server"
+        return 1
+    fi
+}
+
+configure_semgrep_server() {
+    local server_dir="$MCP_COMMUNITY_DIR/semgrep"
+    
+    if [[ ! -d "$server_dir" ]]; then
+        print_warning "Semgrep server directory not found"
+        return 1
+    fi
+    
+    print_info "Adding semgrep server..."
+    local json_config
+    
+    # Check if it uses Python package setup
+    if [[ -f "$server_dir/pyproject.toml" ]] || [[ -f "$server_dir/setup.py" ]]; then
+        json_config=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-semgrep"]}' \
+            "$(escape_json_path "$server_dir")")
+    else
+        # Fallback to direct Python execution
+        local main_script=""
+        for script in main.py src/main.py __main__.py; do
+            if [[ -f "$server_dir/$script" ]]; then
+                main_script="$script"
+                break
+            fi
+        done
+        
+        if [[ -z "$main_script" ]]; then
+            print_error "No main script found for semgrep server"
+            return 1
+        fi
+        
+        json_config=$(printf '{"type": "stdio", "command": "python", "args": ["%s/%s"]}' \
+            "$(escape_json_path "$server_dir")" "$main_script")
+    fi
+    
+    if claude mcp add-json --scope user semgrep "$json_config"; then
+        print_success "Added semgrep server"
+        return 0
+    else
+        print_error "Failed to add semgrep server"
+        return 1
+    fi
 }
 
 configure_claude_mcp() {
     print_step "Configuring Claude Code with MCP servers..."
     
-    # Add filesystem server
-    if [[ -f "$MCP_OFFICIAL_DIR/filesystem/dist/index.js" ]]; then
-        print_info "Adding filesystem server..."
-        claude mcp add --scope user filesystem node "$MCP_OFFICIAL_DIR/filesystem/dist/index.js" || true
-    fi
+    local failed=0
     
-    # Add memory server
-    if [[ -f "$MCP_OFFICIAL_DIR/memory/dist/index.js" ]]; then
-        print_info "Adding memory server..."
-        claude mcp add --scope user memory node "$MCP_OFFICIAL_DIR/memory/dist/index.js" || true
-    fi
+    # Configure official servers
+    configure_node_server "filesystem" "$MCP_OFFICIAL_DIR/filesystem" || ((failed++))
+    configure_node_server "memory" "$MCP_OFFICIAL_DIR/memory" || ((failed++))
+    configure_python_server "git" "$MCP_OFFICIAL_DIR/git" || ((failed++))
+    configure_python_server "fetch" "$MCP_OFFICIAL_DIR/fetch" || ((failed++))
+    configure_python_server "sequentialthinking" "$MCP_OFFICIAL_DIR/sequentialthinking" || ((failed++))
     
-    # Add git server with proper JSON escaping
-    if [[ -d "$MCP_OFFICIAL_DIR/git" ]]; then
-        print_info "Adding git server..."
-        # Validate directory path
-        if [[ ! -d "$MCP_OFFICIAL_DIR/git" ]]; then
-            print_error "Git server directory not found: $MCP_OFFICIAL_DIR/git"
-            return 1
-        fi
-        
-        # Build JSON with proper escaping
-        local git_json
-        git_json=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-git"]}' \
-            "$(printf '%s' "$MCP_OFFICIAL_DIR/git" | sed 's/["\]/\\&/g')")
-        
-        claude mcp add-json --scope user git "$git_json" || true
-    fi
-    
-    # Add fetch server with proper JSON escaping
-    if [[ -d "$MCP_OFFICIAL_DIR/fetch" ]]; then
-        print_info "Adding fetch server..."
-        # Validate directory path
-        if [[ ! -d "$MCP_OFFICIAL_DIR/fetch" ]]; then
-            print_error "Fetch server directory not found: $MCP_OFFICIAL_DIR/fetch"
-            return 1
-        fi
-        
-        # Build JSON with proper escaping
-        local fetch_json
-        fetch_json=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-fetch"]}' \
-            "$(printf '%s' "$MCP_OFFICIAL_DIR/fetch" | sed 's/["\]/\\&/g')")
-        
-        claude mcp add-json --scope user fetch "$fetch_json" || true
-    fi
-    
-    # Add sequential thinking server
-    if [[ -d "$MCP_OFFICIAL_DIR/sequentialthinking" ]]; then
-        print_info "Adding sequential thinking server..."
-        local seq_json
-        seq_json=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-sequentialthinking"]}' \
-            "$(printf '%s' "$MCP_OFFICIAL_DIR/sequentialthinking" | sed 's/["\\/]/\\\\&/g')")
-        
-        claude mcp add-json --scope user sequentialthinking "$seq_json" || true
-    fi
-    
-    # Add context7 server
-    if [[ -f "$MCP_COMMUNITY_DIR/context7/dist/index.js" ]] || [[ -f "$MCP_COMMUNITY_DIR/context7/build/index.js" ]]; then
-        print_info "Adding context7 server..."
-        local context7_path=""
-        if [[ -f "$MCP_COMMUNITY_DIR/context7/dist/index.js" ]]; then
-            context7_path="$MCP_COMMUNITY_DIR/context7/dist/index.js"
-        else
-            context7_path="$MCP_COMMUNITY_DIR/context7/build/index.js"
-        fi
-        claude mcp add --scope user context7 node "$context7_path" || true
-    fi
-    
-    # Add playwright server
-    if [[ -f "$MCP_COMMUNITY_DIR/playwright/dist/index.js" ]] || [[ -f "$MCP_COMMUNITY_DIR/playwright/build/index.js" ]]; then
-        print_info "Adding playwright server..."
-        local playwright_path=""
-        if [[ -f "$MCP_COMMUNITY_DIR/playwright/dist/index.js" ]]; then
-            playwright_path="$MCP_COMMUNITY_DIR/playwright/dist/index.js"
-        else
-            playwright_path="$MCP_COMMUNITY_DIR/playwright/build/index.js"
-        fi
-        claude mcp add --scope user playwright node "$playwright_path" || true
-    fi
-    
-    # Add figma server
-    if [[ -f "$MCP_COMMUNITY_DIR/figma/dist/index.js" ]] || [[ -f "$MCP_COMMUNITY_DIR/figma/build/index.js" ]]; then
-        print_info "Adding figma server..."
-        local figma_path=""
-        if [[ -f "$MCP_COMMUNITY_DIR/figma/dist/index.js" ]]; then
-            figma_path="$MCP_COMMUNITY_DIR/figma/dist/index.js"
-        else
-            figma_path="$MCP_COMMUNITY_DIR/figma/build/index.js"
-        fi
-        claude mcp add --scope user figma node "$figma_path" || true
-    fi
-    
-    # Add semgrep server
-    if [[ -d "$MCP_COMMUNITY_DIR/semgrep" ]]; then
-        print_info "Adding semgrep server..."
-        local semgrep_json
-        # Check if it uses Python entry point
-        if [[ -f "$MCP_COMMUNITY_DIR/semgrep/pyproject.toml" ]] || [[ -f "$MCP_COMMUNITY_DIR/semgrep/setup.py" ]]; then
-            semgrep_json=$(printf '{"type": "stdio", "command": "uv", "args": ["--directory", "%s", "run", "mcp-server-semgrep"]}' \
-                "$(printf '%s' "$MCP_COMMUNITY_DIR/semgrep" | sed 's/["\\/]/\\\\&/g')")
-        else
-            # Fallback to python command
-            semgrep_json=$(printf '{"type": "stdio", "command": "python", "args": ["%s/main.py"]}' \
-                "$(printf '%s' "$MCP_COMMUNITY_DIR/semgrep" | sed 's/["\\/]/\\\\&/g')")
-        fi
-        
-        claude mcp add-json --scope user semgrep "$semgrep_json" || true
-    fi
-    
-    # Add exa server
-    if [[ -f "$MCP_COMMUNITY_DIR/exa/dist/index.js" ]] || [[ -f "$MCP_COMMUNITY_DIR/exa/build/index.js" ]]; then
-        print_info "Adding exa server..."
-        local exa_path=""
-        if [[ -f "$MCP_COMMUNITY_DIR/exa/dist/index.js" ]]; then
-            exa_path="$MCP_COMMUNITY_DIR/exa/dist/index.js"
-        else
-            exa_path="$MCP_COMMUNITY_DIR/exa/build/index.js"
-        fi
-        claude mcp add --scope user exa node "$exa_path" || true
-    fi
+    # Configure community servers
+    configure_node_server "context7" "$MCP_COMMUNITY_DIR/context7" || ((failed++))
+    configure_node_server "playwright" "$MCP_COMMUNITY_DIR/playwright" || ((failed++))
+    configure_node_server "figma" "$MCP_COMMUNITY_DIR/figma" || ((failed++))
+    configure_semgrep_server || ((failed++))
+    configure_node_server "exa" "$MCP_COMMUNITY_DIR/exa" || ((failed++))
     
     # Note about Pieces MCP
     print_info "Note: Pieces MCP requires PiecesOS running locally."
     print_info "To configure Pieces, add the SSE endpoint manually:"
     print_info "  http://localhost:39300/model_context_protocol/2024-11-05/sse"
     
-    print_success "MCP servers configured"
+    if [[ $failed -gt 0 ]]; then
+        print_warning "$failed servers failed to configure"
+    else
+        print_success "All MCP servers configured successfully"
+    fi
 }
 
 verify_mcp_installation() {
@@ -421,7 +561,22 @@ verify_mcp_installation() {
     
     # List configured servers
     print_info "Configured MCP servers:"
-    claude mcp list || true
+    if claude mcp list; then
+        # Count connected servers
+        local connected_count
+        connected_count=$(claude mcp list | grep -c "✓ Connected" || echo "0")
+        local configured_count
+        configured_count=$(claude mcp list | grep -cE "(✓|✗)" || echo "0")
+        
+        if [[ $connected_count -gt 0 ]]; then
+            print_success "$connected_count/$configured_count MCP servers connected successfully"
+        else
+            print_warning "MCP servers configured but none are connected"
+        fi
+    else
+        print_error "Failed to list MCP servers"
+        return 1
+    fi
     
     print_success "MCP installation verified"
 }
