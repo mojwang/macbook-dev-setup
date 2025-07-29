@@ -1,3 +1,15 @@
+# [2.7.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.6.0...v2.7.0) (2025-07-29)
+
+
+### Bug Fixes
+
+* improve MCP setup script security and performance ([c131dd9](https://github.com/mojwang/macbook-dev-setup/commit/c131dd91a4f36a2ba1328bdecc810619243bf4f1))
+
+
+### Features
+
+* Add support for community MCP servers ([47cc153](https://github.com/mojwang/macbook-dev-setup/commit/47cc153a6927d7d537d1f71093427062d32ae9e1))
+
 # [2.6.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.5.0...v2.6.0) (2025-07-26)
 
 
