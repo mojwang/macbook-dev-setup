@@ -195,6 +195,69 @@ The `--sync` flag detects and installs new packages added to configuration files
 - Timeout protection (30s) for potentially hanging commands
 - Git is configured with security-conscious settings (fsckObjects enabled)
 
+## Security and Signal Safety
+
+### Signal-Safe Cleanup Requirements
+All scripts that perform system modifications MUST implement signal-safe cleanup:
+
+1. **Source the signal-safety library** at the beginning of the script:
+   ```bash
+   source "$ROOT_DIR/lib/signal-safety.sh"
+   ```
+
+2. **Implement a cleanup function** specific to your script's needs:
+   ```bash
+   cleanup_yourscript() {
+       # Clean up temporary files
+       rm -f "${TEMP_FILE:-}" 2>/dev/null || true
+       
+       # Kill any background processes
+       [[ -n "${CHILD_PID:-}" ]] && kill "$CHILD_PID" 2>/dev/null || true
+       
+       # Remove partial installations
+       [[ -d "${WORK_DIR:-}" ]] && rm -rf "$WORK_DIR" 2>/dev/null || true
+       
+       # Call default cleanup
+       default_cleanup
+   }
+   ```
+
+3. **Register the cleanup function** immediately after defining it:
+   ```bash
+   setup_cleanup "cleanup_yourscript"
+   ```
+
+### Critical Cleanup Areas
+When implementing cleanup, ensure these artifacts are handled:
+
+- **Package Managers**: npm node_modules, Python venvs, Ruby gems
+- **Build Artifacts**: Compiled binaries, object files, cache directories
+- **Temporary Files**: Config backups, download files, lock files
+- **Background Processes**: Any spawned child processes or daemons
+- **Partial Installations**: Incomplete setups that could cause issues
+
+### Security Best Practices
+
+1. **Never leave sensitive data** in temporary files or logs
+2. **Use secure temp directories**: `mktemp -d` with proper permissions
+3. **Validate all inputs** before using in commands
+4. **Avoid eval** unless absolutely necessary
+5. **Quote all variables** to prevent injection: `"$var"` not `$var`
+6. **Set restrictive permissions** on created files: `umask 077`
+7. **Clean up secrets** from memory/disk after use
+
+### Testing Signal Safety
+Always test your cleanup implementation:
+
+```bash
+# Start your script and interrupt it
+./your-script.sh &
+PID=$!
+sleep 2
+kill -INT $PID
+# Verify no artifacts remain
+```
+
 ## Setup Script Maintenance
 
 When adding new functionality or capabilities to this project, always check if the setup script needs updating:
