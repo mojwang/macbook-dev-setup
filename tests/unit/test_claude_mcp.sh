@@ -53,6 +53,9 @@ assert_true "grep -q 'check_prerequisites()' '$SCRIPT_PATH'"
 test_case "Script should define configure_claude_mcp function"
 assert_true "grep -q 'configure_claude_mcp()' '$SCRIPT_PATH'"
 
+test_case "Script should define clone_community_servers function"
+assert_true "grep -q 'clone_community_servers()' '$SCRIPT_PATH'"
+
 # Test 6: Script handles paths correctly
 test_case "Script should use MCP_ROOT_DIR variable"
 assert_true "grep -q 'MCP_ROOT_DIR=' '$SCRIPT_PATH'"
@@ -67,7 +70,37 @@ assert_true "grep -q 'git diff --quiet' '$SCRIPT_PATH'"
 
 # Test 9: Script has proper error handling for npm
 test_case "Script should handle npm build failures"
-assert_true "grep -q 'Failed to build.*server' '$SCRIPT_PATH'"
+assert_true "grep -q 'No build script found' '$SCRIPT_PATH'"
+
+# Test 10: Script includes new MCP servers
+test_case "Script should include sequentialthinking in OFFICIAL_SERVERS"
+assert_true "grep -q 'sequentialthinking' '$SCRIPT_PATH'"
+
+test_case "Script should define COMMUNITY_SERVERS array"
+assert_true "grep -q 'COMMUNITY_SERVERS=' '$SCRIPT_PATH'"
+
+test_case "Script should include context7 server"
+assert_true "grep -q 'context7:' '$SCRIPT_PATH'"
+
+test_case "Script should include playwright server"
+assert_true "grep -q 'playwright:' '$SCRIPT_PATH'"
+
+test_case "Script should include figma server"
+assert_true "grep -q 'figma:' '$SCRIPT_PATH'"
+
+test_case "Script should include semgrep server"
+assert_true "grep -q 'semgrep:' '$SCRIPT_PATH'"
+
+test_case "Script should include exa server"
+assert_true "grep -q 'exa:' '$SCRIPT_PATH'"
+
+# Test 11: Script handles community servers in remove
+test_case "Script should remove community servers in --remove"
+assert_true "grep -q 'Remove community servers' '$SCRIPT_PATH'"
+
+# Test 12: Script mentions Pieces MCP in help
+test_case "Script should mention Pieces MCP in documentation"
+assert_true "grep -q 'Pieces MCP' '$SCRIPT_PATH'"
 
 # Print summary
 print_test_summary
