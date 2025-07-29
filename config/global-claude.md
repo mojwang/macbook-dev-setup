@@ -24,6 +24,8 @@ This file provides baseline guidance to Claude Code across all projects. Project
 - Provide dry-run/preview modes for all destructive operations
 - Detailed error handling with recovery options
 - Optional logging for troubleshooting
+- Signal-safe cleanup handlers for all system-modifying scripts
+- Atomic file operations to prevent partial writes
 
 ## File Organization
 
@@ -69,6 +71,16 @@ This file provides baseline guidance to Claude Code across all projects. Project
 - When asked to commit changes, also create a pull request unless explicitly told not to
 - Follow conventional commit message formats when they exist in the project
 - Keep commits focused and atomic - one logical change per commit
+
+## Security Practices
+
+- Always quote variables in shell scripts: `"$var"` not `$var`
+- Validate and sanitize all user inputs
+- Use `mktemp` for temporary files with restrictive permissions
+- Never store secrets in code or logs
+- Clean up sensitive data from memory/disk after use
+- Implement proper signal handling for cleanup on interruption
+- Use secure defaults and fail closed, not open
 
 ## Important Behavioral Guidelines
 
