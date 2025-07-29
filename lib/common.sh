@@ -451,6 +451,55 @@ kill_all_test_jobs() {
     fi
 }
 
+# Test-related functions
+validate_test_jobs() {
+    local jobs="${1:-}"
+    local cpu_count=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
+    
+    if [[ ! "$jobs" =~ ^[0-9]+$ ]] || (( jobs < 1 || jobs > 32 )); then
+        echo "Invalid TEST_JOBS value: $jobs. Using CPU count." >&2
+        echo "$cpu_count"
+    else
+        echo "$jobs"
+    fi
+}
+
+wait_for_job_slot() {
+    local max_jobs="${1:-4}"
+    while true; do
+        local current_jobs=$(jobs -r 2>/dev/null | wc -l | tr -d ' ')
+        if [[ -z "$current_jobs" ]]; then
+            current_jobs=0
+        fi
+        if (( current_jobs < max_jobs )); then
+            break
+        fi
+        sleep 0.1
+    done
+}
+
+check_suite_timeout() {
+    local start_time="$1"
+    local timeout="$2"
+    local current_time=$(date +%s)
+    if (( current_time - start_time > timeout )); then
+        return 124  # timeout exit code
+    fi
+    return 0
+}
+
+kill_all_test_jobs() {
+    # Kill all background jobs
+    local pids=$(jobs -p 2>/dev/null)
+    if [[ -n "$pids" ]]; then
+        echo "$pids" | xargs kill 2>/dev/null || true
+        # Wait a moment for processes to die
+        sleep 0.5
+        # Force kill any remaining
+        echo "$pids" | xargs kill -9 2>/dev/null || true
+    fi
+}
+
 # Export common variables for child scripts
 export ROOT_DIR
 export LIB_DIR="$ROOT_DIR/lib"
