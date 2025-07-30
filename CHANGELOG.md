@@ -1,3 +1,23 @@
+# [3.0.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.9.0...v3.0.0) (2025-07-30)
+
+
+### Bug Fixes
+
+* address CI report issues in zsh aliases ([acb9ada](https://github.com/mojwang/macbook-dev-setup/commit/acb9ada5c97fa1e1bfb9bc362f788f072c759314))
+
+
+### Features
+
+* enhance git workflow with worktrees and Graphite CLI ([f4c5a97](https://github.com/mojwang/macbook-dev-setup/commit/f4c5a97d1d06166a073276c19f13f1564e1ba769))
+
+
+### BREAKING CHANGES
+
+* Removed 'gc' alias for 'git commit' to avoid conflict with
+conventional commit aliases. Use 'g commit' or 'gci' instead.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
 # [2.9.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.8.0...v2.9.0) (2025-07-29)
 
 
