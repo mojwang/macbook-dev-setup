@@ -31,28 +31,57 @@ alias gwp="git worktree prune"
 
 # Smart worktree switcher - finds sibling worktrees
 gwcd() {
-    # If in a repo with worktrees, show them
-    local current_repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
-    if [[ -n "$current_repo" ]]; then
-        # Find all related worktrees (same prefix)
-        local base_name="${current_repo%.*}"  # Remove suffix if any
-        local selected=$(find "$(dirname "$(pwd)")" -maxdepth 1 -type d -name "${base_name}*" | \
-            xargs -I {} bash -c 'echo "{} ($(cd "{}" && git branch --show-current 2>/dev/null || echo "no branch"))"' | \
-            fzf --header="Select worktree:" | \
-            awk '{print $1}')
-        [[ -n "$selected" ]] && cd "$selected"
-    else
-        echo "Not in a git repository"
+    # Check for fzf dependency
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for interactive worktree selection"
+        echo "Install with: brew install fzf"
+        return 1
     fi
+    
+    # Cache git root to avoid multiple calls
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+        echo "Not in a git repository"
+        return 1
+    }
+    
+    local current_repo=$(basename "$git_root")
+    # Find all related worktrees (same prefix)
+    local base_name="${current_repo%.*}"  # Remove suffix if any
+    local parent_dir=$(dirname "$git_root")
+    
+    local selected=$(find "$parent_dir" -maxdepth 1 -type d -name "${base_name}*" | \
+        xargs -I {} bash -c 'echo "{} ($(cd "{}" && git branch --show-current 2>/dev/null || echo "no branch"))"' | \
+        fzf --header="Select worktree:" | \
+        awk '{print $1}')
+    
+    [[ -n "$selected" ]] && cd "$selected"
 }
 
 # Quick switch between main and worktrees
 gw() {
     case "$1" in
-        main)   cd "${PWD%.*}";;           # Go to main (remove suffix)
-        review) cd "${PWD%.*}.review";;    # Go to review worktree
-        hotfix) cd "${PWD%.*}.hotfix";;    # Go to hotfix worktree
-        test)   cd "${PWD%.*}.test";;      # Go to test worktree
+        main)   
+            local main_path="${PWD%.*}"
+            if [[ -d "$main_path" ]]; then
+                cd "$main_path"
+            else
+                echo "Main worktree not found at: $main_path"
+                return 1
+            fi
+            ;;
+        review) 
+            local review_path="${PWD%.*}.review"
+            [[ -d "$review_path" ]] && cd "$review_path" || echo "Review worktree not found"
+            ;;
+        hotfix) 
+            local hotfix_path="${PWD%.*}.hotfix"
+            [[ -d "$hotfix_path" ]] && cd "$hotfix_path" || echo "Hotfix worktree not found"
+            ;;
+        test)   
+            local test_path="${PWD%.*}.test"
+            [[ -d "$test_path" ]] && cd "$test_path" || echo "Test worktree not found"
+            ;;
         *)      gwcd;;                     # Interactive selection
     esac
 }
