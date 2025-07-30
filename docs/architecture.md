@@ -2,6 +2,14 @@
 
 Technical details about how this setup works.
 
+## Performance Design
+- The repository uses a **dual-script architecture** for optimal performance:
+  - `setup.sh`: Production script with parallel processing (uses system CPU cores)
+  - `setup-validate.sh`: Validation script optimized for dry-runs (6x faster I/O)
+- Smart delegation: `setup.sh preview` automatically delegates to `setup-validate.sh`
+- Parallel execution for package installations
+- No-auto-update flags for Homebrew operations to reduce overhead
+
 ## Repository Structure
 
 ```

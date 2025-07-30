@@ -2,25 +2,102 @@
 # Git, Docker, and utility shortcuts
 
 # Git aliases
+alias g="git"
 alias gs="git status"
 alias ga="git add"
-alias gc="git commit"
 alias gp="git push"
-alias gl="git log --oneline"
+alias gpl="git pull"
+alias gf="git fetch"
 # Enhanced git diff with delta if available
 if command -v delta &> /dev/null; then
     alias gd="git diff | delta"
-    alias gdiff="git diff | delta"
 else
     alias gd="git diff"
 fi
-alias gb="git branch"
+# Use git aliases from .gitconfig for these
+alias gl="git lg"
+alias gla="git lga"
 alias gco="git checkout"
-alias gpl="git pull"
-alias gf="git fetch"
+alias gb="git branch"
 alias gm="git merge"
 alias gr="git rebase"
 alias gstash="git stash"
+
+# Git worktree aliases
+alias gwa="git worktree add"
+alias gwl="git worktree list"
+alias gwr="git worktree remove"
+alias gwp="git worktree prune"
+
+# Smart worktree switcher - finds sibling worktrees
+gwcd() {
+    # Check for fzf dependency
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required for interactive worktree selection"
+        echo "Install with: brew install fzf"
+        return 1
+    fi
+    
+    # Cache git root to avoid multiple calls
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+        echo "Not in a git repository"
+        return 1
+    }
+    
+    local current_repo=$(basename "$git_root")
+    # Find all related worktrees (same prefix)
+    local base_name="${current_repo%.*}"  # Remove suffix if any
+    local parent_dir=$(dirname "$git_root")
+    
+    local selected=$(find "$parent_dir" -maxdepth 1 -type d -name "${base_name}*" | \
+        xargs -I {} bash -c 'echo "{} ($(cd "{}" && git branch --show-current 2>/dev/null || echo "no branch"))"' | \
+        fzf --header="Select worktree:" | \
+        awk '{print $1}')
+    
+    [[ -n "$selected" ]] && cd "$selected"
+}
+
+# Quick switch between main and worktrees
+gw() {
+    case "$1" in
+        main)   
+            local main_path="${PWD%.*}"
+            if [[ -d "$main_path" ]]; then
+                cd "$main_path"
+            else
+                echo "Main worktree not found at: $main_path"
+                return 1
+            fi
+            ;;
+        review) 
+            local review_path="${PWD%.*}.review"
+            [[ -d "$review_path" ]] && cd "$review_path" || echo "Review worktree not found"
+            ;;
+        hotfix) 
+            local hotfix_path="${PWD%.*}.hotfix"
+            [[ -d "$hotfix_path" ]] && cd "$hotfix_path" || echo "Hotfix worktree not found"
+            ;;
+        test)   
+            local test_path="${PWD%.*}.test"
+            [[ -d "$test_path" ]] && cd "$test_path" || echo "Test worktree not found"
+            ;;
+        *)      gwcd;;                     # Interactive selection
+    esac
+}
+
+# Setup standard worktrees for current repo
+setup_worktrees() {
+    local repo_name=$(basename "$(pwd)")
+    echo "Setting up standard worktrees for $repo_name..."
+    
+    # Create standard worktrees as siblings
+    git worktree add ../${repo_name}.review main
+    git worktree add ../${repo_name}.hotfix main
+    
+    echo "Worktrees created:"
+    git worktree list
+}
 
 # Text editor aliases
 if command -v nvim &> /dev/null; then

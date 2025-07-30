@@ -7,19 +7,25 @@
 source "$(dirname "$0")/../lib/common.sh"
 
 # Commit types with descriptions
-declare -A COMMIT_TYPES=(
-    ["feat"]="New feature"
-    ["fix"]="Bug fix"
-    ["docs"]="Documentation changes"
-    ["style"]="Code style changes (formatting, etc.)"
-    ["refactor"]="Code refactoring"
-    ["perf"]="Performance improvements"
-    ["test"]="Test changes"
-    ["build"]="Build system changes"
-    ["ci"]="CI/CD changes"
-    ["chore"]="Other maintenance"
-    ["revert"]="Revert previous commit"
-)
+COMMIT_TYPES_LIST=("feat" "fix" "docs" "style" "refactor" "perf" "test" "build" "ci" "chore" "revert")
+
+# Function to get commit type description
+get_commit_type_desc() {
+    case "$1" in
+        feat) echo "New feature" ;;
+        fix) echo "Bug fix" ;;
+        docs) echo "Documentation changes" ;;
+        style) echo "Code style changes (formatting, etc.)" ;;
+        refactor) echo "Code refactoring" ;;
+        perf) echo "Performance improvements" ;;
+        test) echo "Test changes" ;;
+        build) echo "Build system changes" ;;
+        ci) echo "CI/CD changes" ;;
+        chore) echo "Other maintenance" ;;
+        revert) echo "Revert previous commit" ;;
+        *) echo "Unknown type" ;;
+    esac
+}
 
 # Valid scopes
 SCOPES=(
@@ -82,17 +88,18 @@ echo
 # Display types with numbers
 i=1
 type_array=()
-for type in "${!COMMIT_TYPES[@]}"; do
+for type in "${COMMIT_TYPES_LIST[@]}"; do
     type_array+=("$type")
-    printf "  %2d) %-10s - %s\n" "$i" "$type" "${COMMIT_TYPES[$type]}"
+    desc=$(get_commit_type_desc "$type")
+    printf "  %2d) %-10s - %s\n" "$i" "$type" "$desc"
     ((i++))
-done | sort -k2
+done
 
 echo
-read -p "Enter number (1-${#COMMIT_TYPES[@]}): " type_num
+read -p "Enter number (1-${#COMMIT_TYPES_LIST[@]}): " type_num
 
 # Validate selection
-if [[ ! "$type_num" =~ ^[0-9]+$ ]] || [ "$type_num" -lt 1 ] || [ "$type_num" -gt "${#COMMIT_TYPES[@]}" ]; then
+if [[ ! "$type_num" =~ ^[0-9]+$ ]] || [ "$type_num" -lt 1 ] || [ "$type_num" -gt "${#COMMIT_TYPES_LIST[@]}" ]; then
     print_error "Invalid selection"
     exit 1
 fi

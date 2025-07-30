@@ -4,6 +4,7 @@ tap "oven-sh/bun"
 # Core development tools
 brew "git"
 brew "gh"                    # GitHub CLI
+brew "withgraphite/tap/graphite"  # Stacked PRs workflow
 brew "docker"
 brew "docker-completion"
 
