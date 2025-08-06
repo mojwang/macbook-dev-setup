@@ -49,7 +49,7 @@ add_claude_code_server() {
     case "$server_type" in
         "node")
             if [[ "$server_name" == "filesystem" ]]; then
-                claude mcp add "$server_name" -s "$scope" node "$server_path" "/Users/mojwang"
+                claude mcp add "$server_name" -s "$scope" node "$server_path" "$HOME"
             elif [[ -n "$api_key_var" ]]; then
                 claude mcp add "$server_name" -s "$scope" node "$server_path" --env "${api_key_var}=${!api_key_var}"
             else

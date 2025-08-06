@@ -26,9 +26,10 @@ import sys
 import os
 import subprocess
 
-api_key = sys.argv[1] if len(sys.argv) > 1 else None
+# Get API key from environment variable for security
+api_key = os.environ.get('EXA_API_KEY')
 if not api_key:
-    print("Error: No API key provided")
+    print("Error: No API key provided (set EXA_API_KEY environment variable)")
     sys.exit(1)
 
 # Get current settings
@@ -79,8 +80,8 @@ else:
     print("Successfully updated Exa MCP configuration!")
 EOF
     
-    # Run the Python script
-    python3 /tmp/update_exa_mcp.py "$api_key"
+    # Run the Python script with API key via environment variable
+    EXA_API_KEY="$api_key" python3 /tmp/update_exa_mcp.py
     
     # Clean up
     rm -f /tmp/update_exa_mcp.py
