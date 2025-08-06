@@ -52,9 +52,11 @@ settings['mcpServers']['exa'] = {
     "command": "npx",
     "args": [
         "-y",
-        "mcp-remote",
-        f"https://mcp.exa.ai/mcp?exaApiKey={api_key}"
-    ]
+        "@modelcontextprotocol/server-exa"
+    ],
+    "env": {
+        "EXA_API_KEY": api_key
+    }
 }
 
 # Write updated settings

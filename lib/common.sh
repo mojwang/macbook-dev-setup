@@ -475,17 +475,17 @@ export -f kill_all_test_jobs
 # MCP server configurations - base paths
 declare -A MCP_SERVER_BASE_PATHS=(
     # Official servers
-    ["filesystem"]="/Users/mojwang/repos/mcp-servers/official/filesystem"
-    ["memory"]="/Users/mojwang/repos/mcp-servers/official/memory"
-    ["sequentialthinking"]="/Users/mojwang/repos/mcp-servers/official/sequentialthinking"
-    ["git"]="/Users/mojwang/repos/mcp-servers/official/git"
-    ["fetch"]="/Users/mojwang/repos/mcp-servers/official/fetch"
+    ["filesystem"]="$HOME/repos/mcp-servers/official/filesystem"
+    ["memory"]="$HOME/repos/mcp-servers/official/memory"
+    ["sequentialthinking"]="$HOME/repos/mcp-servers/official/sequentialthinking"
+    ["git"]="$HOME/repos/mcp-servers/official/git"
+    ["fetch"]="$HOME/repos/mcp-servers/official/fetch"
     # Community servers
-    ["context7"]="/Users/mojwang/repos/mcp-servers/community/context7"
-    ["playwright"]="/Users/mojwang/repos/mcp-servers/community/playwright"
-    ["figma"]="/Users/mojwang/repos/mcp-servers/community/figma"
-    ["exa"]="/Users/mojwang/repos/mcp-servers/community/exa"
-    ["semgrep"]="/Users/mojwang/repos/mcp-servers/community/semgrep"
+    ["context7"]="$HOME/repos/mcp-servers/community/context7"
+    ["playwright"]="$HOME/repos/mcp-servers/community/playwright"
+    ["figma"]="$HOME/repos/mcp-servers/community/figma"
+    ["exa"]="$HOME/repos/mcp-servers/community/exa"
+    ["semgrep"]="$HOME/repos/mcp-servers/community/semgrep"
 )
 
 # MCP server executable patterns - used to find the actual executable
@@ -598,7 +598,7 @@ generate_mcp_server_config() {
       "command": "node",
       "args": [
         "$server_path",
-        "/Users/mojwang"
+        "$HOME"
       ]
     }
 EOF

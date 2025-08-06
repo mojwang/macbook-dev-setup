@@ -72,6 +72,10 @@ if [[ -d "dotfiles/.config/zsh" ]]; then
     mkdir -p ~/.config/zsh
     
     if cp -r dotfiles/.config/zsh/* ~/.config/zsh/ 2>/dev/null; then
+        # Set secure permissions on API keys file
+        if [[ -f ~/.config/zsh/51-api-keys.zsh ]]; then
+            chmod 600 ~/.config/zsh/51-api-keys.zsh
+        fi
         print_success "Zsh modular configuration installed"
     else
         print_warning "Failed to install Zsh modular configuration"

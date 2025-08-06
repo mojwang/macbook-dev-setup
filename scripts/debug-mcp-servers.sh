@@ -31,15 +31,17 @@ test_server() {
         TIMEOUT_CMD="timeout 5s"
     else
         # Fallback: run in background and kill after 5 seconds
-        ("$command" "${args[@]}" 2>&1 | grep -q "Content-Type: application/vnd.mcp" && echo "OK" > /tmp/mcp_test_$$.tmp) &
+        local tmp_file=$(mktemp /tmp/mcp_test_XXXXXX.tmp)
+        ("$command" "${args[@]}" 2>&1 | grep -q "Content-Type: application/vnd.mcp" && echo "OK" > "$tmp_file") &
         local pid=$!
         sleep 5
         kill -0 $pid 2>/dev/null && kill -9 $pid 2>/dev/null
-        if [ -f /tmp/mcp_test_$$.tmp ]; then
-            rm -f /tmp/mcp_test_$$.tmp
+        if [ -f "$tmp_file" ] && [ -s "$tmp_file" ]; then
+            rm -f "$tmp_file"
             echo "✓ Working"
             return 0
         else
+            rm -f "$tmp_file"
             echo "✗ Failed"
             return 1
         fi
