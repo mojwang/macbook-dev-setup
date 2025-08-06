@@ -112,6 +112,39 @@ command_exists() {
     command -v "$1" &> /dev/null
 }
 
+# Run command with timeout (standardized approach)
+# Usage: run_with_timeout SECONDS COMMAND [ARGS...]
+run_with_timeout() {
+    local timeout_seconds="$1"
+    shift
+    
+    # Prefer gtimeout (GNU coreutils on macOS), then timeout, then fallback
+    if command_exists gtimeout; then
+        gtimeout "${timeout_seconds}s" "$@"
+    elif command_exists timeout; then
+        timeout "${timeout_seconds}s" "$@"
+    else
+        # Fallback: run in background and kill after timeout
+        "$@" &
+        local pid=$!
+        local count=0
+        
+        while kill -0 $pid 2>/dev/null; do
+            if [[ $count -ge $timeout_seconds ]]; then
+                kill -TERM $pid 2>/dev/null || true
+                sleep 1
+                kill -0 $pid 2>/dev/null && kill -KILL $pid 2>/dev/null || true
+                return 124  # Standard timeout exit code
+            fi
+            sleep 1
+            ((count++))
+        done
+        
+        wait $pid
+        return $?
+    fi
+}
+
 # Check if running on macOS
 require_macos() {
     if [[ "$OS_TYPE" != "Darwin" ]]; then

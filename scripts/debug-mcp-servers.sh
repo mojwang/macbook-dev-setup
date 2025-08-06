@@ -24,30 +24,8 @@ test_server() {
     
     echo -n "Testing $name... "
     
-    # Use gtimeout if available, otherwise use timeout
-    if command -v gtimeout >/dev/null 2>&1; then
-        TIMEOUT_CMD="gtimeout 5s"
-    elif command -v timeout >/dev/null 2>&1; then
-        TIMEOUT_CMD="timeout 5s"
-    else
-        # Fallback: run in background and kill after 5 seconds
-        local tmp_file=$(mktemp /tmp/mcp_test_XXXXXX.tmp)
-        ("$command" "${args[@]}" 2>&1 | grep -q "Content-Type: application/vnd.mcp" && echo "OK" > "$tmp_file") &
-        local pid=$!
-        sleep 5
-        kill -0 $pid 2>/dev/null && kill -9 $pid 2>/dev/null
-        if [ -f "$tmp_file" ] && [ -s "$tmp_file" ]; then
-            rm -f "$tmp_file"
-            echo "✓ Working"
-            return 0
-        else
-            rm -f "$tmp_file"
-            echo "✗ Failed"
-            return 1
-        fi
-    fi
-    
-    if $TIMEOUT_CMD "$command" "${args[@]}" 2>&1 | grep -q "Content-Type: application/vnd.mcp"; then
+    # Use standardized timeout function from common.sh
+    if run_with_timeout 5 "$command" "${args[@]}" 2>&1 | grep -q "Content-Type: application/vnd.mcp"; then
         echo "✓ Working"
         return 0
     else

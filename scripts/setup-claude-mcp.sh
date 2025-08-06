@@ -360,31 +360,18 @@ build_node_server() {
     init_npm_noninteractive "$server_path"
     
     # Install dependencies with timeout
-    local npm_timeout=120
-    if command -v gtimeout &>/dev/null; then
-        gtimeout ${npm_timeout}s npm install --no-audit --no-fund >/dev/null 2>&1 || {
-            print_error "npm install failed or timed out for $server_name"
-            return 1
-        }
-    else
-        npm install --no-audit --no-fund >/dev/null 2>&1 || {
-            print_error "npm install failed for $server_name"
-            return 1
-        }
+    # Use standardized timeout function
+    if ! run_with_timeout 120 npm install --no-audit --no-fund >/dev/null 2>&1; then
+        print_error "npm install failed or timed out for $server_name"
+        return 1
     fi
     
     # Build if build script exists (with timeout)
     if grep -q '"build"' package.json 2>/dev/null; then
-        local build_timeout=60
-        if command -v gtimeout &>/dev/null; then
-            gtimeout ${build_timeout}s npm run build >/dev/null 2>&1 || {
-                print_warning "Build failed or timed out for $server_name, continuing anyway..."
-            }
-        else
-            npm run build >/dev/null 2>&1 || {
-                print_warning "Build failed for $server_name, continuing anyway..."
-            }
-        fi
+        # Use standardized timeout function
+        run_with_timeout 60 npm run build >/dev/null 2>&1 || {
+            print_warning "Build failed or timed out for $server_name, continuing anyway..."
+        }
     fi
     
     return 0
