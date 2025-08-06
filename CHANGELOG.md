@@ -1,3 +1,17 @@
+# [3.1.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.0.0...v3.1.0) (2025-08-06)
+
+
+### Bug Fixes
+
+* address critical security issues from CI review ([0c61db2](https://github.com/mojwang/macbook-dev-setup/commit/0c61db2bd11a6be76bd223ffa63bea05569d0706))
+* resolve remaining critical security issues ([ee0b5de](https://github.com/mojwang/macbook-dev-setup/commit/ee0b5de77c6df64cdb0d894e87b2e4bd9931c23b))
+
+
+### Features
+
+* add MCP integration tests and standardize timeout handling ([b8cd0e8](https://github.com/mojwang/macbook-dev-setup/commit/b8cd0e87651e8f6dcdec372dce78d57e02c427d1))
+* enhance MCP server setup with Claude Code support ([163bb57](https://github.com/mojwang/macbook-dev-setup/commit/163bb57d89368ae37a962bd4a62ef07bef97dbab))
+
 # [3.0.0](https://github.com/mojwang/macbook-dev-setup/compare/v2.9.0...v3.0.0) (2025-07-30)
 
 
