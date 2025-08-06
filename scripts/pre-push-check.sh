@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Pre-push Check Script
 # Run this before pushing to main to ensure your changes will pass CI

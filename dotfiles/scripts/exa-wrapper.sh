@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Eza wrapper script for ls-like behavior
 # This script provides an ls-compatible interface for the eza command

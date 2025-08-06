@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Signal-safe cleanup template for scripts
 # Source this file and use setup_cleanup function to register cleanup

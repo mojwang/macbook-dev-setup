@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test script for backup system functionality
 source "$(dirname "$0")/../test_framework.sh"

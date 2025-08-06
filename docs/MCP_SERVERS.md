@@ -1,10 +1,15 @@
 # MCP (Model Context Protocol) Servers Configuration
 
-This document describes the MCP servers that have been added to the Claude Code setup.
+This document describes the MCP servers that can be configured for Claude Desktop and Claude Code.
 
 ## Overview
 
-The `setup-claude-mcp.sh` script now installs and configures both official and community MCP servers to enhance Claude Code's capabilities.
+The macbook-dev-setup project includes several scripts to manage MCP servers:
+
+- `setup-claude-mcp.sh` - Installs and configures MCP servers for Claude Desktop
+- `setup-claude-code-mcp.sh` - Configures MCP servers for Claude Code CLI
+- `fix-mcp-servers.sh` - Repairs MCP configuration with dynamic server selection
+- `debug-mcp-servers.sh` - Tests and debugs MCP server installations
 
 ## Official Servers
 
@@ -49,11 +54,62 @@ Pieces MCP requires special configuration:
 
 ## Installation
 
+### Claude Desktop
+
+```bash
+# Install all MCP servers
+./scripts/setup-claude-mcp.sh
+
+# Fix/update configuration
+./scripts/fix-mcp-servers.sh
+
+# Exclude servers that need API keys
+./scripts/fix-mcp-servers.sh --no-api-keys
+
+# Only install specific servers
+./scripts/fix-mcp-servers.sh --servers filesystem,memory,git
+```
+
+### Claude Code
+
+```bash
+# Add all servers to user scope (global)
+./scripts/setup-claude-code-mcp.sh
+
+# Add to project scope (.mcp.json)
+./scripts/setup-claude-code-mcp.sh --scope project
+
+# Skip servers requiring API keys
+./scripts/setup-claude-code-mcp.sh --no-api-keys
+
+# Add specific servers only
+./scripts/setup-claude-code-mcp.sh --servers context7,playwright
+```
+
+## Debugging
+
+```bash
+# Test all MCP servers
+./scripts/debug-mcp-servers.sh
+```
+
+This will:
+- Check environment variables for API keys
+- Test each server individually
+- Verify Claude Desktop configuration
+- Check Claude Code configuration
+
 Run the setup script to install all servers:
 
 ```bash
 ./scripts/setup-claude-mcp.sh
 ```
+
+During installation, you'll be prompted for API keys for servers that require them:
+- **Exa**: Get your API key from https://dashboard.exa.ai/api-keys
+- **Figma**: Get your API key from https://www.figma.com/developers/api#access-tokens
+
+API keys are securely stored in `~/.config/zsh/51-api-keys.zsh` and automatically loaded by your shell.
 
 ## Usage
 
@@ -69,11 +125,39 @@ Once installed, the servers are automatically available in Claude Code. You can:
 - Python 3 and uv (for Python servers)
 - Claude Code CLI
 - For specific servers:
-  - Figma: Requires Figma API access token
+  - Exa: Requires API key (will be prompted during setup)
+  - Figma: Requires API key (will be prompted during setup)
   - Semgrep: May require Semgrep CLI installation
   - Pieces: Requires PiecesOS running locally
 
 ## Troubleshooting
+
+### Connection Issues
+
+To debug MCP connection failures:
+1. Run `claude mcp list` to see connection status
+2. Use `./scripts/debug-mcp-servers.sh` to test individual servers
+3. Check API keys are set: `echo $EXA_API_KEY` and `echo $FIGMA_API_KEY`
+4. Restart Claude after configuration changes: `osascript -e 'quit app "Claude"' && open -a "Claude"`
+
+### Common Issues
+
+**Figma/Exa servers fail to connect:**
+- Ensure API keys are set in your shell environment
+- Check `~/.config/zsh/51-api-keys.zsh` contains the keys
+- Reload your shell or run `source ~/.zshrc`
+
+**Playwright server fails:**
+- The server may use `index.js` instead of `dist/index.js`
+- Check actual file location and update config accordingly
+
+**Semgrep server fails:**
+- Requires Python and uv package manager
+- Run `cd ~/repos/mcp-servers/community/semgrep && uv sync`
+
+**Configuration gets corrupted:**
+- Backup exists at `~/.setup-backups/configs/claude-mcp/`
+- Or use `./scripts/fix-mcp-servers.sh` to reset
 
 If a server fails to build or install:
 1. Check that all prerequisites are installed

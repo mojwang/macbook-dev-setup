@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Conventional Commit Helper
 # Makes it easy to create properly formatted commits

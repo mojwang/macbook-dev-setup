@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Optimized VS Code extension installer
 # Installs extensions in parallel batches to avoid overwhelming VS Code

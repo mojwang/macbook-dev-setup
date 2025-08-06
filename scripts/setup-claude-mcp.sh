@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Setup Claude Code MCP (Model Context Protocol) servers
 # Installs and configures official MCP servers for global use
@@ -9,6 +9,7 @@ set -e
 source "$(dirname "$0")/../lib/common.sh"
 
 # Load signal safety library
+# ROOT_DIR is already set by common.sh
 source "$ROOT_DIR/lib/signal-safety.sh"
 
 # MCP-specific cleanup function
@@ -87,18 +88,27 @@ get_build_paths() {
 NODE_SERVERS=(
     "filesystem"
     "memory"
-    "git"
-    "fetch"
     "sequentialthinking"
     "context7"
     "playwright"
     "figma"
-    "semgrep"
     "exa"
 )
 
 # Python servers that need package build
-PYTHON_SERVERS=()
+PYTHON_SERVERS=(
+    "git"
+    "fetch"
+    "semgrep"
+)
+
+# Servers that require API keys
+# Using regular arrays for compatibility
+SERVER_NAMES_WITH_KEYS=("exa" "figma")
+SERVER_KEY_NAMES=("EXA_API_KEY" "FIGMA_API_KEY")
+
+# API key file location
+API_KEYS_FILE="$HOME/.config/zsh/51-api-keys.zsh"
 
 # Claude Desktop config path
 CLAUDE_CONFIG_DIR="$HOME/Library/Application Support/Claude"
@@ -107,6 +117,14 @@ CLAUDE_CONFIG_FILE="$CLAUDE_CONFIG_DIR/claude_desktop_config.json"
 # Backup directory
 BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.setup-backups}"
 BACKUP_DIR="$BACKUP_ROOT/configs/claude-mcp/$(date +%Y%m%d-%H%M%S)"
+
+# Load existing API keys if available
+load_api_keys() {
+    if [[ -f "$API_KEYS_FILE" ]]; then
+        # Source the file to load API keys into environment
+        source "$API_KEYS_FILE" 2>/dev/null || true
+    fi
+}
 
 # Check if running on macOS
 check_macos() {
@@ -196,10 +214,144 @@ clone_or_update_repo() {
     fi
 }
 
+# Check if an API key is already set
+check_api_key() {
+    local key_name="$1"
+    
+    # Check environment variable
+    if [[ -n "${!key_name}" ]]; then
+        return 0
+    fi
+    
+    # Check API keys file
+    if [[ -f "$API_KEYS_FILE" ]] && grep -q "export ${key_name}=" "$API_KEYS_FILE" 2>/dev/null; then
+        local key_value=$(grep "export ${key_name}=" "$API_KEYS_FILE" | sed -E 's/.*="(.*)".*/\1/')
+        if [[ -n "$key_value" && "$key_value" != "\${${key_name}:-}" ]]; then
+            return 0
+        fi
+    fi
+    
+    return 1
+}
+
+# Prompt for API key
+prompt_for_api_key() {
+    local server_name="$1"
+    local key_name="$2"
+    local api_key=""
+    
+    print_info "The $server_name server requires an API key."
+    
+    case "$server_name" in
+        "exa")
+            echo "  Get your API key from: https://dashboard.exa.ai/api-keys"
+            ;;
+        "figma")
+            echo "  Get your API key from: https://www.figma.com/developers/api#access-tokens"
+            ;;
+    esac
+    
+    echo -n "Enter your $server_name API key (or press Enter to skip): "
+    read -r api_key
+    
+    if [[ -n "$api_key" ]]; then
+        save_api_key "$key_name" "$api_key"
+        export "$key_name=$api_key"
+        return 0
+    else
+        print_warning "Skipping $server_name configuration (no API key provided)"
+        return 1
+    fi
+}
+
+# Save API key to file
+save_api_key() {
+    local key_name="$1"
+    local key_value="$2"
+    
+    # Basic validation - API keys should not contain quotes or shell special chars
+    if [[ "$key_value" =~ [\"\'\\$\`] ]]; then
+        print_error "API key contains invalid characters"
+        return 1
+    fi
+    
+    # Ensure the directory exists
+    mkdir -p "$(dirname "$API_KEYS_FILE")"
+    
+    # Create the file if it doesn't exist with proper permissions
+    if [[ ! -f "$API_KEYS_FILE" ]]; then
+        cat > "$API_KEYS_FILE" << 'EOF'
+# API Keys and Tokens
+# This file is managed by the setup scripts
+# Manual edits are preserved
+
+EOF
+        # Set restrictive permissions (user read/write only)
+        chmod 600 "$API_KEYS_FILE"
+    fi
+    
+    # Check if the key already exists
+    if grep -q "^export ${key_name}=" "$API_KEYS_FILE" 2>/dev/null; then
+        # Update existing key using a more robust method
+        local temp_file="${API_KEYS_FILE}.tmp"
+        grep -v "^export ${key_name}=" "$API_KEYS_FILE" > "$temp_file"
+        echo "export ${key_name}=\"${key_value}\"" >> "$temp_file"
+        mv "$temp_file" "$API_KEYS_FILE"
+        print_success "Updated $key_name in $API_KEYS_FILE"
+    else
+        # Add new key
+        echo "export ${key_name}=\"${key_value}\"" >> "$API_KEYS_FILE"
+        print_success "Added $key_name to $API_KEYS_FILE"
+    fi
+}
+
+# Get API key name for a server
+get_api_key_name() {
+    local server_name="$1"
+    for i in "${!SERVER_NAMES_WITH_KEYS[@]}"; do
+        if [[ "${SERVER_NAMES_WITH_KEYS[$i]}" == "$server_name" ]]; then
+            echo "${SERVER_KEY_NAMES[$i]}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Configure API keys for servers that need them
+configure_api_keys() {
+    local server_name="$1"
+    
+    # Check if this server needs an API key
+    local key_name=$(get_api_key_name "$server_name")
+    if [[ -n "$key_name" ]]; then
+        # Check if key already exists
+        if check_api_key "$key_name"; then
+            print_info "$server_name API key already configured"
+            return 0
+        else
+            # Prompt for the key
+            if prompt_for_api_key "$server_name" "$key_name"; then
+                return 0
+            else
+                return 1
+            fi
+        fi
+    fi
+    
+    return 0
+}
+
 # Build Node.js server
 build_node_server() {
     local server_path="$1"
     local server_name=$(basename "$server_path")
+    
+    # Skip building npx-based servers
+    local server_type="${MCP_SERVER_TYPES[$server_name]}"
+    if [[ "$server_type" == "npx" ]]; then
+        print_info "Skipping build for $server_name (npx-based server)"
+        return 0
+    fi
     
     print_info "Building $server_name..."
     cd "$server_path" || return 1
@@ -208,16 +360,31 @@ build_node_server() {
     init_npm_noninteractive "$server_path"
     
     # Install dependencies with timeout
-    timeout 120 npm install --no-audit --no-fund --loglevel=error >/dev/null 2>&1 || {
-        print_error "npm install failed or timed out for $server_name"
-        return 1
-    }
-    
-    # Build if build script exists
-    if grep -q '"build"' package.json 2>/dev/null; then
-        timeout 60 npm run build >/dev/null 2>&1 || {
-            print_warning "Build failed for $server_name, continuing anyway..."
+    local npm_timeout=120
+    if command -v gtimeout &>/dev/null; then
+        gtimeout ${npm_timeout}s npm install --no-audit --no-fund >/dev/null 2>&1 || {
+            print_error "npm install failed or timed out for $server_name"
+            return 1
         }
+    else
+        npm install --no-audit --no-fund >/dev/null 2>&1 || {
+            print_error "npm install failed for $server_name"
+            return 1
+        }
+    fi
+    
+    # Build if build script exists (with timeout)
+    if grep -q '"build"' package.json 2>/dev/null; then
+        local build_timeout=60
+        if command -v gtimeout &>/dev/null; then
+            gtimeout ${build_timeout}s npm run build >/dev/null 2>&1 || {
+                print_warning "Build failed or timed out for $server_name, continuing anyway..."
+            }
+        else
+            npm run build >/dev/null 2>&1 || {
+                print_warning "Build failed for $server_name, continuing anyway..."
+            }
+        fi
     fi
     
     return 0
@@ -231,14 +398,37 @@ build_python_server() {
     print_info "Building Python server $server_name..."
     cd "$server_path" || return 1
     
-    # Create virtual environment if needed
-    if [[ ! -d "venv" ]]; then
-        python3 -m venv venv >/dev/null 2>&1
-    fi
-    
-    # Install dependencies
-    if [[ -f "requirements.txt" ]]; then
-        ./venv/bin/pip install -r requirements.txt >/dev/null 2>&1
+    # Use uv for Python dependency management
+    if command -v uv &>/dev/null; then
+        # For servers with pyproject.toml, use uv sync
+        if [[ -f "pyproject.toml" ]]; then
+            uv sync >/dev/null 2>&1 || {
+                print_warning "uv sync failed for $server_name, trying pip fallback..."
+                # Fallback to traditional venv approach
+                if [[ ! -d "venv" ]]; then
+                    python3 -m venv venv >/dev/null 2>&1
+                fi
+                if [[ -f "requirements.txt" ]]; then
+                    ./venv/bin/pip install -r requirements.txt >/dev/null 2>&1
+                fi
+            }
+        else
+            # For servers with only requirements.txt, use traditional approach
+            if [[ ! -d "venv" ]]; then
+                python3 -m venv venv >/dev/null 2>&1
+            fi
+            if [[ -f "requirements.txt" ]]; then
+                ./venv/bin/pip install -r requirements.txt >/dev/null 2>&1
+            fi
+        fi
+    else
+        # Fallback if uv is not available
+        if [[ ! -d "venv" ]]; then
+            python3 -m venv venv >/dev/null 2>&1
+        fi
+        if [[ -f "requirements.txt" ]]; then
+            ./venv/bin/pip install -r requirements.txt >/dev/null 2>&1
+        fi
     fi
     
     return 0
@@ -248,18 +438,29 @@ build_python_server() {
 install_official_servers() {
     print_info "Installing Official MCP Servers"
     
-    # Clone or update the official servers repository
-    if ! clone_or_update_repo "$MCP_REPO_URL" "$MCP_OFFICIAL_DIR"; then
-        print_error "Failed to clone/update official MCP servers"
-        return 1
+    # Check if we need to reorganize the directory structure
+    if [[ -d "$MCP_OFFICIAL_DIR" ]] && [[ ! -d "$MCP_OFFICIAL_DIR/.git" ]]; then
+        # Looks like individual server directories, not the full repo
+        print_info "Official servers already installed individually"
+    else
+        # Clone or update the official servers repository
+        if ! clone_or_update_repo "$MCP_REPO_URL" "$MCP_OFFICIAL_DIR"; then
+            print_error "Failed to clone/update official MCP servers"
+            return 1
+        fi
     fi
     
     # Build each server
     local failed_servers=()
     for server in "${OFFICIAL_SERVERS[@]}"; do
-        local server_path="$MCP_OFFICIAL_DIR/src/$server"
+        local server_path=""
         
-        if [[ ! -d "$server_path" ]]; then
+        # Check both possible locations (some repos have src/, some don't)
+        if [[ -d "$MCP_OFFICIAL_DIR/src/$server" ]]; then
+            server_path="$MCP_OFFICIAL_DIR/src/$server"
+        elif [[ -d "$MCP_OFFICIAL_DIR/$server" ]]; then
+            server_path="$MCP_OFFICIAL_DIR/$server"
+        else
             print_warning "Server $server not found in official repository"
             continue
         fi
@@ -311,6 +512,15 @@ install_community_servers() {
         local parsed_info=$(parse_server_info "$server_info")
         IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
         
+        # Skip cloning for npx-based servers
+        local server_type="${MCP_SERVER_TYPES[$server_name]}"
+        if [[ "$server_type" == "npx" ]]; then
+            print_info "$server_name is an npx-based server, skipping clone"
+            # Configure API keys if needed
+            configure_api_keys "$server_name"
+            continue
+        fi
+        
         local server_path="$MCP_COMMUNITY_DIR/$server_name"
         
         if ! clone_or_update_repo "$server_url" "$server_path"; then
@@ -320,6 +530,9 @@ install_community_servers() {
         fi
         
         # TODO: Add checksum verification when we have checksums
+        
+        # Configure API keys if needed
+        configure_api_keys "$server_name"
         
         # Detect and build based on project type
         if [[ -f "$server_path/package.json" ]]; then
@@ -379,38 +592,9 @@ find_server_executable() {
 generate_server_config() {
     local server_name="$1"
     local server_path="$2"
-    local server_type="node"  # Default to node
     
-    # Detect server type
-    if [[ -f "$server_path/requirements.txt" ]] || [[ -f "$server_path/pyproject.toml" ]]; then
-        server_type="python"
-    fi
-    
-    # Find executable
-    local executable=$(find_server_executable "$server_path" "$server_type")
-    if [[ -z "$executable" ]]; then
-        print_warning "Could not find executable for $server_name"
-        return 1
-    fi
-    
-    # Generate config based on type
-    if [[ "$server_type" == "node" ]]; then
-        cat <<EOF
-    "$server_name": {
-      "command": "node",
-      "args": ["$executable"],
-      "cwd": "$server_path"
-    }
-EOF
-    else
-        cat <<EOF
-    "$server_name": {
-      "command": "$server_path/venv/bin/python",
-      "args": ["$executable"],
-      "cwd": "$server_path"
-    }
-EOF
-    fi
+    # Use the shared function from common.sh
+    generate_mcp_server_config "$server_name"
 }
 
 # Configure Claude Desktop
@@ -431,28 +615,20 @@ configure_claude_desktop() {
     local config='{\n  "mcpServers": {\n'
     local server_configs=()
     
-    # Add official servers
-    for server in "${OFFICIAL_SERVERS[@]}"; do
-        local server_path="$MCP_OFFICIAL_DIR/src/$server"
-        if [[ -d "$server_path" ]]; then
-            local server_config=$(generate_server_config "$server" "$server_path")
-            if [[ -n "$server_config" ]]; then
-                server_configs+=("$server_config")
-            fi
-        fi
-    done
+    # Get all available servers
+    local all_servers=("${OFFICIAL_SERVERS[@]}" $(for s in "${COMMUNITY_SERVERS[@]}"; do echo "$s" | cut -d: -f1; done))
     
-    # Add community servers
-    for server_info in "${COMMUNITY_SERVERS[@]}"; do
-        local parsed_info=$(parse_server_info "$server_info")
-        IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
-        
-        local server_path="$MCP_COMMUNITY_DIR/$server_name"
-        if [[ -d "$server_path" ]]; then
-            local server_config=$(generate_server_config "$server_name" "$server_path")
+    # Generate configs for each server
+    for server in "${all_servers[@]}"; do
+        if is_mcp_server_installed "$server"; then
+            local server_config=$(generate_mcp_server_config "$server")
             if [[ -n "$server_config" ]]; then
                 server_configs+=("$server_config")
+            else
+                print_warning "Could not configure $server"
             fi
+        else
+            print_warning "Server $server is not installed"
         fi
     done
     
@@ -467,6 +643,14 @@ configure_claude_desktop() {
     done
     
     config="${config}${joined_configs}\n  }\n}"
+    
+    # Validate JSON configuration before writing
+    if ! echo -e "$config" | python3 -m json.tool >/dev/null 2>&1; then
+        print_error "Generated configuration is not valid JSON"
+        print_info "Debug output:"
+        echo -e "$config"
+        return 1
+    fi
     
     # Write the configuration
     echo -e "$config" > "$CLAUDE_CONFIG_FILE"
@@ -545,15 +729,27 @@ check_status() {
         local parsed_info=$(parse_server_info "$server_info")
         IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
         
-        local server_path="$MCP_COMMUNITY_DIR/$server_name"
-        if [[ -d "$server_path" ]]; then
+        # Check server type
+        local server_type="${MCP_SERVER_TYPES[$server_name]}"
+        
+        if [[ "$server_type" == "npx" ]]; then
+            # For npx servers, just check if they're configured
             if grep -q "\"$server_name\"" "$CLAUDE_CONFIG_FILE" 2>/dev/null; then
-                print_success "✓ $server_name (configured)"
+                print_success "✓ $server_name (npx-based, configured)"
             else
-                print_warning "○ $server_name (installed but not configured)"
+                print_warning "○ $server_name (npx-based, not configured)"
             fi
         else
-            print_error "✗ $server_name (not installed)"
+            local server_path="$MCP_COMMUNITY_DIR/$server_name"
+            if [[ -d "$server_path" ]]; then
+                if grep -q "\"$server_name\"" "$CLAUDE_CONFIG_FILE" 2>/dev/null; then
+                    print_success "✓ $server_name (configured)"
+                else
+                    print_warning "○ $server_name (installed but not configured)"
+                fi
+            else
+                print_error "✗ $server_name (not installed)"
+            fi
         fi
     done
     
@@ -566,18 +762,113 @@ check_status() {
 # Update all servers
 update_servers() {
     print_info "Updating MCP Servers"
+    echo ""
+    
+    # Load existing API keys
+    load_api_keys
+    
+    # Track update results
+    local updated_servers=()
+    local failed_servers=()
     
     # Update official servers
     if [[ -d "$MCP_OFFICIAL_DIR" ]]; then
-        install_official_servers
+        print_info "Updating official servers repository..."
+        cd "$MCP_OFFICIAL_DIR"
+        
+        # Stash any local changes
+        if git diff --quiet && git diff --cached --quiet; then
+            git pull --rebase origin main 2>/dev/null || git pull --rebase origin master 2>/dev/null || {
+                print_warning "Failed to update official servers repository"
+            }
+        else
+            print_warning "Local changes detected in official servers, skipping git pull"
+        fi
+        
+        # Rebuild official servers
+        for server in "${OFFICIAL_SERVERS[@]}"; do
+            local server_path=""
+            if [[ -d "$MCP_OFFICIAL_DIR/src/$server" ]]; then
+                server_path="$MCP_OFFICIAL_DIR/src/$server"
+            elif [[ -d "$MCP_OFFICIAL_DIR/$server" ]]; then
+                server_path="$MCP_OFFICIAL_DIR/$server"
+            else
+                continue
+            fi
+            
+            print_info "Updating $server..."
+            if [[ " ${NODE_SERVERS[@]} " =~ " $server " ]]; then
+                if build_node_server "$server_path"; then
+                    updated_servers+=("$server")
+                else
+                    failed_servers+=("$server")
+                fi
+            elif [[ " ${PYTHON_SERVERS[@]} " =~ " $server " ]]; then
+                if build_python_server "$server_path"; then
+                    updated_servers+=("$server")
+                else
+                    failed_servers+=("$server")
+                fi
+            fi
+        done
     fi
     
     # Update community servers
     if [[ -d "$MCP_COMMUNITY_DIR" ]]; then
-        install_community_servers
+        print_info "Updating community servers..."
+        for server_info in "${COMMUNITY_SERVERS[@]}"; do
+            local parsed_info=$(parse_server_info "$server_info")
+            IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
+            
+            # Skip updating npx-based servers
+            local server_type="${MCP_SERVER_TYPES[$server_name]}"
+            if [[ "$server_type" == "npx" ]]; then
+                print_info "$server_name is an npx-based server, no update needed"
+                # Just check API keys
+                configure_api_keys "$server_name"
+                updated_servers+=("$server_name")
+                continue
+            fi
+            
+            local server_path="$MCP_COMMUNITY_DIR/$server_name"
+            if [[ -d "$server_path" ]]; then
+                print_info "Updating $server_name..."
+                if clone_or_update_repo "$server_url" "$server_path"; then
+                    # Configure API keys if needed
+                    configure_api_keys "$server_name"
+                    
+                    # Rebuild the server
+                    if [[ -f "$server_path/package.json" ]]; then
+                        if build_node_server "$server_path"; then
+                            updated_servers+=("$server_name")
+                        else
+                            failed_servers+=("$server_name")
+                        fi
+                    elif [[ -f "$server_path/requirements.txt" ]] || [[ -f "$server_path/pyproject.toml" ]]; then
+                        if build_python_server "$server_path"; then
+                            updated_servers+=("$server_name")
+                        else
+                            failed_servers+=("$server_name")
+                        fi
+                    fi
+                else
+                    failed_servers+=("$server_name")
+                fi
+            fi
+        done
+    fi
+    
+    # Show update results
+    echo ""
+    if [[ ${#updated_servers[@]} -gt 0 ]]; then
+        print_success "Successfully updated servers: ${updated_servers[*]}"
+    fi
+    if [[ ${#failed_servers[@]} -gt 0 ]]; then
+        print_warning "Failed to update servers: ${failed_servers[*]}"
     fi
     
     # Reconfigure Claude Desktop
+    echo ""
     configure_claude_desktop
 }
 
@@ -635,10 +926,15 @@ main() {
     esac
     
     # Full installation
-    print_banner "Claude MCP Server Setup"
+    echo -e "\n========================================="
+    echo "Claude MCP Server Setup"
+    echo "========================================="
     
     check_macos
     check_prerequisites
+    
+    # Load existing API keys
+    load_api_keys
     
     # Create directory structure
     mkdir -p "$MCP_OFFICIAL_DIR" "$MCP_COMMUNITY_DIR" "$MCP_CUSTOM_DIR"
@@ -661,6 +957,13 @@ main() {
     echo "To check server status: $0 --check"
     echo "To update servers: $0 --update"
     echo ""
+    
+    # Check if any API keys were configured
+    if [[ -f "$API_KEYS_FILE" ]] && grep -q "export.*_API_KEY=" "$API_KEYS_FILE" 2>/dev/null; then
+        print_info "API keys have been saved to: $API_KEYS_FILE"
+        print_info "Please run 'source ~/.zshrc' to load the API keys in your current shell"
+    fi
+    
     print_success "You can now use MCP servers in Claude Desktop!"
 }
 

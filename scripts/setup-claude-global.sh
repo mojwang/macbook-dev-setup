@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Setup global CLAUDE.md configuration
 # This provides baseline Claude Code instructions across all projects
@@ -9,7 +9,7 @@ set -e
 source "$(dirname "$0")/../lib/common.sh"
 
 # Load signal safety library
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# ROOT_DIR is already set by common.sh
 source "$ROOT_DIR/lib/signal-safety.sh"
 
 # Claude global setup specific cleanup

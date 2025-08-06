@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test error chain - failure case
 source "$(dirname "$0")/../test_framework.sh"
 

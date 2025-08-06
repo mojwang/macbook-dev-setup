@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Cleanup script to free up disk space and remove unnecessary files
 

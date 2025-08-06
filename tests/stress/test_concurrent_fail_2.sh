@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 source "$(dirname "$0")/../test_framework.sh"
 describe "Concurrent Fail 2"
 it "fails concurrently"

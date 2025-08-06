@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Adaptive Color Configuration for Terminal Tools
 # This script dynamically configures colors based on terminal capabilities and theme

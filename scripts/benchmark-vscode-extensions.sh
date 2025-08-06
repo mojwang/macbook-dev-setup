@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Benchmark script to compare VSCode extension installation methods
 set -e

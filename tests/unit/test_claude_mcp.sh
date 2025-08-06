@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test for Claude MCP setup script
 
@@ -84,12 +84,19 @@ assert_true "[[ -f '$test_npm_dir/package.json' ]]" "package.json created"
 
 # Test configuration generation
 it "should generate node server config"
-mock_find_executable() {
-    echo "/path/to/server/dist/index.js"
-}
-mock_command "find_server_executable" mock_find_executable
+# Source common.sh to get the MCP functions
+source "$SCRIPT_DIR/lib/common.sh"
 
-config=$(generate_server_config "test-server" "/path/to/server")
+# Set up test environment
+MCP_SERVER_BASE_PATHS["test-server"]="$TEST_TMP_DIR/server"
+MCP_SERVER_TYPES["test-server"]="node"
+MCP_SERVER_EXECUTABLES["test-server"]="dist/index.js"
+
+# Create mock executable
+mkdir -p "$TEST_TMP_DIR/server/dist"
+touch "$TEST_TMP_DIR/server/dist/index.js"
+
+config=$(generate_mcp_server_config "test-server")
 assert_contains "$config" '"command": "node"' "Node command in config"
 assert_contains "$config" '"test-server"' "Server name in config"
 

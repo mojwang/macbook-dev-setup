@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Warp Terminal Optimization Script
 # Configures Warp-specific features and power tools

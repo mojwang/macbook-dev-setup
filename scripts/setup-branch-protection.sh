@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Setup GitHub Branch Protection Rules
 # This script configures branch protection for the main branch

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Cleanup script to remove accumulated test artifacts and temporary files
 # This provides a safety net for interrupted scripts that didn't clean up properly

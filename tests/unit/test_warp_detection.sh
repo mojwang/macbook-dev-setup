@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test script for Warp Terminal detection and setup
 source "$(dirname "$0")/../test_framework.sh"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Development Environment Preview Script
 # Fast validation and dry-run mode
