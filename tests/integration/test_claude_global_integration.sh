@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Integration test for global Claude configuration setup
 source "$(dirname "$0")/../test_framework.sh"

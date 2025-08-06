@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Integration tests for sync functionality and new v2.0 features
 source "$(dirname "$0")/../test_framework.sh"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Common library for macOS development setup scripts
 # This file contains shared functions, variables, and utilities
@@ -110,6 +110,39 @@ execute_command() {
 # Check if command exists
 command_exists() {
     command -v "$1" &> /dev/null
+}
+
+# Run command with timeout (standardized approach)
+# Usage: run_with_timeout SECONDS COMMAND [ARGS...]
+run_with_timeout() {
+    local timeout_seconds="$1"
+    shift
+    
+    # Prefer gtimeout (GNU coreutils on macOS), then timeout, then fallback
+    if command_exists gtimeout; then
+        gtimeout "${timeout_seconds}s" "$@"
+    elif command_exists timeout; then
+        timeout "${timeout_seconds}s" "$@"
+    else
+        # Fallback: run in background and kill after timeout
+        "$@" &
+        local pid=$!
+        local count=0
+        
+        while kill -0 $pid 2>/dev/null; do
+            if [[ $count -ge $timeout_seconds ]]; then
+                kill -TERM $pid 2>/dev/null || true
+                sleep 1
+                kill -0 $pid 2>/dev/null && kill -KILL $pid 2>/dev/null || true
+                return 124  # Standard timeout exit code
+            fi
+            sleep 1
+            ((count++))
+        done
+        
+        wait $pid
+        return $?
+    fi
 }
 
 # Check if running on macOS
@@ -467,6 +500,264 @@ export -f validate_test_jobs
 export -f wait_for_job_slot
 export -f check_suite_timeout
 export -f kill_all_test_jobs
+
+# ============================================================================
+# MCP Configuration Functions
+# ============================================================================
+
+# MCP server configurations - base paths
+declare -A MCP_SERVER_BASE_PATHS=(
+    # Official servers
+    ["filesystem"]="$HOME/repos/mcp-servers/official/filesystem"
+    ["memory"]="$HOME/repos/mcp-servers/official/memory"
+    ["sequentialthinking"]="$HOME/repos/mcp-servers/official/sequentialthinking"
+    ["git"]="$HOME/repos/mcp-servers/official/git"
+    ["fetch"]="$HOME/repos/mcp-servers/official/fetch"
+    # Community servers
+    ["context7"]="$HOME/repos/mcp-servers/community/context7"
+    ["playwright"]="$HOME/repos/mcp-servers/community/playwright"
+    ["figma"]="$HOME/repos/mcp-servers/community/figma"
+    ["exa"]="$HOME/repos/mcp-servers/community/exa"
+    ["semgrep"]="$HOME/repos/mcp-servers/community/semgrep"
+)
+
+# MCP server executable patterns - used to find the actual executable
+declare -A MCP_SERVER_EXECUTABLES=(
+    # Node servers - common patterns
+    ["filesystem"]="dist/index.js"
+    ["memory"]="dist/index.js"
+    ["sequentialthinking"]="dist/index.js"
+    ["context7"]="dist/index.js"
+    ["playwright"]="cli.js build/index.js dist/index.js"
+    ["figma"]="dist/index.js"
+    ["exa"]="build/index.js .smithery/index.cjs dist/index.js"
+    # Python servers use directory
+    ["git"]=""
+    ["fetch"]=""
+    ["semgrep"]=""
+)
+
+# MCP server types
+declare -A MCP_SERVER_TYPES=(
+    ["filesystem"]="node"
+    ["memory"]="node"
+    ["sequentialthinking"]="node"
+    ["git"]="python-uv"
+    ["fetch"]="python-uv"
+    ["context7"]="node"
+    ["playwright"]="node"
+    ["figma"]="npx"
+    ["exa"]="npx"
+    ["semgrep"]="python-uvx"
+)
+
+# NPX-based servers and their package names
+declare -A MCP_SERVER_NPX_PACKAGES=(
+    ["figma"]="figma-developer-mcp"
+    ["exa"]="exa-mcp-server"
+)
+
+# MCP servers that require API keys
+declare -A MCP_SERVER_API_KEYS=(
+    ["figma"]="FIGMA_API_KEY"
+    ["exa"]="EXA_API_KEY"
+)
+
+# Find the actual executable path for an MCP server
+find_mcp_server_executable() {
+    local server_name="$1"
+    local server_type="${MCP_SERVER_TYPES[$server_name]}"
+    
+    # For npx servers, return the npx package name
+    if [[ "$server_type" == "npx" ]]; then
+        echo "${MCP_SERVER_NPX_PACKAGES[$server_name]}"
+        return 0
+    fi
+    
+    local base_path="${MCP_SERVER_BASE_PATHS[$server_name]}"
+    local executables="${MCP_SERVER_EXECUTABLES[$server_name]}"
+    
+    # Python servers just use the base directory
+    if [[ "$server_type" == "python-uv" ]] || [[ "$server_type" == "python-uvx" ]]; then
+        echo "$base_path"
+        return 0
+    fi
+    
+    # For Node.js servers, try each possible executable pattern
+    if [[ -n "$executables" ]]; then
+        for exe in $executables; do
+            if [[ -f "$base_path/$exe" ]]; then
+                echo "$base_path/$exe"
+                return 0
+            fi
+        done
+    fi
+    
+    # Fallback: search for any index.js file
+    local found=$(find "$base_path" -name "index.js" -type f 2>/dev/null | grep -v node_modules | head -1)
+    if [[ -n "$found" ]]; then
+        echo "$found"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Generate MCP server config for Claude Desktop
+generate_mcp_server_config() {
+    local server_name="$1"
+    local include_api_keys="${2:-true}"
+    
+    local server_path=$(find_mcp_server_executable "$server_name")
+    local server_type="${MCP_SERVER_TYPES[$server_name]}"
+    local api_key_var="${MCP_SERVER_API_KEYS[$server_name]:-}"
+    
+    # Check if server path exists
+    if [[ -z "$server_path" ]]; then
+        return 1
+    fi
+    
+    # Skip servers that need API keys if not including them
+    if [[ "$include_api_keys" == "false" ]] && [[ -n "$api_key_var" ]]; then
+        return 1
+    fi
+    
+    case "$server_type" in
+        "node")
+            # Special handling for filesystem server
+            if [[ "$server_name" == "filesystem" ]]; then
+                cat <<EOF
+    "$server_name": {
+      "command": "node",
+      "args": [
+        "$server_path",
+        "$HOME"
+      ]
+    }
+EOF
+            elif [[ -n "$api_key_var" ]]; then
+                cat <<EOF
+    "$server_name": {
+      "command": "node",
+      "args": ["$server_path"],
+      "env": {
+        "$api_key_var": "\${$api_key_var}"
+      }
+    }
+EOF
+            else
+                cat <<EOF
+    "$server_name": {
+      "command": "node",
+      "args": ["$server_path"]
+    }
+EOF
+            fi
+            ;;
+        "python-uv")
+            cat <<EOF
+    "$server_name": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "$server_path",
+        "run",
+        "mcp-server-$server_name"
+      ]
+    }
+EOF
+            ;;
+        "python-uvx")
+            if [[ "$server_name" == "semgrep" ]]; then
+                cat <<EOF
+    "$server_name": {
+      "command": "uvx",
+      "args": [
+        "--with",
+        "mcp==1.11.0",
+        "semgrep-mcp"
+      ]
+    }
+EOF
+            fi
+            ;;
+        "npx")
+            local npx_package="${MCP_SERVER_NPX_PACKAGES[$server_name]}"
+            if [[ -n "$api_key_var" ]]; then
+                if [[ "$server_name" == "figma" ]]; then
+                    cat <<EOF
+    "$server_name": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "$npx_package",
+        "--stdio"
+      ],
+      "env": {
+        "$api_key_var": "\${$api_key_var}"
+      }
+    }
+EOF
+                else
+                    cat <<EOF
+    "$server_name": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "$npx_package"
+      ],
+      "env": {
+        "$api_key_var": "\${$api_key_var}"
+      }
+    }
+EOF
+                fi
+            else
+                cat <<EOF
+    "$server_name": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "$npx_package"
+      ]
+    }
+EOF
+            fi
+            ;;
+    esac
+}
+
+# Check if MCP server is installed
+is_mcp_server_installed() {
+    local server_name="$1"
+    local server_type="${MCP_SERVER_TYPES[$server_name]}"
+    
+    # For npx servers, we don't need to check installation
+    if [[ "$server_type" == "npx" ]]; then
+        return 0
+    fi
+    
+    local base_path="${MCP_SERVER_BASE_PATHS[$server_name]}"
+    
+    # Check if base path exists
+    if [[ ! -d "$base_path" ]]; then
+        return 1
+    fi
+    
+    # For node servers, check if we can find an executable
+    if [[ "$server_type" == "node" ]]; then
+        local exe_path=$(find_mcp_server_executable "$server_name")
+        [[ -n "$exe_path" ]] && [[ -f "$exe_path" ]]
+    else
+        # For Python servers, just check directory exists
+        return 0
+    fi
+}
+
+# Export MCP functions
+export -f find_mcp_server_executable
+export -f generate_mcp_server_config
+export -f is_mcp_server_installed
 
 # Initialization message
 if [[ "${COMMON_LIB_LOADED:-}" != "true" ]]; then

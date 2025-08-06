@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 source "$(dirname "$0")/../test_framework.sh"
 describe "Scale Test 15"
 it "has consistent workload"

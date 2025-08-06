@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Setup Help - Learn about installed tools, aliases, and features
 # This script provides comprehensive information about the development environment

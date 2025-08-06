@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Example test using BDD/SDD style for setup preview command
 source "$(dirname "$0")/../test_framework.sh"

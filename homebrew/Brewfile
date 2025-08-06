@@ -135,7 +135,7 @@ cask "google-cloud-sdk"     # Google Cloud SDK
 cask "ngrok"                # Expose local servers
 
 # Fonts
-cask "font-anonymice-nerd-font"
+# cask "font-anonymice-nerd-font"  # Commented out: Already installed, version conflict
 cask "font-symbols-only-nerd-font"
 
 # VS Code extensions are managed separately by scripts/setup-vscode-extensions.sh

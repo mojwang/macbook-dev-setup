@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test framework for development environment setup scripts
 # Provides basic unit testing capabilities for shell scripts

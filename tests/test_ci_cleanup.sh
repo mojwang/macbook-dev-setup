@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # CI-specific test for cleanup behavior
 # This test verifies that no artifacts are left behind

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Development Environment Setup Script
 # Simplified interface with smart defaults
@@ -350,6 +350,16 @@ main_setup() {
         print_step "Setting up Claude MCP servers..."
         ./scripts/setup-claude-mcp.sh
         
+        # Setup Claude Code MCP servers if VS Code is installed
+        if command -v code &>/dev/null || [[ -d "/Applications/Visual Studio Code.app" ]]; then
+            print_step "Setting up Claude Code MCP servers..."
+            if command -v claude &>/dev/null; then
+                ./scripts/setup-claude-code-mcp.sh
+            else
+                print_info "Claude Code CLI not found - install Claude Code extension in VS Code"
+            fi
+        fi
+        
         print_step "Configuring applications..."
         ./scripts/setup-applications.sh
         
@@ -393,6 +403,12 @@ main_setup() {
         if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
             ./scripts/setup-claude-mcp.sh --update
         fi
+        
+        # Update Claude Code MCP servers if VS Code and Claude CLI are installed
+        if command -v code &>/dev/null && command -v claude &>/dev/null; then
+            print_step "Updating Claude Code MCP servers..."
+            ./scripts/setup-claude-code-mcp.sh --remove --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa
+        fi
     fi
     
     # Check for Warp and offer optimization
@@ -408,6 +424,14 @@ main_setup() {
     echo "=================="
     echo "Time: ${minutes}m ${seconds}s"
     
+    # Show MCP server status if available
+    if command -v claude &>/dev/null; then
+        echo ""
+        echo "MCP Servers Status:"
+        claude mcp list | grep -E "✓ Connected|✗ Failed" | head -5
+        echo "Run 'claude mcp list' for full status"
+    fi
+    
     if [[ "$setup_state" == "fresh" ]]; then
         echo ""
         echo -e "${YELLOW}⚠️  IMPORTANT: Restart your terminal to apply changes${NC}"
@@ -415,6 +439,12 @@ main_setup() {
         echo "Next steps:"
         echo "• Open a new terminal window"
         echo "• Run 'claude setup-token' to configure Claude CLI"
+        echo "• MCP servers are configured for Claude Desktop"
+        if command -v claude &>/dev/null; then
+            echo "• MCP servers are configured for Claude Code - run 'claude mcp list' to verify"
+        else
+            echo "• Install Claude Code extension in VS Code to enable MCP servers"
+        fi
     fi
 }
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Simple parallel test runner that works with bash 3.2
 # Executes tests in parallel for improved performance

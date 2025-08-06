@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Setup Git Hooks and Commit Template
 # This script configures git for conventional commits

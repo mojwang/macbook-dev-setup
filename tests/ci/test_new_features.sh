@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # CI tests for new features (OpenJDK and terminal fonts)
 # Source test framework

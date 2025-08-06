@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test suite for update.sh git safety features
 # Tests safe_git_update function

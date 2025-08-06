@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Backup Manager Library
 # Provides organized backup functionality for setup scripts

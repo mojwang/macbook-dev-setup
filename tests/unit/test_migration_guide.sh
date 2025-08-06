@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test that migration from old flags to new commands is documented
 source "$(dirname "$0")/../test_framework.sh"

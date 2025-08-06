@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Configuration parser for setup.yaml
 # Provides functions to read and parse YAML configuration
