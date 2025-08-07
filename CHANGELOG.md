@@ -1,3 +1,10 @@
+## [3.2.1](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.0...v3.2.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* improve MCP server setup reliability and bash compatibility ([8800a35](https://github.com/mojwang/macbook-dev-setup/commit/8800a35df57b9d4725db216325e4e39e94876e01))
+
 # [3.2.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.1.0...v3.2.0) (2025-08-07)
 
 
