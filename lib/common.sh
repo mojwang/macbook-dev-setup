@@ -33,37 +33,30 @@ if [[ "${BASH_VERSION%%.*}" -lt 4 ]]; then
         COMMON_LIB_LOADED=true
         
         # Define minimal print functions with optional logging support
-        # These use 'ci_' prefix to avoid confusion with full implementations
-        ci_print_info() { 
+        # In CI mode, we define the standard function names directly
+        print_info() { 
             echo "ℹ $*"
             [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] INFO: $*" >> "$LOG_FILE" 2>/dev/null || true
         }
-        ci_print_success() { 
+        print_success() { 
             echo "✓ $*"
             [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] SUCCESS: $*" >> "$LOG_FILE" 2>/dev/null || true
         }
-        ci_print_error() { 
+        print_error() { 
             echo "✗ $*" >&2
             [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] ERROR: $*" >> "$LOG_FILE" 2>/dev/null || true
         }
-        ci_print_warning() { 
+        print_warning() { 
             echo "⚠ $*"
             [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] WARNING: $*" >> "$LOG_FILE" 2>/dev/null || true
         }
-        ci_print_step() { 
+        print_step() { 
             echo "→ $*"
             [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] STEP: $*" >> "$LOG_FILE" 2>/dev/null || true
         }
         
-        # Alias the CI functions to standard names for compatibility
-        alias print_info='ci_print_info'
-        alias print_success='ci_print_success'
-        alias print_error='ci_print_error'
-        alias print_warning='ci_print_warning'
-        alias print_step='ci_print_step'
-        
-        # Export the CI functions
-        export -f ci_print_info ci_print_success ci_print_error ci_print_warning ci_print_step
+        # Export the functions so they're available in subshells
+        export -f print_info print_success print_error print_warning print_step
         
         # Log the bash version for debugging
         [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] CI Mode: bash $BASH_VERSION detected" >> "$LOG_FILE" 2>/dev/null || true
