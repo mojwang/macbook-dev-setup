@@ -1,3 +1,15 @@
+# [3.2.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.1.0...v3.2.0) (2025-08-07)
+
+
+### Bug Fixes
+
+* address PR feedback with priority improvements ([9671dc1](https://github.com/mojwang/macbook-dev-setup/commit/9671dc1408143c874e40d44c0a39905204290139))
+
+
+### Features
+
+* add Claude sub-agents architecture for specialized task handling ([fd3f478](https://github.com/mojwang/macbook-dev-setup/commit/fd3f47866dfe34b4063318f9829bb63d6e4e3bec))
+
 # [3.1.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.0.0...v3.1.0) (2025-08-06)
 
 
