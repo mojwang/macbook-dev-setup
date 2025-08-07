@@ -61,6 +61,19 @@ gcfs scope "message"         # Scoped feat commit
 commit-help                  # Show commit format reference
 ```
 
+### Branch Cleanup
+```bash
+# Clean up stale remote-tracking branches
+gclean                       # Interactive cleanup of gone branches
+gclean --force               # Skip confirmation prompts
+git-cleanup-branches         # Full function name (same as gclean)
+gprune                       # Just prune remote branches
+
+# Manual cleanup (what gclean does automatically):
+git remote prune origin
+git branch -vv | grep ": gone]" | awk '{print $1}' | xargs git branch -d
+```
+
 ## MCP Server Management
 ```bash
 ./scripts/setup-claude-mcp.sh        # Install and configure MCP servers
