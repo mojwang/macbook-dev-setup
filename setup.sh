@@ -6,6 +6,29 @@
 
 VERSION="3.2.0"
 
+# Check bash version (requires bash 4+ for features like indirect expansion)
+check_bash_version() {
+    local bash_major_version="${BASH_VERSION%%.*}"
+    if [[ "$bash_major_version" -lt 4 ]]; then
+        echo "Warning: You're using bash $BASH_VERSION"
+        echo "This script requires bash 4.0 or higher for full functionality."
+        echo ""
+        echo "Your system bash (/bin/bash) is version 3.2.57"
+        if command -v brew &>/dev/null && brew list bash &>/dev/null; then
+            echo "Homebrew bash is installed. Please ensure /opt/homebrew/bin is in your PATH."
+        else
+            echo "Install modern bash with: brew install bash"
+        fi
+        echo ""
+        echo "Current bash: $(which bash)"
+        echo "Continuing anyway, but some features may not work correctly..."
+        echo ""
+    fi
+}
+
+# Check bash version early
+check_bash_version
+
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
 
@@ -382,11 +405,33 @@ main_setup() {
             fi
         fi
         
-        print_step "Updating existing packages..."
-        # Inline package updates
+        print_step "Checking for package updates..."
+        # Inline package updates with better output
         if command -v brew &>/dev/null; then
-            brew upgrade
-            brew cleanup
+            # Check what needs updating
+            local outdated_packages=$(brew outdated -q 2>/dev/null)
+            
+            if [[ -n "$outdated_packages" ]]; then
+                local package_count=$(echo "$outdated_packages" | wc -l | tr -d ' ')
+                print_info "Found $package_count outdated packages"
+                echo "$outdated_packages" | head -10
+                if [[ $package_count -gt 10 ]]; then
+                    echo "... and $((package_count - 10)) more"
+                fi
+                
+                print_step "Updating packages..."
+                brew upgrade -q
+                print_success "Updated $package_count packages"
+            else
+                print_info "All packages are up to date"
+            fi
+            
+            # Cleanup old versions
+            local cleanup_size=$(brew cleanup -n 2>/dev/null | grep "Would remove" | sed 's/.*Would remove: //' || echo "0B")
+            if [[ "$cleanup_size" != "0B" ]]; then
+                print_info "Cleaning up old versions ($cleanup_size)..."
+                brew cleanup -q
+            fi
         fi
         
         print_step "Updating configurations..."
@@ -407,7 +452,8 @@ main_setup() {
         # Update Claude Code MCP servers if VS Code and Claude CLI are installed
         if command -v code &>/dev/null && command -v claude &>/dev/null; then
             print_step "Updating Claude Code MCP servers..."
-            ./scripts/setup-claude-code-mcp.sh --remove --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa
+            # The script will automatically only reconnect servers that were actually updated
+            ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa
         fi
     fi
     

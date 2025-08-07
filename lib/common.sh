@@ -7,6 +7,14 @@
 # Note: Strict mode is not set here to allow sourcing from various scripts
 # Individual scripts should set their own error handling as needed
 
+# Check bash version requirement (bash 4+ required for associative arrays)
+if [[ "${BASH_VERSION%%.*}" -lt 4 ]]; then
+    echo "Error: This script requires bash 4.0 or higher (found $BASH_VERSION)" >&2
+    echo "Please run with Homebrew bash: brew install bash" >&2
+    echo "Ensure /opt/homebrew/bin is in your PATH" >&2
+    exit 1
+fi
+
 # Prevent multiple sourcing of this file to avoid readonly variable errors
 if [[ -n "${COMMON_LIB_LOADED:-}" ]]; then
     return 0
@@ -506,13 +514,30 @@ export -f kill_all_test_jobs
 # ============================================================================
 
 # MCP server configurations - base paths
+# Check both possible locations for official servers (src/ subfolder or direct)
+get_mcp_server_base_path() {
+    local server_name="$1"
+    
+    # Official servers - check both locations
+    if [[ "$server_name" =~ ^(filesystem|memory|sequentialthinking|git|fetch)$ ]]; then
+        if [[ -d "$HOME/repos/mcp-servers/official/src/$server_name" ]]; then
+            echo "$HOME/repos/mcp-servers/official/src/$server_name"
+        elif [[ -d "$HOME/repos/mcp-servers/official/$server_name" ]]; then
+            echo "$HOME/repos/mcp-servers/official/$server_name"
+        fi
+    # Community servers
+    elif [[ -d "$HOME/repos/mcp-servers/community/$server_name" ]]; then
+        echo "$HOME/repos/mcp-servers/community/$server_name"
+    fi
+}
+
 declare -A MCP_SERVER_BASE_PATHS=(
-    # Official servers
-    ["filesystem"]="$HOME/repos/mcp-servers/official/filesystem"
-    ["memory"]="$HOME/repos/mcp-servers/official/memory"
-    ["sequentialthinking"]="$HOME/repos/mcp-servers/official/sequentialthinking"
-    ["git"]="$HOME/repos/mcp-servers/official/git"
-    ["fetch"]="$HOME/repos/mcp-servers/official/fetch"
+    # Official servers - will be dynamically determined
+    ["filesystem"]="$(get_mcp_server_base_path filesystem)"
+    ["memory"]="$(get_mcp_server_base_path memory)"
+    ["sequentialthinking"]="$(get_mcp_server_base_path sequentialthinking)"
+    ["git"]="$(get_mcp_server_base_path git)"
+    ["fetch"]="$(get_mcp_server_base_path fetch)"
     # Community servers
     ["context7"]="$HOME/repos/mcp-servers/community/context7"
     ["playwright"]="$HOME/repos/mcp-servers/community/playwright"
@@ -574,7 +599,14 @@ find_mcp_server_executable() {
         return 0
     fi
     
-    local base_path="${MCP_SERVER_BASE_PATHS[$server_name]}"
+    # Get the base path dynamically
+    local base_path=$(get_mcp_server_base_path "$server_name")
+    
+    # If base path doesn't exist, return error
+    if [[ -z "$base_path" ]] || [[ ! -d "$base_path" ]]; then
+        return 1
+    fi
+    
     local executables="${MCP_SERVER_EXECUTABLES[$server_name]}"
     
     # Python servers just use the base directory
@@ -737,10 +769,11 @@ is_mcp_server_installed() {
         return 0
     fi
     
-    local base_path="${MCP_SERVER_BASE_PATHS[$server_name]}"
+    # Get the base path dynamically
+    local base_path=$(get_mcp_server_base_path "$server_name")
     
     # Check if base path exists
-    if [[ ! -d "$base_path" ]]; then
+    if [[ -z "$base_path" ]] || [[ ! -d "$base_path" ]]; then
         return 1
     fi
     
@@ -755,6 +788,7 @@ is_mcp_server_installed() {
 }
 
 # Export MCP functions
+export -f get_mcp_server_base_path
 export -f find_mcp_server_executable
 export -f generate_mcp_server_config
 export -f is_mcp_server_installed

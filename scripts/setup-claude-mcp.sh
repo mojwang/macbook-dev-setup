@@ -123,6 +123,13 @@ load_api_keys() {
     if [[ -f "$API_KEYS_FILE" ]]; then
         # Source the file to load API keys into environment
         source "$API_KEYS_FILE" 2>/dev/null || true
+        
+        # Verify keys were loaded
+        for key_name in "${SERVER_KEY_NAMES[@]}"; do
+            if [[ -n "${!key_name}" ]]; then
+                print_info "Loaded existing $key_name from config"
+            fi
+        done
     fi
 }
 
@@ -208,6 +215,10 @@ clone_or_update_repo() {
         cd "$target_dir" || return 1
         git fetch origin >/dev/null 2>&1
         git reset --hard origin/main >/dev/null 2>&1 || git reset --hard origin/master >/dev/null 2>&1
+    elif [[ -d "$target_dir" ]]; then
+        # Directory exists but is not a git repo - skip cloning
+        print_info "Directory $repo_name exists but is not a git repository, skipping update"
+        return 0
     else
         print_info "Cloning $repo_name..."
         git clone --depth 1 "$repo_url" "$target_dir" >/dev/null 2>&1
@@ -218,15 +229,20 @@ clone_or_update_repo() {
 check_api_key() {
     local key_name="$1"
     
-    # Check environment variable
+    # Check environment variable first (may have been loaded)
     if [[ -n "${!key_name}" ]]; then
         return 0
     fi
     
-    # Check API keys file
+    # Check API keys file and load it if found
     if [[ -f "$API_KEYS_FILE" ]] && grep -q "export ${key_name}=" "$API_KEYS_FILE" 2>/dev/null; then
-        local key_value=$(grep "export ${key_name}=" "$API_KEYS_FILE" | sed -E 's/.*="(.*)".*/\1/')
-        if [[ -n "$key_value" && "$key_value" != "\${${key_name}:-}" ]]; then
+        # Extract the key value from the file
+        local key_value=$(grep "export ${key_name}=" "$API_KEYS_FILE" | sed -E 's/^export [^=]+="([^"]+)".*/\1/')
+        
+        # Check if we got a non-empty, non-placeholder value
+        if [[ -n "$key_value" && "$key_value" != "\${${key_name}:-}" && "$key_value" != "" ]]; then
+            # Export it to the environment for this session
+            export "${key_name}=${key_value}"
             return 0
         fi
     fi
@@ -234,11 +250,68 @@ check_api_key() {
     return 1
 }
 
+# Validate API key by making a test request
+validate_api_key() {
+    local server_name="$1"
+    local key_name="$2"
+    local key_value="${!key_name}"
+    
+    if [[ -z "$key_value" ]]; then
+        return 1
+    fi
+    
+    case "$server_name" in
+        "exa")
+            # Test Exa API key with a simple search request
+            local response=$(curl -s -o /dev/null -w "%{http_code}" \
+                -X POST "https://api.exa.ai/search" \
+                -H "x-api-key: $key_value" \
+                -H "Content-Type: application/json" \
+                -d '{"query":"test","numResults":1}' \
+                --connect-timeout 5 2>/dev/null || echo "000")
+            
+            if [[ "$response" == "200" ]]; then
+                return 0  # Valid key
+            elif [[ "$response" == "401" ]] || [[ "$response" == "403" ]]; then
+                return 1  # Invalid/revoked key
+            else
+                return 2  # Network error or other issue - assume key is still valid
+            fi
+            ;;
+        "figma")
+            # Test Figma API key with a simple user request
+            local response=$(curl -s -o /dev/null -w "%{http_code}" \
+                "https://api.figma.com/v1/me" \
+                -H "X-Figma-Token: $key_value" \
+                --connect-timeout 5 2>/dev/null || echo "000")
+            
+            if [[ "$response" == "200" ]]; then
+                return 0  # Valid key
+            elif [[ "$response" == "403" ]]; then
+                return 1  # Invalid/revoked key
+            else
+                return 2  # Network error or other issue - assume key is still valid
+            fi
+            ;;
+        *)
+            # Unknown server type, skip validation
+            return 2
+            ;;
+    esac
+}
+
 # Prompt for API key
 prompt_for_api_key() {
     local server_name="$1"
     local key_name="$2"
     local api_key=""
+    
+    # Check if we're in interactive mode
+    if [[ ! -t 0 ]] || [[ "${CI:-false}" == "true" ]]; then
+        print_warning "$server_name requires API key ($key_name) but running in non-interactive mode"
+        print_info "To configure $server_name, set $key_name in ~/.config/zsh/51-api-keys.zsh"
+        return 1
+    fi
     
     print_info "The $server_name server requires an API key."
     
@@ -255,9 +328,17 @@ prompt_for_api_key() {
     read -r api_key
     
     if [[ -n "$api_key" ]]; then
-        save_api_key "$key_name" "$api_key"
+        # Validate the key before saving
         export "$key_name=$api_key"
-        return 0
+        if validate_api_key "$server_name" "$key_name"; then
+            save_api_key "$key_name" "$api_key"
+            print_success "$server_name API key saved and validated"
+            return 0
+        else
+            unset "$key_name"
+            print_error "Invalid $server_name API key. Please check and try again."
+            return 1
+        fi
     else
         print_warning "Skipping $server_name configuration (no API key provided)"
         return 1
@@ -320,14 +401,41 @@ get_api_key_name() {
 # Configure API keys for servers that need them
 configure_api_keys() {
     local server_name="$1"
+    local validate="${2:-false}"  # Optional validation flag
     
     # Check if this server needs an API key
     local key_name=$(get_api_key_name "$server_name")
     if [[ -n "$key_name" ]]; then
         # Check if key already exists
         if check_api_key "$key_name"; then
-            print_info "$server_name API key already configured"
-            return 0
+            # Optionally validate the existing key
+            if [[ "$validate" == "true" ]]; then
+                print_info "Validating $server_name API key..."
+                local validation_result
+                validate_api_key "$server_name" "$key_name"
+                validation_result=$?
+                
+                if [[ $validation_result -eq 0 ]]; then
+                    print_success "$server_name API key is valid"
+                    return 0
+                elif [[ $validation_result -eq 1 ]]; then
+                    print_error "$server_name API key is invalid or revoked"
+                    print_info "Please provide a new API key"
+                    # Prompt for a new key
+                    if prompt_for_api_key "$server_name" "$key_name"; then
+                        return 0
+                    else
+                        return 1
+                    fi
+                else
+                    # Network error or unknown - assume key is still valid
+                    print_info "$server_name API key already configured (validation skipped)"
+                    return 0
+                fi
+            else
+                print_info "$server_name API key already configured"
+                return 0
+            fi
         else
             # Prompt for the key
             if prompt_for_api_key "$server_name" "$key_name"; then
@@ -341,6 +449,39 @@ configure_api_keys() {
     return 0
 }
 
+# Check if Node.js server needs building
+check_node_server_needs_build() {
+    local server_path="$1"
+    local server_name=$(basename "$server_path")
+    
+    # Check if dist/build directory exists
+    if [[ -d "$server_path/dist" ]] || [[ -d "$server_path/build" ]]; then
+        # Check if node_modules exists
+        if [[ -d "$server_path/node_modules" ]]; then
+            # Check if package.json is newer than dist/build
+            local package_json_time=""
+            local dist_time=""
+            
+            if [[ -f "$server_path/package.json" ]]; then
+                package_json_time=$(stat -f %m "$server_path/package.json" 2>/dev/null || stat -c %Y "$server_path/package.json" 2>/dev/null || echo "0")
+            fi
+            
+            if [[ -d "$server_path/dist" ]]; then
+                dist_time=$(find "$server_path/dist" -type f -name "*.js" -exec stat -f %m {} \; 2>/dev/null | sort -n | tail -1 || echo "0")
+            elif [[ -d "$server_path/build" ]]; then
+                dist_time=$(find "$server_path/build" -type f -name "*.js" -exec stat -f %m {} \; 2>/dev/null | sort -n | tail -1 || echo "0")
+            fi
+            
+            # If dist is newer than package.json, no build needed
+            if [[ -n "$dist_time" ]] && [[ -n "$package_json_time" ]] && [[ "$dist_time" -gt "$package_json_time" ]]; then
+                return 1  # No build needed
+            fi
+        fi
+    fi
+    
+    return 0  # Build needed
+}
+
 # Build Node.js server
 build_node_server() {
     local server_path="$1"
@@ -350,6 +491,12 @@ build_node_server() {
     local server_type="${MCP_SERVER_TYPES[$server_name]}"
     if [[ "$server_type" == "npx" ]]; then
         print_info "Skipping build for $server_name (npx-based server)"
+        return 0
+    fi
+    
+    # Check if build is actually needed
+    if ! check_node_server_needs_build "$server_path"; then
+        print_info "Skipping build for $server_name (already up to date)"
         return 0
     fi
     
@@ -377,10 +524,58 @@ build_node_server() {
     return 0
 }
 
+# Check if Python server needs building
+check_python_server_needs_build() {
+    local server_path="$1"
+    local server_name=$(basename "$server_path")
+    
+    # Check if venv exists with installed packages
+    if [[ -d "$server_path/venv" ]] && [[ -d "$server_path/venv/lib" ]]; then
+        # Check if requirements.txt or pyproject.toml is newer than venv
+        local req_time=""
+        local venv_time=""
+        
+        if [[ -f "$server_path/requirements.txt" ]]; then
+            req_time=$(stat -f %m "$server_path/requirements.txt" 2>/dev/null || stat -c %Y "$server_path/requirements.txt" 2>/dev/null || echo "0")
+        elif [[ -f "$server_path/pyproject.toml" ]]; then
+            req_time=$(stat -f %m "$server_path/pyproject.toml" 2>/dev/null || stat -c %Y "$server_path/pyproject.toml" 2>/dev/null || echo "0")
+        fi
+        
+        if [[ -d "$server_path/venv" ]]; then
+            venv_time=$(stat -f %m "$server_path/venv" 2>/dev/null || stat -c %Y "$server_path/venv" 2>/dev/null || echo "0")
+        fi
+        
+        # If venv is newer than requirements, no build needed
+        if [[ -n "$venv_time" ]] && [[ -n "$req_time" ]] && [[ "$venv_time" -gt "$req_time" ]]; then
+            # Also check if .uv directory exists for uv-managed projects
+            if [[ -f "$server_path/pyproject.toml" ]] && command -v uv &>/dev/null; then
+                if [[ -d "$server_path/.venv" ]]; then
+                    return 1  # No build needed
+                fi
+            else
+                return 1  # No build needed
+            fi
+        fi
+    fi
+    
+    # Check for uv-managed projects
+    if [[ -f "$server_path/pyproject.toml" ]] && [[ -d "$server_path/.venv" ]]; then
+        return 1  # No build needed
+    fi
+    
+    return 0  # Build needed
+}
+
 # Build Python server
 build_python_server() {
     local server_path="$1"
     local server_name=$(basename "$server_path")
+    
+    # Check if build is actually needed
+    if ! check_python_server_needs_build "$server_path"; then
+        print_info "Skipping build for $server_name (already up to date)"
+        return 0
+    fi
     
     print_info "Building Python server $server_name..."
     cd "$server_path" || return 1
@@ -670,10 +865,11 @@ print_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --help     Show this help message"
-    echo "  --check    Check MCP server status"
-    echo "  --update   Update all MCP servers"
-    echo "  --remove   Remove MCP configuration"
+    echo "  --help           Show this help message"
+    echo "  --check          Check MCP server status"
+    echo "  --update         Update all MCP servers"
+    echo "  --remove         Remove MCP configuration"
+    echo "  --validate-keys  Validate existing API keys"
     echo ""
     echo "Environment Variables:"
     echo "  MCP_ROOT_DIR   Root directory for MCP servers (default: ~/repos/mcp-servers)"
@@ -682,6 +878,7 @@ print_usage() {
     echo "  $0                    # Install and configure MCP servers"
     echo "  $0 --check           # Check server status"
     echo "  $0 --update          # Update all servers"
+    echo "  $0 --validate-keys   # Check if API keys are still valid"
 }
 
 # Check MCP server status
@@ -757,19 +954,29 @@ update_servers() {
     # Track update results
     local updated_servers=()
     local failed_servers=()
+    local actually_updated=()
+    
+    # Clear the update status file
+    local UPDATE_STATUS_FILE="/tmp/mcp-update-status"
+    > "$UPDATE_STATUS_FILE"
     
     # Update official servers
     if [[ -d "$MCP_OFFICIAL_DIR" ]]; then
         print_info "Updating official servers repository..."
         cd "$MCP_OFFICIAL_DIR"
         
-        # Stash any local changes
-        if git diff --quiet && git diff --cached --quiet; then
-            git pull --rebase origin main 2>/dev/null || git pull --rebase origin master 2>/dev/null || {
-                print_warning "Failed to update official servers repository"
-            }
+        # Check if this is a git repository
+        if git rev-parse --git-dir > /dev/null 2>&1; then
+            # Stash any local changes
+            if git diff --quiet && git diff --cached --quiet; then
+                git pull --rebase origin main 2>/dev/null || git pull --rebase origin master 2>/dev/null || {
+                    print_warning "Failed to update official servers repository"
+                }
+            else
+                print_warning "Local changes detected in official servers, skipping git pull"
+            fi
         else
-            print_warning "Local changes detected in official servers, skipping git pull"
+            print_info "Official servers directory is not a git repository, skipping git operations"
         fi
         
         # Rebuild official servers
@@ -784,15 +991,27 @@ update_servers() {
             fi
             
             print_info "Updating $server..."
+            local needs_update=false
+            
+            # Check if server needs rebuilding (simplified check - could be enhanced)
             if [[ " ${NODE_SERVERS[@]} " =~ " $server " ]]; then
+                if [[ ! -d "$server_path/dist" ]] || [[ ! -d "$server_path/node_modules" ]]; then
+                    needs_update=true
+                fi
                 if build_node_server "$server_path"; then
                     updated_servers+=("$server")
+                    if [[ "$needs_update" == "true" ]]; then
+                        echo "$server" >> "$UPDATE_STATUS_FILE"
+                        actually_updated+=("$server")
+                    fi
                 else
                     failed_servers+=("$server")
                 fi
             elif [[ " ${PYTHON_SERVERS[@]} " =~ " $server " ]]; then
                 if build_python_server "$server_path"; then
                     updated_servers+=("$server")
+                    echo "$server" >> "$UPDATE_STATUS_FILE"
+                    actually_updated+=("$server")
                 else
                     failed_servers+=("$server")
                 fi
@@ -820,7 +1039,24 @@ update_servers() {
             local server_path="$MCP_COMMUNITY_DIR/$server_name"
             if [[ -d "$server_path" ]]; then
                 print_info "Updating $server_name..."
+                local repo_updated=false
+                
+                # Check if repo was actually updated
+                local old_head=""
+                if [[ -d "$server_path/.git" ]]; then
+                    old_head=$(cd "$server_path" && git rev-parse HEAD 2>/dev/null || echo "")
+                fi
+                
                 if clone_or_update_repo "$server_url" "$server_path"; then
+                    # Check if HEAD changed
+                    local new_head=""
+                    if [[ -d "$server_path/.git" ]]; then
+                        new_head=$(cd "$server_path" && git rev-parse HEAD 2>/dev/null || echo "")
+                    fi
+                    if [[ "$old_head" != "$new_head" ]] || [[ -z "$old_head" ]]; then
+                        repo_updated=true
+                    fi
+                    
                     # Configure API keys if needed
                     configure_api_keys "$server_name"
                     
@@ -828,12 +1064,20 @@ update_servers() {
                     if [[ -f "$server_path/package.json" ]]; then
                         if build_node_server "$server_path"; then
                             updated_servers+=("$server_name")
+                            if [[ "$repo_updated" == "true" ]]; then
+                                echo "$server_name" >> "$UPDATE_STATUS_FILE"
+                                actually_updated+=("$server_name")
+                            fi
                         else
                             failed_servers+=("$server_name")
                         fi
                     elif [[ -f "$server_path/requirements.txt" ]] || [[ -f "$server_path/pyproject.toml" ]]; then
                         if build_python_server "$server_path"; then
                             updated_servers+=("$server_name")
+                            if [[ "$repo_updated" == "true" ]]; then
+                                echo "$server_name" >> "$UPDATE_STATUS_FILE"
+                                actually_updated+=("$server_name")
+                            fi
                         else
                             failed_servers+=("$server_name")
                         fi
@@ -845,18 +1089,97 @@ update_servers() {
         done
     fi
     
+    # Track servers missing API keys
+    local missing_keys=()
+    for i in "${!SERVER_NAMES_WITH_KEYS[@]}"; do
+        local server_name="${SERVER_NAMES_WITH_KEYS[$i]}"
+        local key_name="${SERVER_KEY_NAMES[$i]}"
+        if [[ -z "${!key_name}" ]]; then
+            missing_keys+=("$server_name")
+        fi
+    done
+    
     # Show update results
     echo ""
     if [[ ${#updated_servers[@]} -gt 0 ]]; then
         print_success "Successfully updated servers: ${updated_servers[*]}"
     fi
+    
+    if [[ ${#actually_updated[@]} -gt 0 ]]; then
+        print_info "Servers with actual changes: ${actually_updated[*]}"
+    else
+        print_info "No servers had actual changes"
+    fi
+    
     if [[ ${#failed_servers[@]} -gt 0 ]]; then
         print_warning "Failed to update servers: ${failed_servers[*]}"
+    fi
+    
+    if [[ ${#missing_keys[@]} -gt 0 ]]; then
+        print_warning "Servers missing API keys: ${missing_keys[*]}"
+        print_info "To configure these servers, add their API keys to ~/.config/zsh/51-api-keys.zsh"
     fi
     
     # Reconfigure Claude Desktop
     echo ""
     configure_claude_desktop
+    
+    # Return status based on whether any servers were actually updated
+    if [[ ${#actually_updated[@]} -gt 0 ]]; then
+        return 0
+    else
+        return 2  # Special code to indicate no updates
+    fi
+}
+
+# Validate all configured API keys
+validate_all_keys() {
+    print_info "Validating API Keys"
+    echo ""
+    
+    # Load existing API keys
+    load_api_keys
+    
+    local validation_results=()
+    local invalid_keys=()
+    
+    # Check each server that requires API keys
+    for i in "${!SERVER_NAMES_WITH_KEYS[@]}"; do
+        local server_name="${SERVER_NAMES_WITH_KEYS[$i]}"
+        local key_name="${SERVER_KEY_NAMES[$i]}"
+        
+        if check_api_key "$key_name"; then
+            print_info "Validating $server_name API key..."
+            local validation_result
+            validate_api_key "$server_name" "$key_name"
+            validation_result=$?
+            
+            if [[ $validation_result -eq 0 ]]; then
+                print_success "✓ $server_name API key is valid"
+                validation_results+=("$server_name: valid")
+            elif [[ $validation_result -eq 1 ]]; then
+                print_error "✗ $server_name API key is invalid or revoked"
+                invalid_keys+=("$server_name")
+                validation_results+=("$server_name: invalid")
+            else
+                print_warning "○ $server_name API key validation skipped (network issue)"
+                validation_results+=("$server_name: unknown")
+            fi
+        else
+            print_warning "○ $server_name API key not configured"
+            validation_results+=("$server_name: not configured")
+        fi
+    done
+    
+    echo ""
+    if [[ ${#invalid_keys[@]} -gt 0 ]]; then
+        print_error "Invalid API keys detected: ${invalid_keys[*]}"
+        print_info "Please run the setup again to provide new API keys"
+        return 1
+    else
+        print_success "All configured API keys are valid"
+        return 0
+    fi
 }
 
 # Remove MCP configuration
@@ -897,6 +1220,10 @@ main() {
             check_prerequisites
             update_servers
             exit 0
+            ;;
+        --validate-keys)
+            validate_all_keys
+            exit $?
             ;;
         --remove)
             remove_configuration

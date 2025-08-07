@@ -46,48 +46,68 @@ add_claude_code_server() {
     
     print_info "Adding $server_name to Claude Code (scope: $scope)..."
     
+    # Capture the command output and exit code
+    local cmd_output
+    local cmd_exit_code
+    
     case "$server_type" in
         "node")
             if [[ "$server_name" == "filesystem" ]]; then
-                claude mcp add "$server_name" -s "$scope" node "$server_path" "$HOME"
+                cmd_output=$(claude mcp add "$server_name" -s "$scope" node "$server_path" "$HOME" 2>&1)
+                cmd_exit_code=$?
             elif [[ -n "$api_key_var" ]]; then
-                claude mcp add "$server_name" -s "$scope" node "$server_path" --env "${api_key_var}=${!api_key_var}"
+                cmd_output=$(claude mcp add "$server_name" -s "$scope" node "$server_path" --env "${api_key_var}=${!api_key_var}" 2>&1)
+                cmd_exit_code=$?
             else
-                claude mcp add "$server_name" -s "$scope" node "$server_path"
+                cmd_output=$(claude mcp add "$server_name" -s "$scope" node "$server_path" 2>&1)
+                cmd_exit_code=$?
             fi
             ;;
         "python-uv")
-            claude mcp add "$server_name" -s "$scope" uv --directory "$server_path" run "mcp-server-$server_name"
+            # Claude Code requires the command to be passed correctly for Python servers
+            cmd_output=$(claude mcp add "$server_name" -s "$scope" -- sh -c "cd '$server_path' && uv run mcp-server-$server_name" 2>&1)
+            cmd_exit_code=$?
             ;;
         "python-uvx")
             if [[ "$server_name" == "semgrep" ]]; then
-                claude mcp add "$server_name" -s "$scope" uvx --with mcp==1.11.0 semgrep-mcp
+                cmd_output=$(claude mcp add "$server_name" -s "$scope" -- uvx --with mcp==1.11.0 semgrep-mcp 2>&1)
+                cmd_exit_code=$?
             fi
             ;;
         "npx")
             local npx_package="${MCP_SERVER_NPX_PACKAGES[$server_name]}"
             if [[ "$server_name" == "figma" ]]; then
                 if [[ -n "$api_key_var" ]]; then
-                    claude mcp add "$server_name" -s "$scope" --env "${api_key_var}=${!api_key_var}" -- npx -y "$npx_package" --stdio
+                    cmd_output=$(claude mcp add "$server_name" -s "$scope" --env "${api_key_var}=${!api_key_var}" -- npx -y "$npx_package" --stdio 2>&1)
+                    cmd_exit_code=$?
                 else
-                    claude mcp add "$server_name" -s "$scope" -- npx -y "$npx_package" --stdio
+                    cmd_output=$(claude mcp add "$server_name" -s "$scope" -- npx -y "$npx_package" --stdio 2>&1)
+                    cmd_exit_code=$?
                 fi
             else
                 if [[ -n "$api_key_var" ]]; then
-                    claude mcp add "$server_name" -s "$scope" --env "${api_key_var}=${!api_key_var}" -- npx -y "$npx_package"
+                    cmd_output=$(claude mcp add "$server_name" -s "$scope" --env "${api_key_var}=${!api_key_var}" -- npx -y "$npx_package" 2>&1)
+                    cmd_exit_code=$?
                 else
-                    claude mcp add "$server_name" -s "$scope" -- npx -y "$npx_package"
+                    cmd_output=$(claude mcp add "$server_name" -s "$scope" -- npx -y "$npx_package" 2>&1)
+                    cmd_exit_code=$?
                 fi
             fi
             ;;
     esac
     
-    if [[ $? -eq 0 ]]; then
+    if [[ $cmd_exit_code -eq 0 ]]; then
         print_success "Added $server_name"
         return 0
     else
-        print_error "Failed to add $server_name"
-        return 1
+        # Check if the error is because the server already exists
+        if echo "$cmd_output" | grep -q "already exists"; then
+            print_info "Server $server_name already exists in $scope config - skipping"
+            return 0  # Not really an error, server is already configured
+        else
+            print_error "Failed to add $server_name: $cmd_output"
+            return 1
+        fi
     fi
 }
 
@@ -114,14 +134,20 @@ print_usage() {
     echo "  --no-api-keys     Skip servers that require API keys"
     echo "  --servers LIST    Only configure specified servers (comma-separated)"
     echo "  --remove          Remove all MCP servers before adding"
+    echo "  --force           Force reconnect all servers (ignores update status)"
     echo "  --help, -h        Show this help message"
+    echo ""
+    echo "Behavior:"
+    echo "  By default, only reconnects servers that were actually updated."
+    echo "  Use --force to reconnect all servers regardless of update status."
     echo ""
     echo "Available servers:"
     echo "  Official: filesystem, memory, git, fetch, sequentialthinking"
     echo "  Community: context7, playwright, figma, semgrep, exa"
     echo ""
     echo "Examples:"
-    echo "  $0                                    # Add all servers to user scope"
+    echo "  $0                                    # Smart reconnect (only if updated)"
+    echo "  $0 --force                            # Force reconnect all servers"
     echo "  $0 --scope project                    # Add to project scope (.mcp.json)"
     echo "  $0 --no-api-keys                      # Skip servers needing API keys"
     echo "  $0 --servers filesystem,memory,git    # Only add specific servers"
@@ -133,7 +159,12 @@ main() {
     local SCOPE="user"
     local INCLUDE_API_KEYS=true
     local REMOVE_FIRST=false
+    local FORCE_RECONNECT=false
     local SERVERS_TO_INCLUDE=()
+    
+    # Check for update status file to determine if reconnection is needed
+    local UPDATE_STATUS_FILE="/tmp/mcp-update-status"
+    local UPDATED_SERVERS=()
     
     # Parse command line options
     while [[ $# -gt 0 ]]; do
@@ -156,6 +187,11 @@ main() {
                 ;;
             --remove)
                 REMOVE_FIRST=true
+                shift
+                ;;
+            --force)
+                FORCE_RECONNECT=true
+                REMOVE_FIRST=true  # Force implies remove first
                 shift
                 ;;
             --help|-h)
@@ -182,15 +218,44 @@ main() {
         source "$HOME/.config/zsh/51-api-keys.zsh" 2>/dev/null || true
     fi
     
-    # Remove existing servers if requested
-    if [[ "$REMOVE_FIRST" == "true" ]]; then
+    # Check for updated servers if not forcing
+    if [[ "$FORCE_RECONNECT" == "false" ]] && [[ -f "$UPDATE_STATUS_FILE" ]]; then
+        # Read updated servers from file
+        while IFS= read -r server; do
+            [[ -n "$server" ]] && UPDATED_SERVERS+=("$server")
+        done < "$UPDATE_STATUS_FILE"
+        
+        if [[ ${#UPDATED_SERVERS[@]} -eq 0 ]]; then
+            print_info "No MCP servers were updated, skipping reconnection"
+            echo ""
+            print_info "Use --force to force reconnection of all servers"
+            exit 0
+        else
+            print_info "Servers that were updated: ${UPDATED_SERVERS[*]}"
+            echo ""
+        fi
+    fi
+    
+    # Remove existing servers if requested or if forcing
+    if [[ "$REMOVE_FIRST" == "true" ]] || [[ "$FORCE_RECONNECT" == "true" ]]; then
         remove_all_servers "$SCOPE"
+    elif [[ ${#UPDATED_SERVERS[@]} -gt 0 ]]; then
+        # Only remove the servers that were updated
+        print_info "Removing updated servers for reconnection..."
+        for server in "${UPDATED_SERVERS[@]}"; do
+            print_info "Removing $server..."
+            claude mcp remove "$server" -s "$SCOPE" 2>/dev/null || true
+        done
     fi
     
     # Determine which servers to configure
     if [[ ${#SERVERS_TO_INCLUDE[@]} -gt 0 ]]; then
         # Use specified servers
         servers=("${SERVERS_TO_INCLUDE[@]}")
+    elif [[ "$FORCE_RECONNECT" == "false" ]] && [[ ${#UPDATED_SERVERS[@]} -gt 0 ]]; then
+        # Only reconnect updated servers
+        servers=("${UPDATED_SERVERS[@]}")
+        print_info "Reconnecting only updated servers: ${servers[*]}"
     else
         # Use all available servers
         servers=(
@@ -210,18 +275,22 @@ main() {
     local success_count=0
     for server in "${servers[@]}"; do
         # Skip API key servers if not including them
-        if [[ "$INCLUDE_API_KEYS" == "false" ]] && [[ -n "${MCP_SERVER_API_KEYS[$server]}" ]]; then
+        if [[ "$INCLUDE_API_KEYS" == "false" ]] && [[ -n "${MCP_SERVER_API_KEYS[$server]:-}" ]]; then
             print_info "Skipping $server (requires API key)"
             continue
         fi
         
         if add_claude_code_server "$server" "$SCOPE"; then
-            ((success_count++))
+            success_count=$((success_count + 1))
         fi
     done
     
     echo ""
-    print_success "Successfully configured $success_count MCP servers for Claude Code"
+    if [[ $success_count -gt 0 ]]; then
+        print_success "Successfully configured $success_count MCP servers for Claude Code"
+    else
+        print_info "All MCP servers were already configured for Claude Code"
+    fi
     
     # Show current configuration
     echo ""
