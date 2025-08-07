@@ -1,3 +1,10 @@
+## [3.2.2](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.1...v3.2.2) (2025-08-07)
+
+
+### Bug Fixes
+
+* allow bash 3.2 in CI environments ([2278ec9](https://github.com/mojwang/macbook-dev-setup/commit/2278ec9d5d9a6606a2508069c86546dfacb9e9c6))
+
 ## [3.2.1](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.0...v3.2.1) (2025-08-07)
 
 
