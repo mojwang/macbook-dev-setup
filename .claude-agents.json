@@ -1,0 +1,292 @@
+{
+  "version": "1.0.0",
+  "project": "macbook-dev-setup",
+  "description": "Claude sub-agent configuration for automated macOS dev environment setup",
+  
+  "agents": {
+    "quality": {
+      "name": "Quality & Testing Agent",
+      "enabled": true,
+      "priority": "high",
+      "triggers": [
+        "after_feature_implementation",
+        "before_commit",
+        "on_test_file_change"
+      ],
+      "configuration": {
+        "test_coverage_threshold": 80,
+        "performance_threshold_ms": 100,
+        "require_tests_for_features": true,
+        "test_frameworks": ["bash", "bdd", "tdd", "sdd"]
+      },
+      "prompts": {
+        "default": "Run quality checks and ensure all tests pass",
+        "thorough": "Perform comprehensive quality analysis including coverage, performance, and idempotency"
+      }
+    },
+    
+    "security": {
+      "name": "Security Analysis Agent",
+      "enabled": true,
+      "priority": "critical",
+      "triggers": [
+        "on_shell_script_change",
+        "on_api_key_handling",
+        "on_sudo_usage",
+        "before_commit"
+      ],
+      "configuration": {
+        "scan_for_secrets": true,
+        "check_permissions": true,
+        "validate_https": true,
+        "max_sudo_usage": 2,
+        "blocked_patterns": [
+          "eval.*user_input",
+          "rm -rf /",
+          "curl http://",
+          "hardcoded_password"
+        ]
+      },
+      "prompts": {
+        "default": "Perform security analysis on the code",
+        "comprehensive": "Run full security audit including dependencies and permissions"
+      }
+    },
+    
+    "shell": {
+      "name": "Shell Script Specialist Agent",
+      "enabled": true,
+      "priority": "high",
+      "triggers": [
+        "on_sh_file_creation",
+        "on_sh_file_modification",
+        "on_performance_request"
+      ],
+      "configuration": {
+        "require_set_e": true,
+        "require_signal_handlers": true,
+        "optimize_parallel": true,
+        "shellcheck_enabled": true,
+        "posix_check": false,
+        "timeout_seconds": 30
+      },
+      "prompts": {
+        "default": "Validate and optimize shell script",
+        "performance": "Optimize shell script for parallel execution and performance"
+      }
+    },
+    
+    "development": {
+      "name": "Development Agent",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_feature_request",
+        "on_bug_report",
+        "on_refactor_request"
+      ],
+      "configuration": {
+        "follow_conventions": true,
+        "prefer_edit_over_create": true,
+        "maintain_consistency": true,
+        "auto_add_tests": true
+      },
+      "prompts": {
+        "default": "Implement the requested feature",
+        "refactor": "Refactor code while maintaining functionality"
+      }
+    },
+    
+    "dependency": {
+      "name": "Dependency Management Agent",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "weekly_check",
+        "on_security_alert",
+        "on_brewfile_change"
+      ],
+      "configuration": {
+        "check_updates": true,
+        "scan_vulnerabilities": true,
+        "auto_update_patch": false,
+        "package_managers": ["homebrew", "npm", "pip", "gem"]
+      },
+      "prompts": {
+        "default": "Check for dependency updates and vulnerabilities",
+        "update": "Update all dependencies to latest compatible versions"
+      }
+    },
+    
+    "configuration": {
+      "name": "Configuration Validator Agent",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_dotfile_change",
+        "on_mcp_config_change",
+        "on_vscode_settings_change"
+      ],
+      "configuration": {
+        "validate_syntax": true,
+        "check_symlinks": true,
+        "verify_idempotency": true
+      },
+      "prompts": {
+        "default": "Validate configuration files",
+        "mcp": "Validate and test MCP server configurations"
+      }
+    },
+    
+    "documentation": {
+      "name": "Documentation Sync Agent",
+      "enabled": true,
+      "priority": "low",
+      "triggers": [
+        "after_code_change",
+        "before_release",
+        "on_command_addition"
+      ],
+      "configuration": {
+        "auto_update_changelog": true,
+        "sync_inline_docs": true,
+        "generate_references": true
+      },
+      "prompts": {
+        "default": "Update documentation to reflect changes",
+        "changelog": "Update CHANGELOG.md with recent changes"
+      }
+    },
+    
+    "performance": {
+      "name": "Performance Optimization Agent",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_slow_execution",
+        "on_startup_delay",
+        "on_optimization_request"
+      ],
+      "configuration": {
+        "shell_startup_threshold_ms": 100,
+        "script_timeout_seconds": 30,
+        "enable_profiling": true,
+        "parallel_jobs": "auto"
+      },
+      "prompts": {
+        "default": "Optimize performance and identify bottlenecks",
+        "startup": "Optimize shell startup time"
+      }
+    },
+    
+    "mcp": {
+      "name": "MCP Integration Agent",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_mcp_server_install",
+        "on_connection_issue",
+        "on_api_key_setup"
+      ],
+      "configuration": {
+        "debug_connections": true,
+        "validate_api_keys": true,
+        "test_integrations": true
+      },
+      "prompts": {
+        "default": "Debug and fix MCP server issues",
+        "setup": "Configure and test MCP server installation"
+      }
+    }
+  },
+  
+  "workflows": {
+    "feature_development": {
+      "description": "Standard feature development workflow",
+      "sequence": [
+        "development",
+        "shell",
+        "security",
+        "quality",
+        "documentation"
+      ]
+    },
+    
+    "security_audit": {
+      "description": "Comprehensive security audit",
+      "parallel": [
+        "security",
+        "dependency"
+      ],
+      "then": [
+        "quality"
+      ]
+    },
+    
+    "performance_optimization": {
+      "description": "Performance improvement workflow",
+      "sequence": [
+        "performance",
+        "shell",
+        "quality"
+      ]
+    },
+    
+    "pr_validation": {
+      "description": "Pull request validation",
+      "parallel": [
+        "quality",
+        "security",
+        "shell"
+      ],
+      "then": [
+        "documentation"
+      ]
+    },
+    
+    "mcp_troubleshooting": {
+      "description": "MCP server debugging workflow",
+      "sequence": [
+        "mcp",
+        "configuration",
+        "quality"
+      ]
+    }
+  },
+  
+  "coordination": {
+    "max_parallel_agents": 3,
+    "default_timeout_seconds": 300,
+    "retry_on_failure": true,
+    "max_retries": 2,
+    "cascade_on_critical_failure": false
+  },
+  
+  "quality_gates": {
+    "pre_commit": {
+      "required_agents": ["security", "shell"],
+      "failure_blocks_commit": true
+    },
+    "pre_push": {
+      "required_agents": ["quality", "security"],
+      "failure_blocks_push": true
+    },
+    "pre_merge": {
+      "required_agents": ["quality", "security", "documentation"],
+      "failure_blocks_merge": true
+    }
+  },
+  
+  "reporting": {
+    "generate_reports": true,
+    "report_format": "markdown",
+    "include_metrics": true,
+    "output_directory": "reports/agents/"
+  },
+  
+  "experimental": {
+    "auto_trigger_agents": false,
+    "learn_from_patterns": false,
+    "adaptive_thresholds": false
+  }
+}

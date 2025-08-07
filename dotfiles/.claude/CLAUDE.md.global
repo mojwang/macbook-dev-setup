@@ -1,0 +1,50 @@
+# Claude Global Config v2.0
+
+## Core Principles
+- Be direct and concise
+- Test-driven development by default
+- Security-first approach
+- Match existing project patterns
+
+## Git Workflow
+- Feature branches only (NEVER commit directly to main)
+- If changes are staged on main: create feature branch first (`git checkout -b feat/name`)
+- Small commits (<200 LOC diffs)
+- Conventional commit format
+- Create PR unless told otherwise
+
+## Development Standards
+- Shell scripts: Use `#!/usr/bin/env bash` (NOT `#!/bin/bash`)
+- Fail-fast: `set -e` in shell scripts
+- Clean up after interruptions
+- Backup before system changes
+- Follow project conventions
+
+## Behavior
+- Do only what's asked
+- Prefer editing over creating files
+- Never create docs unless requested
+- Ask for clarification when blocked
+
+## Agent Activation Patterns
+### Auto-trigger agents for:
+- **Security Agent**: When modifying shell scripts, handling API keys, or sudo operations
+- **Quality Agent**: After implementing features, before commits, when tests exist
+- **Shell Script Agent**: For any .sh file creation/modification
+- **Performance Agent**: When optimization is mentioned or startup time issues
+
+### Quality Gates (must pass before completion):
+1. Shell scripts must have `set -e` and proper error handling
+2. Tests must pass if they exist
+3. No hardcoded secrets or credentials
+4. Code follows existing project patterns
+5. Performance benchmarks met (if defined)
+
+### Agent Coordination:
+- Use parallel agents when tasks are independent
+- Chain agents only when dependencies exist
+- Always run Security Agent for sensitive operations
+- Document Agent follows significant changes
+
+## Important
+When global CLAUDE.md updates, sync to macbook-dev-setup project.

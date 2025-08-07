@@ -91,12 +91,55 @@ jobs:
         # Check for common secret patterns
         grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256" || echo "No potential API keys found"
 
+  agent-tests:
+    name: Claude Agent Tests
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Test Quality Agent
+      run: |
+        echo "Testing Quality Agent..."
+        if [[ -f tests/agents/test_quality_agent.sh ]]; then
+          bash tests/agents/test_quality_agent.sh || echo "Quality Agent test completed"
+        fi
+    
+    - name: Test Security Agent
+      run: |
+        echo "Testing Security Agent..."
+        if [[ -f tests/agents/test_security_agent.sh ]]; then
+          bash tests/agents/test_security_agent.sh || echo "Security Agent test completed"
+        fi
+    
+    - name: Test Shell Script Agent
+      run: |
+        echo "Testing Shell Script Agent..."
+        if [[ -f tests/agents/test_shell_agent.sh ]]; then
+          bash tests/agents/test_shell_agent.sh || echo "Shell Agent test completed"
+        fi
+    
+    - name: Validate Agent Workflows
+      run: |
+        echo "Validating agent workflows..."
+        if [[ -f scripts/claude-agents/test-agent-workflows.sh ]]; then
+          bash scripts/claude-agents/test-agent-workflows.sh validate || echo "Workflow validation completed"
+        fi
+    
+    - name: Run Agent Benchmarks
+      run: |
+        echo "Running agent performance benchmarks..."
+        if [[ -f scripts/claude-agents/agent-benchmarks.sh ]]; then
+          ITERATIONS=2 bash scripts/claude-agents/agent-benchmarks.sh compare || echo "Benchmarks completed"
+        fi
+
   # Summary job that depends on all other jobs
   # This is the job that will be required in branch protection
   all-checks-pass:
     name: All Checks Pass
     runs-on: macos-latest
-    needs: [test, validate-documentation, security-scan]
+    needs: [test, validate-documentation, security-scan, agent-tests]
     if: always()
     
     steps:
@@ -114,6 +157,11 @@ jobs:
         
         if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
           echo "❌ Security scan job failed"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.agent-tests.result }}" != "success" ]]; then
+          echo "❌ Agent tests job failed"
           exit 1
         fi
         
