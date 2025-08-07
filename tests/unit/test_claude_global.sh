@@ -2,15 +2,8 @@
 
 # Test script for global Claude configuration setup
 
-# Check if test framework exists
-TEST_FRAMEWORK="$(dirname "$0")/../test_framework.sh"
-if [[ ! -f "$TEST_FRAMEWORK" ]]; then
-    echo "Error: Test framework not found at $TEST_FRAMEWORK" >&2
-    echo "Please ensure the test framework is available before running tests." >&2
-    exit 1
-fi
-
-source "$TEST_FRAMEWORK"
+# Source test framework
+source "$(dirname "$0")/../test_framework.sh"
 
 # Create a temporary test environment
 TEST_HOME="$(mktemp -d)"
