@@ -256,7 +256,15 @@
   
   "coordination": {
     "max_parallel_agents": 3,
-    "default_timeout_seconds": 300,
+    "default_timeout_seconds": 120,
+    "task_specific_timeouts": {
+      "quality_tests": 180,
+      "security_scan": 120,
+      "dependency_check": 240,
+      "performance_benchmark": 60,
+      "documentation_update": 30,
+      "mcp_debug": 150
+    },
     "retry_on_failure": true,
     "max_retries": 2,
     "cascade_on_critical_failure": false

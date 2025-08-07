@@ -19,10 +19,18 @@ print_banner() {
     echo ""
 }
 
-# Time measurement utility
+# Time measurement utility with error handling
 measure_time() {
+    local command="$1"
     local start=$(date +%s%N)
-    eval "$1" >/dev/null 2>&1
+    
+    # Execute command with error handling
+    if ! eval "$command" >/dev/null 2>&1; then
+        print_warning "Command failed: $command" >&2
+        echo "0"  # Return 0 for failed commands
+        return 1
+    fi
+    
     local end=$(date +%s%N)
     echo $(( (end - start) / 1000000 ))  # Return milliseconds
 }

@@ -131,7 +131,13 @@ jobs:
       run: |
         echo "Running agent performance benchmarks..."
         if [[ -f scripts/claude-agents/agent-benchmarks.sh ]]; then
-          ITERATIONS=2 bash scripts/claude-agents/agent-benchmarks.sh compare || echo "Benchmarks completed"
+          # Run benchmarks and capture output
+          ITERATIONS=2 OUTPUT_FORMAT=json bash scripts/claude-agents/agent-benchmarks.sh report > benchmark_results.json || echo "Benchmarks completed"
+          
+          # TODO: Future enhancement - compare with baseline
+          # if [[ -f .github/benchmark_baseline.json ]]; then
+          #   python3 scripts/compare_benchmarks.py benchmark_results.json .github/benchmark_baseline.json
+          # fi
         fi
 
   # Summary job that depends on all other jobs

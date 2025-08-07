@@ -5,11 +5,19 @@
 
 source "$(dirname "$0")/lib/common.sh"
 
+# The cleanup function and trap are already set up in common.sh
+
 print_info "Fixing shell script shebangs..."
 echo ""
 
 fixed_count=0
 checked_count=0
+
+# Validate we're in a safe directory
+if [[ ! -d ".git" ]] && [[ ! -f "setup.sh" ]]; then
+    print_error "This script should be run from the project root directory"
+    exit 1
+fi
 
 # Store files in an array to avoid subshell issues
 mapfile -d '' shell_files < <(find . -name "*.sh" -type f -not -path "./.git/*" -print0)

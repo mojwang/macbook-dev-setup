@@ -10,7 +10,10 @@ source "$(dirname "$0")/../test_framework.sh"
 # Test: Security agent detects hardcoded secrets
 it "should detect hardcoded secrets in code"
 scan_for_secrets() {
-    local test_file=$(mktemp)
+    local test_file=$(mktemp -t secrets_test.XXXXXX)
+    # Ensure cleanup on exit
+    trap "rm -f '$test_file'" RETURN
+    
     cat > "$test_file" <<'EOF'
 API_KEY="sk-1234567890abcdef"
 PASSWORD="supersecret123"
@@ -20,7 +23,6 @@ EOF
     # Simulate secret detection
     grep -E "(API_KEY|PASSWORD|TOKEN).*=.*['\"]" "$test_file" >/dev/null
     local result=$?
-    rm -f "$test_file"
     return $result
 }
 expect_true "scan_for_secrets" "Should detect hardcoded secrets"
@@ -64,7 +66,12 @@ expect_false "echo 'sudo rm -rf /' | grep -q 'sudo rm -rf /'" "Should flag dange
 # Test: Security agent validates file permissions
 it "should check file permissions are secure"
 check_file_permissions() {
-    local test_file=$(mktemp)
+    # Use mktemp with template for better control
+    local test_dir=$(mktemp -d -t security_test.XXXXXX)
+    trap "rm -rf '$test_dir'" RETURN
+    
+    local test_file="$test_dir/test_file"
+    touch "$test_file"
     chmod 777 "$test_file"
     
     # Check if file is world-writable (insecure)
@@ -72,7 +79,6 @@ check_file_permissions() {
     local is_secure=1
     [[ "$perms" == "777" ]] && is_secure=0
     
-    rm -f "$test_file"
     [[ $is_secure -eq 0 ]] && return 1
     return 0
 }
