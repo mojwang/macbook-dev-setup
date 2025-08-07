@@ -7,12 +7,74 @@
 # Note: Strict mode is not set here to allow sourcing from various scripts
 # Individual scripts should set their own error handling as needed
 
-# Check bash version requirement (bash 4+ required for associative arrays)
+# =============================================================================
+# Bash Version Compatibility Check
+# =============================================================================
+# This library requires bash 4+ for full functionality due to:
+# - Associative arrays (declare -A) for MCP server configurations
+# - Indirect variable expansion (${!var}) for dynamic references
+# - Advanced string manipulation features
+#
+# CI Fallback Mode:
+# GitHub Actions and other CI environments typically only have bash 3.2.
+# When detected, we provide minimal functions to allow basic operations
+# while skipping advanced features. This enables CI/CD pipelines to run
+# preview/test commands without full functionality.
+# =============================================================================
+
 if [[ "${BASH_VERSION%%.*}" -lt 4 ]]; then
-    echo "Error: This script requires bash 4.0 or higher (found $BASH_VERSION)" >&2
-    echo "Please run with Homebrew bash: brew install bash" >&2
-    echo "Ensure /opt/homebrew/bin is in your PATH" >&2
-    exit 1
+    if [[ "${CI:-false}" == "true" ]] || [[ "${GITHUB_ACTIONS:-false}" == "true" ]]; then
+        # CI Fallback Mode - provide minimal functionality for bash 3.2
+        echo "Warning: Running with bash $BASH_VERSION in CI environment" >&2
+        echo "Disabled features: MCP server management, associative arrays, indirect expansion" >&2
+        echo "Available features: Basic setup preview, simple commands, file operations" >&2
+        
+        # Mark library as loaded to prevent duplicate sourcing
+        COMMON_LIB_LOADED=true
+        
+        # Define minimal print functions with optional logging support
+        # These use 'ci_' prefix to avoid confusion with full implementations
+        ci_print_info() { 
+            echo "ℹ $*"
+            [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] INFO: $*" >> "$LOG_FILE" 2>/dev/null || true
+        }
+        ci_print_success() { 
+            echo "✓ $*"
+            [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] SUCCESS: $*" >> "$LOG_FILE" 2>/dev/null || true
+        }
+        ci_print_error() { 
+            echo "✗ $*" >&2
+            [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] ERROR: $*" >> "$LOG_FILE" 2>/dev/null || true
+        }
+        ci_print_warning() { 
+            echo "⚠ $*"
+            [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] WARNING: $*" >> "$LOG_FILE" 2>/dev/null || true
+        }
+        ci_print_step() { 
+            echo "→ $*"
+            [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] STEP: $*" >> "$LOG_FILE" 2>/dev/null || true
+        }
+        
+        # Alias the CI functions to standard names for compatibility
+        alias print_info='ci_print_info'
+        alias print_success='ci_print_success'
+        alias print_error='ci_print_error'
+        alias print_warning='ci_print_warning'
+        alias print_step='ci_print_step'
+        
+        # Export the CI functions
+        export -f ci_print_info ci_print_success ci_print_error ci_print_warning ci_print_step
+        
+        # Log the bash version for debugging
+        [[ -n "${LOG_FILE:-}" ]] && echo "$(date '+%Y-%m-%d %H:%M:%S') [${SCRIPT_NAME:-common}] CI Mode: bash $BASH_VERSION detected" >> "$LOG_FILE" 2>/dev/null || true
+        
+        return 0
+    else
+        echo "Error: This script requires bash 4.0 or higher (found $BASH_VERSION)" >&2
+        echo "Please run with Homebrew bash: brew install bash" >&2
+        echo "Ensure /opt/homebrew/bin is in your PATH" >&2
+        exit 1
+    fi
 fi
 
 # Prevent multiple sourcing of this file to avoid readonly variable errors
