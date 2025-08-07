@@ -8,11 +8,28 @@
 # Individual scripts should set their own error handling as needed
 
 # Check bash version requirement (bash 4+ required for associative arrays)
+# Skip strict check in CI environments which typically only have bash 3.2
 if [[ "${BASH_VERSION%%.*}" -lt 4 ]]; then
-    echo "Error: This script requires bash 4.0 or higher (found $BASH_VERSION)" >&2
-    echo "Please run with Homebrew bash: brew install bash" >&2
-    echo "Ensure /opt/homebrew/bin is in your PATH" >&2
-    exit 1
+    if [[ "${CI:-false}" == "true" ]] || [[ "${GITHUB_ACTIONS:-false}" == "true" ]]; then
+        # In CI, skip the features that require bash 4+
+        echo "Warning: Running with bash $BASH_VERSION in CI environment" >&2
+        echo "Some features will be disabled" >&2
+        # Return early to avoid loading associative arrays
+        COMMON_LIB_LOADED=true
+        # Define minimal functions needed for CI
+        print_info() { echo "ℹ $*"; }
+        print_success() { echo "✓ $*"; }
+        print_error() { echo "✗ $*" >&2; }
+        print_warning() { echo "⚠ $*"; }
+        print_step() { echo "→ $*"; }
+        export -f print_info print_success print_error print_warning print_step
+        return 0
+    else
+        echo "Error: This script requires bash 4.0 or higher (found $BASH_VERSION)" >&2
+        echo "Please run with Homebrew bash: brew install bash" >&2
+        echo "Ensure /opt/homebrew/bin is in your PATH" >&2
+        exit 1
+    fi
 fi
 
 # Prevent multiple sourcing of this file to avoid readonly variable errors
