@@ -113,8 +113,17 @@ else
     print_warning "Scripts directory not found"
 fi
 
-# Configure Git with personal information
+# Configure Git with personal information and preferences
 echo "Configuring Git with your personal information..."
+
+# Set git editor to vim (which is aliased to nvim)
+current_editor=$(git config --global core.editor 2>/dev/null || echo "")
+if [[ "$current_editor" != "vim" ]] && [[ "$current_editor" != "nvim" ]]; then
+    git config --global core.editor "vim"
+    print_success "Git editor set to vim (nvim)"
+else
+    print_info "Git editor already configured: $current_editor"
+fi
 
 # Check current Git configuration
 current_name=$(git config --global user.name 2>/dev/null || echo "")

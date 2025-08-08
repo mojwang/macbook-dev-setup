@@ -29,6 +29,70 @@ alias gwl="git worktree list"
 alias gwr="git worktree remove"
 alias gwp="git worktree prune"
 
+# Git cleanup aliases
+alias gprune="git remote prune origin"
+alias gclean="git-cleanup-branches"
+
+# Clean up stale remote-tracking branches
+git-cleanup-branches() {
+    # Check if we're in a git repository
+    if ! git rev-parse --git-dir > /dev/null 2>&1; then
+        echo "Error: Not in a git repository"
+        return 1
+    fi
+    
+    # First, prune remote branches
+    echo "Pruning remote branches..."
+    git remote prune origin
+    
+    # Find branches that are gone
+    local gone_branches=$(git branch -vv | grep ": gone]" | awk '{print $1}')
+    
+    if [[ -z "$gone_branches" ]]; then
+        echo "No stale branches to clean up"
+        return 0
+    fi
+    
+    echo ""
+    echo "The following branches track remote branches that no longer exist:"
+    echo "$gone_branches" | while read -r branch; do
+        echo "  - $branch"
+    done
+    echo ""
+    
+    # Check if we're in non-interactive mode or if force flag is set
+    if [[ "$1" == "--force" ]] || [[ "$1" == "-f" ]]; then
+        echo "Force mode: Deleting branches without confirmation..."
+        echo "$gone_branches" | xargs git branch -d 2>/dev/null || \
+        echo "$gone_branches" | xargs git branch -D
+        echo "Cleanup complete!"
+    else
+        # Ask for confirmation
+        echo -n "Delete these branches? [y/N] "
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            # Try safe delete first, then force if needed
+            echo "$gone_branches" | while read -r branch; do
+                if git branch -d "$branch" 2>/dev/null; then
+                    echo "Deleted: $branch"
+                else
+                    echo -n "Branch '$branch' is not fully merged. Force delete? [y/N] "
+                    read -r force_response
+                    if [[ "$force_response" =~ ^[Yy]$ ]]; then
+                        git branch -D "$branch"
+                        echo "Force deleted: $branch"
+                    else
+                        echo "Skipped: $branch"
+                    fi
+                fi
+            done
+            echo "Cleanup complete!"
+        else
+            echo "Cleanup cancelled"
+        fi
+    fi
+}
+
 # Smart worktree switcher - finds sibling worktrees
 gwcd() {
     # Check for fzf dependency

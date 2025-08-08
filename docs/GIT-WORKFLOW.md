@@ -67,6 +67,36 @@ gwcd       # Shows all sibling worktrees with their branches
 3. **Clean Up**: Remove worktrees when done to avoid clutter
 4. **One Task Per Worktree**: Don't mix unrelated work
 
+## Branch Cleanup
+
+### Cleaning Up Stale Branches
+After merging PRs or when remote branches are deleted, you'll accumulate local branches that track non-existent remotes. Clean them up with:
+
+```bash
+# Interactive cleanup (recommended)
+gclean              # Shows branches to delete, asks for confirmation
+gclean --force      # Skip confirmation (careful!)
+
+# Just prune remote references
+gprune              # Same as: git remote prune origin
+
+# The manual way (what gclean does for you)
+git remote prune origin
+git branch -vv | grep ": gone]" | awk '{print $1}' | xargs git branch -d
+```
+
+### When to Clean Branches
+- After merging pull requests
+- When switching between projects
+- As part of weekly maintenance
+- Before creating new features
+
+### Branch Cleanup Best Practices
+1. **Regular Maintenance**: Run `gclean` weekly to keep your repo tidy
+2. **Safe by Default**: `gclean` tries safe delete first, prompts for force delete
+3. **Review Before Delete**: Always check what will be deleted
+4. **Keep Important Work**: Don't force delete unmerged branches with uncommitted work
+
 ### VS Code Tip
 Create a workspace file to see all worktrees at once:
 ```json
