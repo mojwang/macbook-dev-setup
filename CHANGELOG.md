@@ -1,3 +1,10 @@
+## [3.2.3](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.2...v3.2.3) (2025-08-08)
+
+
+### Bug Fixes
+
+* use functions instead of aliases for CI mode ([344a5c8](https://github.com/mojwang/macbook-dev-setup/commit/344a5c8fce9a90f7c8886342a3bcdb7d040f8ba5))
+
 ## [3.2.2](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.1...v3.2.2) (2025-08-07)
 
 

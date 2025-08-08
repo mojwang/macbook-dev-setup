@@ -4,7 +4,7 @@
 # Simplified interface with smart defaults
 # For macOS Apple Silicon
 
-VERSION="3.2.2"
+VERSION="3.2.3"
 
 # Check bash version (requires bash 4+ for features like indirect expansion)
 check_bash_version() {
