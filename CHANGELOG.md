@@ -1,3 +1,10 @@
+# [3.3.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.3...v3.3.0) (2025-08-08)
+
+
+### Features
+
+* auto-configure git editor to vim/nvim in setup script ([49a739e](https://github.com/mojwang/macbook-dev-setup/commit/49a739e557b49e7fc6cf113059f02833af98e539))
+
 ## [3.2.3](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.2...v3.2.3) (2025-08-08)
 
 
