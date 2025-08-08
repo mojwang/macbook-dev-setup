@@ -69,7 +69,7 @@ test_ci_environment_detection() {
 test_ci_minimal_functions() {
     echo "Testing CI minimal functions..."
     
-    # Create a test script that uses CI functions
+    # Create a test script that uses print functions
     local test_script=$(mktemp)
     cat > "$test_script" << 'EOF'
 #!/bin/bash
@@ -77,11 +77,11 @@ export CI=true
 source ./lib/common.sh
 
 # Test the minimal functions exist and work
-ci_print_info "Test info message"
-ci_print_success "Test success message"
-ci_print_warning "Test warning message"
-ci_print_step "Test step message"
-ci_print_error "Test error message"
+print_info "Test info message"
+print_success "Test success message"
+print_warning "Test warning message"
+print_step "Test step message"
+print_error "Test error message"
 EOF
     
     # Run with system bash and check output
@@ -90,37 +90,37 @@ EOF
     
     # Check each function output
     if echo "$output" | grep -q "ℹ Test info message"; then
-        echo "✓ ci_print_info works"
+        echo "✓ print_info works"
     else
-        echo "✗ ci_print_info failed"
+        echo "✗ print_info failed"
         return 1
     fi
     
     if echo "$output" | grep -q "✓ Test success message"; then
-        echo "✓ ci_print_success works"
+        echo "✓ print_success works"
     else
-        echo "✗ ci_print_success failed"
+        echo "✗ print_success failed"
         return 1
     fi
     
     if echo "$output" | grep -q "⚠ Test warning message"; then
-        echo "✓ ci_print_warning works"
+        echo "✓ print_warning works"
     else
-        echo "✗ ci_print_warning failed"
+        echo "✗ print_warning failed"
         return 1
     fi
     
     if echo "$output" | grep -q "→ Test step message"; then
-        echo "✓ ci_print_step works"
+        echo "✓ print_step works"
     else
-        echo "✗ ci_print_step failed"
+        echo "✗ print_step failed"
         return 1
     fi
     
     if echo "$output" | grep -q "✗ Test error message"; then
-        echo "✓ ci_print_error works"
+        echo "✓ print_error works"
     else
-        echo "✗ ci_print_error failed"
+        echo "✗ print_error failed"
         return 1
     fi
 }
@@ -138,7 +138,7 @@ export LOG_FILE="$log_file"
 export SCRIPT_NAME="test_ci"
 source ./lib/common.sh
 
-ci_print_info "Test log message"
+print_info "Test log message"
 EOF
     
     # Run the script
