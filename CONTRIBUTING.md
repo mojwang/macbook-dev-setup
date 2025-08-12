@@ -150,7 +150,7 @@ git push origin feature/your-feature-name
 
 ### Shell Scripts
 
-1. **Use bash** with `#!/bin/bash` shebang
+1. **Use bash** with `#!/usr/bin/env bash` shebang
 2. **Source common library** for shared functions:
    ```bash
    source "$(dirname "$0")/../lib/common.sh"

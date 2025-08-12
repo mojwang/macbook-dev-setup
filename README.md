@@ -1,4 +1,4 @@
-# 🛠️ macOS Development Setup
+# 🛠️ macOS Development Setup (v3.3.0)
 
 Automated setup for a modern macOS development environment on Apple Silicon.
 
@@ -27,6 +27,7 @@ Essential development tools for:
 - **Databases**: PostgreSQL, MySQL, Redis
 - **Cloud**: AWS, Azure, GCP CLIs
 - **Modern CLI**: Enhanced terminal tools (bat, eza, fzf, ripgrep)
+- **AI Tools**: Claude Desktop with MCP servers
 
 [See full tool list →](docs/tools.md)
 
@@ -36,10 +37,12 @@ Essential development tools for:
 ./setup.sh               # Standard installation
 ./setup.sh preview       # Preview changes without installing
 ./setup.sh minimal       # Install essential tools only
+./setup.sh advanced      # Interactive menu for all options
 ./setup.sh fix           # Run diagnostics and fix common issues
 ./setup.sh warp          # Configure Warp terminal optimizations
 ./setup.sh backup        # View backups
 ./setup.sh backup clean  # Clean old backups
+./setup.sh backup migrate # Migrate legacy backups to new structure
 ./setup.sh help          # Show help message
 ```
 
@@ -64,8 +67,11 @@ SETUP_NO_WARP=true ./setup.sh     # Skip Warp terminal detection
 ## Documentation
 
 - [**Getting Started**](docs/getting-started.md) - Detailed setup guide
+- [**Commands Reference**](docs/COMMANDS.md) - All available commands
 - [**Tools & Features**](docs/tools.md) - Complete tool list
 - [**Configuration**](docs/configuration.md) - Customization options
+- [**MCP Servers**](docs/MCP_SERVERS.md) - Claude AI integrations
+- [**Git Workflow**](docs/GIT-WORKFLOW.md) - Worktrees & branch management
 - [**Maintenance**](docs/maintenance.md) - Updates, health checks, rollbacks
 - [**Architecture**](docs/architecture.md) - Technical details
 - [**Troubleshooting**](docs/troubleshooting.md) - Common issues
