@@ -21,19 +21,58 @@ trap cleanup EXIT
 trap cleanup EXIT INT TERM HUP
 ```
 
-### Signal Explanation
+## Core Principles
 
-- **EXIT**: Normal script termination
-- **INT**: Interrupt signal (Ctrl+C)
-- **TERM**: Termination request (kill command)
-- **HUP**: Terminal hangup (closing terminal)
+### 1. Always Use Error Handling
+```bash
+#!/usr/bin/env bash
+set -e  # Exit on error
+set -u  # Error on undefined variables
+set -o pipefail  # Propagate pipe failures
+```
 
-## Implementation Guide
+### 2. Implement Cleanup Handlers
+```bash
+# Define cleanup function
+cleanup() {
+    local exit_code=$?
+    echo "Cleaning up temporary files..."
+    rm -f "$TEMP_FILE" 2>/dev/null || true
+    exit $exit_code
+}
+
+# Register cleanup on signals
+trap cleanup EXIT INT TERM HUP
+```
+
+### 3. Use the Signal Safety Library
+```bash
+source "$(dirname "$0")/../lib/signal-safety.sh"
+
+# Automatic signal handling setup
+setup_signal_handlers
+
+# Add custom cleanup
+add_cleanup_handler "rm -f /tmp/myfile"
+```
+
+## Common Signals
+
+| Signal | Number | Description | Default Action |
+|--------|--------|-------------|---------------|
+| SIGHUP | 1 | Hangup detected | Terminate |
+| SIGINT | 2 | Interrupt (Ctrl+C) | Terminate |
+| SIGQUIT | 3 | Quit (Ctrl+\) | Core dump |
+| SIGTERM | 15 | Termination request | Terminate |
+| SIGKILL | 9 | Force kill (untrappable) | Terminate |
+| SIGTSTP | 20 | Terminal stop (Ctrl+Z) | Stop |
+| EXIT | - | Normal script termination | - |
+
+## Implementation Patterns
 
 ### Basic Pattern
-
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Define cleanup function
 cleanup() {
@@ -51,12 +90,77 @@ temp_dir=$(mktemp -d /tmp/myapp_dir.XXXXXX)
 # Your script logic here
 ```
 
-### Using the Signal Safety Library
+### Preventing Multiple Cleanup Calls
+```bash
+CLEANUP_DONE=false
+
+safe_cleanup() {
+    if [[ "$CLEANUP_DONE" == "false" ]]; then
+        CLEANUP_DONE=true
+        cleanup
+    fi
+}
+
+trap safe_cleanup EXIT INT TERM HUP
+```
+
+### Background Processes
+```bash
+# Track background PIDs
+PIDS=()
+
+# Start background job
+command &
+PIDS+=($!)
+
+# Cleanup function kills all background jobs
+cleanup() {
+    for pid in "${PIDS[@]}"; do
+        kill "$pid" 2>/dev/null || true
+    done
+    wait
+}
+
+trap cleanup EXIT INT TERM HUP
+```
+
+### Lock Files
+```bash
+LOCK_FILE="/tmp/script.lock"
+
+acquire_lock() {
+    if ! mkdir "$LOCK_FILE" 2>/dev/null; then
+        echo "Another instance is running"
+        exit 1
+    fi
+    trap 'rmdir "$LOCK_FILE" 2>/dev/null' EXIT INT TERM HUP
+}
+
+acquire_lock
+```
+
+### Signal Forwarding
+```bash
+# Forward signals to child processes
+forward_signal() {
+    kill -$1 $CHILD_PID 2>/dev/null || true
+}
+
+trap 'forward_signal INT' INT
+trap 'forward_signal TERM' TERM
+
+# Start child process
+./child-script.sh &
+CHILD_PID=$!
+wait $CHILD_PID
+```
+
+## Using the Signal Safety Library
 
 For more complex scripts, use the provided library:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 source "$(dirname "$0")/../lib/signal-safety.sh"
 
@@ -75,36 +179,87 @@ temp_file=$(safe_mktemp "myapp.XXXXXX")
 temp_dir=$(safe_mktemp_dir "myapp_work.XXXXXX")
 ```
 
-### Preventing Multiple Cleanup Calls
-
-The signal-safety library ensures cleanup only runs once:
-
-```bash
-CLEANUP_DONE=false
-
-safe_cleanup() {
-    if [[ "$CLEANUP_DONE" == "false" ]]; then
-        CLEANUP_DONE=true
-        cleanup
-    fi
-}
-
-trap safe_cleanup EXIT INT TERM HUP
-```
-
 ## Testing Signal Handling
 
-Run the signal handling tests:
-
+### Manual Testing
 ```bash
-./tests/test_signal_handling.sh
+# Start your script
+./your-script.sh &
+PID=$!
+
+# Test different signals
+sleep 2
+kill -INT $PID   # Ctrl+C
+kill -TERM $PID  # Termination
+kill -HUP $PID   # Hangup
+
+# Verify cleanup happened
+ls /tmp/  # Check temp files removed
+ps aux | grep $PID  # Check process terminated
 ```
 
-This test suite verifies:
-- Cleanup on SIGINT (Ctrl+C)
-- Cleanup on SIGTERM
-- Proper trap inheritance in subshells
-- Prevention of multiple cleanup calls
+### Automated Testing
+```bash
+#!/usr/bin/env bash
+source "$(dirname "$0")/../test_framework.sh"
+
+it "should clean up on interrupt"
+# Start script in background
+timeout 5 ./script-with-cleanup.sh &
+PID=$!
+sleep 1
+
+# Send interrupt
+kill -INT $PID 2>/dev/null || true
+wait $PID 2>/dev/null || true
+
+# Verify cleanup
+assert_false "[[ -f /tmp/test-file ]]" "Temp file should be removed"
+```
+
+### Run the Test Suite
+```bash
+# Run signal handling tests
+./tests/test_signal_handling.sh
+
+# Run CI cleanup verification
+./tests/test_ci_cleanup.sh
+```
+
+## Best Practices
+
+### 1. Quick Cleanup
+- Keep cleanup functions fast and simple
+- Don't perform complex operations during signal handling
+- Use `|| true` to prevent cleanup failures from blocking
+
+### 2. Idempotent Cleanup
+- Make cleanup safe to run multiple times
+- Check if resources exist before removing
+- Use `-f` flag with `rm` to ignore missing files
+
+### 3. Timeout Protection
+```bash
+# Add timeout to prevent hanging
+timeout 30 ./long-running-command.sh || {
+    echo "Command timed out"
+    exit 1
+}
+```
+
+### 4. Clean Up in Reverse Order
+- Remove resources in reverse order of creation
+- Kill processes before removing their files
+- Close connections before removing sockets
+
+### 5. Use /tmp for Temporary Files
+```bash
+# Good: Uses /tmp
+temp_file=$(mktemp /tmp/myapp.XXXXXX)
+
+# Bad: Uses current directory
+temp_file=$(mktemp myapp.XXXXXX)
+```
 
 ## CI/CD Considerations
 
@@ -129,22 +284,74 @@ For additional safety, a cleanup utility is provided:
 0 3 * * 0 /path/to/cleanup-artifacts.sh --execute
 ```
 
-## Best Practices
+## Debugging Signal Issues
 
-1. **Always use signal-aware traps** when creating temporary resources
-2. **Use /tmp for temporary files** via `mktemp /tmp/prefix.XXXXXX`
-3. **Test signal handling** when modifying scripts that create resources
-4. **Clean up in reverse order** of resource creation
-5. **Use the signal-safety library** for complex scripts
+### Enable Debug Output
+```bash
+# Show signal handling
+set -x
+trap 'echo "Received signal"' INT TERM
+
+# Or use debug function
+debug_trap() {
+    echo "Signal $1 received at line $LINENO"
+}
+trap 'debug_trap INT' INT
+```
+
+### Check Trap Settings
+```bash
+# List current traps
+trap -p
+
+# Remove specific trap
+trap - INT
+
+# Reset all traps
+trap - EXIT INT TERM HUP
+```
+
+## Integration with This Project
+
+The macbook-dev-setup project uses signal safety throughout:
+
+1. **Setup Scripts**: All installation scripts implement cleanup handlers
+2. **Parallel Execution**: Background jobs are properly tracked and terminated
+3. **Backup System**: Ensures backups aren't corrupted by interrupts
+4. **Test Framework**: Tests validate signal handling behavior
+
+### Example from setup.sh
+```bash
+# From setup.sh
+cleanup() {
+    local exit_code=$?
+    [[ -n "${CLEANUP_DONE:-}" ]] && return
+    CLEANUP_DONE=1
+    
+    # Kill background jobs
+    jobs -p | xargs -r kill 2>/dev/null || true
+    
+    # Remove temp files
+    rm -f "$TEMP_LOG" 2>/dev/null || true
+    
+    # Show exit message
+    if [[ $exit_code -eq 0 ]]; then
+        print_success "Setup completed successfully"
+    else
+        print_error "Setup interrupted or failed"
+    fi
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM HUP
+```
 
 ## Verification
 
 To verify no artifacts are left behind:
 
 ```bash
-# Run CI cleanup verification
-./tests/test_ci_cleanup.sh
-
 # Check for common artifacts
 find /tmp -name "test_*" -o -name "tmp.*" | wc -l
 find ~ -maxdepth 1 -name ".test-setup-backups-*" | wc -l
@@ -154,7 +361,15 @@ find ~ -maxdepth 1 -name ".test-setup-backups-*" | wc -l
 
 The following scripts have been updated with proper signal handling:
 - `lib/common.sh` - Main library with signal-safe trap
+- `lib/signal-safety.sh` - Dedicated signal handling library
 - `tests/test_backup_system.sh` - Handles test backup cleanup
 - `scripts/rollback.sh` - Cleans up temporary requirements file
 - `tests/test_error_recovery.sh` - Cleans up test artifacts
 - All scripts using the common library inherit signal safety
+
+## References
+
+- [Bash Manual - Signals](https://www.gnu.org/software/bash/manual/html_node/Signals.html)
+- [POSIX Signal Handling](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#trap)
+- [lib/signal-safety.sh](../lib/signal-safety.sh) - Project's signal handling library
+- [lib/common.sh](../lib/common.sh) - Common library with signal handling

@@ -52,6 +52,34 @@ Pieces MCP requires special configuration:
 - Configure manually with SSE endpoint: `http://localhost:39300/model_context_protocol/2024-11-05/sse`
 - Provides long-term memory and context-aware coding assistance
 
+## Troubleshooting
+
+### Common Issues
+
+1. **Server not found**
+   ```bash
+   # Check if server is installed
+   ./scripts/debug-mcp-servers.sh
+   
+   # Reinstall servers
+   ./scripts/setup-claude-mcp.sh
+   ```
+
+2. **API key not working**
+   - Ensure API keys are exported in `~/.config/zsh/51-api-keys.zsh`
+   - Reload shell: `source ~/.zshrc`
+   - Verify key is set: `echo $FIGMA_API_KEY` or `echo $EXA_API_KEY`
+
+3. **Claude Desktop not recognizing servers**
+   - Restart Claude Desktop after configuration
+   - Check config file: `cat ~/Library/Application\ Support/Claude/claude_desktop_config.json`
+   - Run fix script: `./scripts/fix-mcp-servers.sh`
+
+4. **Claude Code CLI issues**
+   - List current servers: `claude mcp list`
+   - Remove and re-add: `claude mcp remove <server>` then re-run setup
+   - Check configuration: `claude settings show`
+
 ## Installation
 
 ### Claude Desktop
@@ -68,16 +96,37 @@ Pieces MCP requires special configuration:
 
 # Only install specific servers
 ./scripts/fix-mcp-servers.sh --servers filesystem,memory,git
+
+# Debug MCP server installations
+./scripts/debug-mcp-servers.sh
 ```
 
-### Claude Code
+### Claude Code CLI
 
 ```bash
 # Add all servers to user scope (global)
 ./scripts/setup-claude-code-mcp.sh
 
-# Add to project scope (.mcp.json)
+# Add to project scope (.mcp.json in current directory)
 ./scripts/setup-claude-code-mcp.sh --scope project
+
+# Explicitly add to user scope (default)
+./scripts/setup-claude-code-mcp.sh --scope user
+
+# Update Exa MCP server specifically
+./scripts/update-exa-mcp.sh
+```
+
+#### Scope Options
+
+- **User Scope (default)**: Configures MCP servers globally for all Claude Code sessions
+  - Configuration stored in `~/.config/claude/claude_code_config.json`
+  - Available across all projects
+  
+- **Project Scope**: Configures MCP servers for a specific project
+  - Creates `.mcp.json` in the current directory
+  - Takes precedence over user configuration
+  - Useful for project-specific servers or API keys
 
 # Skip servers requiring API keys
 ./scripts/setup-claude-code-mcp.sh --no-api-keys

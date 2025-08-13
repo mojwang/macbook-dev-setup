@@ -13,8 +13,9 @@
 ./setup.sh help         # Show help message
 
 # Backup management (automatic - runs during setup)
-./setup.sh backup       # List all backups
-./setup.sh backup clean # Manually remove old backups (also automatic)
+./setup.sh backup         # List all backups
+./setup.sh backup clean   # Manually remove old backups (also automatic)
+./setup.sh backup migrate # Migrate legacy backups to new structure
 ```
 
 ### Advanced Options
@@ -27,6 +28,9 @@ SETUP_NO_WARP=true ./setup.sh   # Skip Warp auto-detection
 
 # Advanced interactive mode
 ./setup.sh advanced     # Interactive menu for all options
+
+# Git configuration
+git config --global core.editor # Automatically set to vim/nvim if available
 ```
 
 ### Information Commands
@@ -75,15 +79,33 @@ git branch -vv | grep ": gone]" | awk '{print $1}' | xargs git branch -d
 ```
 
 ## MCP Server Management
+
+### Claude Desktop
 ```bash
-./scripts/setup-claude-mcp.sh        # Install and configure MCP servers
+./scripts/setup-claude-mcp.sh           # Install and configure MCP servers
 ./scripts/setup-claude-mcp.sh --check   # Check MCP server status
 ./scripts/setup-claude-mcp.sh --update  # Update MCP servers
 ./scripts/setup-claude-mcp.sh --remove  # Remove MCP configuration
 
+./scripts/fix-mcp-servers.sh            # Fix/repair MCP configuration
+./scripts/fix-mcp-servers.sh --no-api-keys  # Only setup servers without API keys
+./scripts/fix-mcp-servers.sh --servers filesystem,memory,git  # Setup specific servers
+./scripts/debug-mcp-servers.sh          # Test and debug MCP installations
+```
+
+### Claude Code CLI
+```bash
+./scripts/setup-claude-code-mcp.sh      # Add MCP servers to user scope (global)
+./scripts/setup-claude-code-mcp.sh --scope project  # Add to project scope (.mcp.json)
+./scripts/setup-claude-code-mcp.sh --scope user     # Add to user scope (default)
+
 # After setup, use MCP servers in Claude Code:
-/mcp                         # Access MCP servers in Claude Code
 claude mcp list              # List configured MCP servers
+claude mcp add <server>      # Add a new MCP server
+claude mcp remove <server>   # Remove an MCP server
+
+# Update Exa MCP server specifically
+./scripts/update-exa-mcp.sh              # Update the Exa search server
 ```
 
 ## Package Synchronization
@@ -98,6 +120,8 @@ The `--sync` flag detects and installs new packages added to configuration files
 ```bash
 ./scripts/cleanup-artifacts.sh  # Periodic maintenance and cleanup
 ./scripts/health-check.sh       # System health verification
+./scripts/setup-terminal-fonts.sh  # Install Nerd Fonts for terminal
+./scripts/benchmark-vscode-extensions.sh  # Benchmark VS Code extension install times
 ./scripts/update.sh             # Update all tools and dependencies
 ./scripts/uninstall.sh          # Clean removal with backups
 ./scripts/rollback.sh           # Restore from previous backups
