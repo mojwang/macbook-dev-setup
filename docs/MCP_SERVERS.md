@@ -45,6 +45,12 @@ These servers are maintained by the community:
    - AI-optimized search engine integration
    - Better web search results for AI agents
 
+6. **taskmaster** (https://github.com/eyaltoledano/claude-task-master)
+   - AI-powered task management and PRD parsing
+   - Dual role: Works as both MCP server and sub-agent
+   - Features project planning, task breakdown, complexity analysis
+   - Optional research capabilities with Perplexity API
+
 ## Pieces MCP
 
 Pieces MCP requires special configuration:
@@ -157,6 +163,10 @@ Run the setup script to install all servers:
 During installation, you'll be prompted for API keys for servers that require them:
 - **Exa**: Get your API key from https://dashboard.exa.ai/api-keys
 - **Figma**: Get your API key from https://www.figma.com/developers/api#access-tokens
+- **TaskMaster** (optional): 
+  - Requires ANTHROPIC_API_KEY and OPENAI_API_KEY (usually already configured)
+  - Optionally uses PERPLEXITY_API_KEY for research features (https://www.perplexity.ai/settings/api)
+  - Works without Perplexity but with limited research capabilities
 
 API keys are securely stored in `~/.config/zsh/51-api-keys.zsh` and automatically loaded by your shell.
 
@@ -207,6 +217,11 @@ To debug MCP connection failures:
 **Configuration gets corrupted:**
 - Backup exists at `~/.setup-backups/configs/claude-mcp/`
 - Or use `./scripts/fix-mcp-servers.sh` to reset
+
+**TaskMaster not showing research options:**
+- Check if Perplexity API key is set: `echo $PERPLEXITY_API_KEY`
+- If not set, research features are disabled but task management still works
+- Add key to `~/.config/zsh/51-api-keys.zsh` and restart Claude to enable
 
 If a server fails to build or install:
 1. Check that all prerequisites are installed

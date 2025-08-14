@@ -197,6 +197,30 @@
         "default": "Debug and fix MCP server issues",
         "setup": "Configure and test MCP server installation"
       }
+    },
+    
+    "taskmaster": {
+      "name": "TaskMaster Project Planning Agent",
+      "enabled": true,
+      "priority": "high",
+      "triggers": [
+        "on_prd_provided",
+        "on_complex_project",
+        "on_task_management_request",
+        "on_multi_step_feature"
+      ],
+      "configuration": {
+        "auto_parse_prd": true,
+        "analyze_complexity": true,
+        "research_enabled": "auto",
+        "break_down_tasks": true,
+        "track_progress": true
+      },
+      "prompts": {
+        "default": "Parse PRD and create comprehensive task breakdown with implementation plan",
+        "research": "Research technical requirements and create detailed implementation tasks",
+        "complexity": "Analyze task complexity and suggest optimal implementation order"
+      }
     }
   },
   
@@ -204,6 +228,18 @@
     "feature_development": {
       "description": "Standard feature development workflow",
       "sequence": [
+        "development",
+        "shell",
+        "security",
+        "quality",
+        "documentation"
+      ]
+    },
+    
+    "complex_project": {
+      "description": "Complex project implementation with PRD",
+      "sequence": [
+        "taskmaster",
         "development",
         "shell",
         "security",

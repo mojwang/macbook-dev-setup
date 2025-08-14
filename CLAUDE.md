@@ -58,7 +58,24 @@ Automated macOS dev environment setup for Apple Silicon.
 - [MCP Servers](docs/MCP_SERVERS.md) - Claude integrations
 - [Claude Agents](docs/CLAUDE_AGENTS.md) - Sub-agent architecture
 
+## MCP Server Priority
+1. **Context7**: Library docs, code examples, API references (check first)
+2. **TaskMaster**: Task management, PRD parsing, project planning
+3. **Exa**: General web research (fallback for non-code queries)
+
+## TaskMaster Configuration
+- **As MCP Server**: Direct task commands (`task-master list`, `task-master next`)
+- **As Sub-Agent**: Complex project planning, PRD parsing
+- **Research**: Enabled if PERPLEXITY_API_KEY set, gracefully disabled otherwise
+- To enable research: Add `export PERPLEXITY_API_KEY="your-key"` to `~/.config/zsh/51-api-keys.zsh`
+
 ## Agent Workflows for This Project
+
+### Complex Project Implementation:
+1. **TaskMaster Agent** → Parse PRD, research requirements
+2. **Development Agent** → Implement features
+3. **Quality Agent** → Test implementation
+4. **Documentation Agent** → Update docs
 
 ### Shell Script Development:
 1. **Create/Modify** → Shell Script Agent (validation)
