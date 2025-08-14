@@ -586,20 +586,8 @@ get_mcp_server_base_path() {
     fi
 }
 
-declare -A MCP_SERVER_BASE_PATHS=(
-    # Official servers - will be dynamically determined
-    ["filesystem"]="$(get_mcp_server_base_path filesystem)"
-    ["memory"]="$(get_mcp_server_base_path memory)"
-    ["sequentialthinking"]="$(get_mcp_server_base_path sequentialthinking)"
-    ["git"]="$(get_mcp_server_base_path git)"
-    ["fetch"]="$(get_mcp_server_base_path fetch)"
-    # Community servers
-    ["context7"]="$HOME/repos/mcp-servers/community/context7"
-    ["playwright"]="$HOME/repos/mcp-servers/community/playwright"
-    ["figma"]="$HOME/repos/mcp-servers/community/figma"
-    ["exa"]="$HOME/repos/mcp-servers/community/exa"
-    ["semgrep"]="$HOME/repos/mcp-servers/community/semgrep"
-)
+# MCP server base paths are now dynamically determined via get_mcp_server_base_path()
+# This eliminates redundancy and handles path variations automatically
 
 # MCP server executable patterns - used to find the actual executable
 declare -A MCP_SERVER_EXECUTABLES=(
@@ -629,18 +617,22 @@ declare -A MCP_SERVER_TYPES=(
     ["figma"]="npx"
     ["exa"]="npx"
     ["semgrep"]="python-uvx"
+    ["taskmaster"]="npx"
 )
 
 # NPX-based servers and their package names
 declare -A MCP_SERVER_NPX_PACKAGES=(
     ["figma"]="figma-developer-mcp"
     ["exa"]="exa-mcp-server"
+    ["taskmaster"]="task-master-ai"
 )
 
 # MCP servers that require API keys
 declare -A MCP_SERVER_API_KEYS=(
     ["figma"]="FIGMA_API_KEY"
     ["exa"]="EXA_API_KEY"
+    # Taskmaster (MCP server) can work without API keys but has enhanced features with them
+    # When used as "Product Manager" agent, it leverages these keys for discovery workflows
 )
 
 # Find the actual executable path for an MCP server
@@ -654,7 +646,7 @@ find_mcp_server_executable() {
         return 0
     fi
     
-    # Get the base path dynamically
+    # Get the base path dynamically (single source of truth)
     local base_path=$(get_mcp_server_base_path "$server_name")
     
     # If base path doesn't exist, return error

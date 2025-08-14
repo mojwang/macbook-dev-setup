@@ -65,14 +65,17 @@ Automated macOS dev environment setup for Apple Silicon.
 
 ## MCP Server Priority
 1. **Context7**: Library docs, code examples, API references (check first)
-2. **Product Manager (TaskMaster)**: Task management, PRD parsing, project planning, discovery
+2. **Taskmaster**: Direct task management commands via MCP
 3. **Exa**: General web research (fallback for non-code queries)
 
-## Product Manager Configuration
-- **As MCP Server**: Direct task commands (`task-master list`, `task-master next`)
-- **As Sub-Agent**: Product discovery, PRD parsing, customer validation
+Note: For product discovery and PRD workflows, use "Product Manager" as a sub-agent via the Task tool
+
+## Taskmaster/Product Manager Configuration
+- **As "taskmaster" MCP Server**: Direct task commands (`task-master list`, `task-master next`)
+- **As "Product Manager" Sub-Agent**: Product discovery, PRD parsing, customer validation via Task tool
 - **Research**: Enabled if PERPLEXITY_API_KEY set, gracefully disabled otherwise
 - To enable research: Add `export PERPLEXITY_API_KEY="your-key"` to `~/.config/zsh/51-api-keys.zsh`
+- **Naming Convention**: "taskmaster" for MCP operations, "Product Manager" for agent workflows
 
 ## Agent Workflows for This Project
 

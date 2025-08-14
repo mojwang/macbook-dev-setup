@@ -373,6 +373,7 @@ main_setup() {
         print_step "Setting up Claude MCP servers..."
         ./scripts/setup-claude-mcp.sh
         
+
         # Setup Claude Code MCP servers if VS Code is installed
         if command -v code &>/dev/null || [[ -d "/Applications/Visual Studio Code.app" ]]; then
             print_step "Setting up Claude Code MCP servers..."
@@ -453,7 +454,7 @@ main_setup() {
         if command -v code &>/dev/null && command -v claude &>/dev/null; then
             print_step "Updating Claude Code MCP servers..."
             # The script will automatically only reconnect servers that were actually updated
-            ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa
+            ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
         fi
     fi
     

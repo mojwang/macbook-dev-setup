@@ -36,8 +36,8 @@ add_claude_code_server() {
         return 1
     fi
     
-    # Check if API key is required and set
-    if [[ -n "$api_key_var" ]]; then
+    # Check if API key is required and set (TaskMaster is optional)
+    if [[ -n "$api_key_var" ]] && [[ "$server_name" != "taskmaster" ]]; then
         if [[ -z "${!api_key_var}" ]]; then
             print_warning "Skipping $server_name ($api_key_var not set)"
             return 1
@@ -84,6 +84,20 @@ add_claude_code_server() {
                     cmd_output=$(claude mcp add "$server_name" -s "$scope" -- npx -y "$npx_package" --stdio 2>&1)
                     cmd_exit_code=$?
                 fi
+            elif [[ "$server_name" == "taskmaster" ]]; then
+                # TaskMaster needs multiple API keys
+                local env_args=""
+                if [[ -n "$ANTHROPIC_API_KEY" ]]; then
+                    env_args="--env ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+                fi
+                if [[ -n "$OPENAI_API_KEY" ]]; then
+                    env_args="$env_args --env OPENAI_API_KEY=${OPENAI_API_KEY}"
+                fi
+                if [[ -n "$PERPLEXITY_API_KEY" ]]; then
+                    env_args="$env_args --env PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}"
+                fi
+                cmd_output=$(claude mcp add "$server_name" -s "$scope" $env_args -- npx -y "$npx_package" 2>&1)
+                cmd_exit_code=$?
             else
                 if [[ -n "$api_key_var" ]]; then
                     cmd_output=$(claude mcp add "$server_name" -s "$scope" --env "${api_key_var}=${!api_key_var}" -- npx -y "$npx_package" 2>&1)
@@ -98,6 +112,25 @@ add_claude_code_server() {
     
     if [[ $cmd_exit_code -eq 0 ]]; then
         print_success "Added $server_name"
+        
+        # Special message for TaskMaster
+        if [[ "$server_name" == "taskmaster" ]]; then
+            echo ""
+            print_info "TaskMaster Product Manager added successfully!"
+            if [[ -n "$ANTHROPIC_API_KEY" ]]; then
+                print_success "  ✓ AI-powered task generation enabled (ANTHROPIC_API_KEY set)"
+            else
+                print_info "  ℹ Basic features available (ANTHROPIC_API_KEY not set)"
+                print_info "    To enable AI features, add ANTHROPIC_API_KEY to ~/.config/zsh/51-api-keys.zsh"
+            fi
+            if [[ -n "$PERPLEXITY_API_KEY" ]]; then
+                print_success "  ✓ Research features enabled (PERPLEXITY_API_KEY set)"
+            else
+                print_info "  ℹ Research features disabled (PERPLEXITY_API_KEY not set)"
+            fi
+            echo ""
+        fi
+        
         return 0
     else
         # Check if the error is because the server already exists
@@ -267,7 +300,7 @@ main() {
         
         # Add servers with API keys if including them
         if [[ "$INCLUDE_API_KEYS" == "true" ]]; then
-            servers+=("figma" "exa")
+            servers+=("figma" "exa" "taskmaster")
         fi
     fi
     
