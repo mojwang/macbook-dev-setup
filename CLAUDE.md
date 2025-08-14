@@ -23,6 +23,17 @@ Automated macOS dev environment setup for Apple Silicon.
 - **Commits**: `gc*` aliases for conventional format
 - See `docs/GIT-WORKFLOW.md` for details
 
+## Git Rules
+- **Auto-commit complete work**: Automatically add and commit when finishing logical units (features, fixes, refactors)
+- **Descriptive messages**: Capture full scope of changes, not just the main change
+- **Smart commit timing**: 
+  - ✅ Commit: Complete features, verified fixes, finished refactors, finalized configs
+  - ❌ Wait: Sub-tasks, failing tests, incomplete changes, experimental work
+- **Conventional format**: Use `type(scope): description` for this project (feat, fix, docs, etc.)
+- **Message examples**:
+  - `feat(setup): add Homebrew installation with retry logic and error handling`
+  - `fix(git): resolve worktree navigation for non-existent directories`
+
 ## Key Directories
 - `/lib`: Core libraries (common.sh, signal-safety.sh)
 - `/scripts`: Component installers and utilities
