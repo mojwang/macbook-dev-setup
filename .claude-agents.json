@@ -199,8 +199,8 @@
       }
     },
     
-    "taskmaster": {
-      "name": "TaskMaster Project Planning Agent",
+    "product_manager": {
+      "name": "Product Manager",
       "enabled": true,
       "priority": "high",
       "triggers": [
@@ -210,6 +210,26 @@
         "on_multi_step_feature"
       ],
       "configuration": {
+        "discovery_methods": {
+          "customer_interviews": "simulated_personas",
+          "surveys": "ai_generated_responses",
+          "usability_testing": "heuristic_evaluation",
+          "market_analysis": "web_research",
+          "competitive_analysis": "automated_comparison"
+        },
+        "risk_assessment": {
+          "value_risk": true,
+          "usability_risk": true,
+          "feasibility_risk": true,
+          "viability_risk": true
+        },
+        "frameworks": [
+          "opportunity_assessment",
+          "jobs_to_be_done",
+          "design_thinking",
+          "lean_startup",
+          "dual_track_agile"
+        ],
         "auto_parse_prd": true,
         "analyze_complexity": true,
         "research_enabled": "auto",
@@ -218,8 +238,101 @@
       },
       "prompts": {
         "default": "Parse PRD and create comprehensive task breakdown with implementation plan",
+        "discovery": "Conduct product discovery: identify customer problems, assess four risks, define success metrics",
+        "opportunity": "Create opportunity assessment: problem, target user, market size, success criteria",
+        "validation": "Validate assumptions through customer interviews and rapid prototyping",
+        "prioritization": "Prioritize using ICE (Impact, Confidence, Ease) or RICE framework",
+        "roadmap": "Create outcome-based roadmap focused on customer value, not features",
         "research": "Research technical requirements and create detailed implementation tasks",
         "complexity": "Analyze task complexity and suggest optimal implementation order"
+      }
+    },
+    
+    "customer_persona": {
+      "name": "Customer Persona Simulator",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_customer_research",
+        "on_interview_simulation",
+        "on_feedback_needed"
+      ],
+      "configuration": {
+        "persona_types": [
+          "early_adopter",
+          "power_user",
+          "casual_user",
+          "skeptical_user",
+          "enterprise_buyer"
+        ],
+        "response_styles": {
+          "interview": "conversational",
+          "survey": "structured",
+          "feedback": "detailed"
+        }
+      },
+      "prompts": {
+        "default": "Simulate diverse customer perspectives for product validation",
+        "interview": "Respond to interview questions as different user personas",
+        "feedback": "Provide detailed product feedback from various user perspectives"
+      }
+    },
+    
+    "market_research": {
+      "name": "Market Research Analyst",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_market_analysis",
+        "on_competitive_research",
+        "on_sizing_request"
+      ],
+      "configuration": {
+        "research_methods": [
+          "competitive_analysis",
+          "market_sizing",
+          "trend_analysis",
+          "technology_adoption"
+        ],
+        "data_sources": {
+          "primary": "web_research",
+          "secondary": "industry_reports",
+          "tertiary": "expert_synthesis"
+        }
+      },
+      "prompts": {
+        "default": "Analyze market trends and competitive landscape",
+        "competitive": "Identify and analyze key competitors and their features",
+        "sizing": "Estimate market size and growth potential"
+      }
+    },
+    
+    "ux_research": {
+      "name": "UX Research Specialist",
+      "enabled": true,
+      "priority": "normal",
+      "triggers": [
+        "on_usability_testing",
+        "on_heuristic_evaluation",
+        "on_accessibility_check"
+      ],
+      "configuration": {
+        "evaluation_methods": [
+          "nielsen_heuristics",
+          "cognitive_walkthrough",
+          "accessibility_wcag",
+          "information_architecture"
+        ],
+        "testing_approaches": {
+          "heuristic": "expert_review",
+          "usability": "simulated_testing",
+          "accessibility": "automated_checks"
+        }
+      },
+      "prompts": {
+        "default": "Evaluate usability and user experience",
+        "heuristic": "Perform heuristic evaluation using Nielsen's principles",
+        "accessibility": "Check accessibility compliance and inclusive design"
       }
     }
   },
@@ -239,7 +352,7 @@
     "complex_project": {
       "description": "Complex project implementation with PRD",
       "sequence": [
-        "taskmaster",
+        "product_manager",
         "development",
         "shell",
         "security",
@@ -286,6 +399,29 @@
         "mcp",
         "configuration",
         "quality"
+      ]
+    },
+    
+    "product_discovery": {
+      "description": "Product discovery and validation process",
+      "sequence": [
+        "product_manager",
+        "customer_persona",
+        "market_research",
+        "ux_research",
+        "product_manager"
+      ]
+    },
+    
+    "customer_validation": {
+      "description": "Customer validation through simulated interviews",
+      "parallel": [
+        "customer_persona",
+        "market_research"
+      ],
+      "then": [
+        "product_manager",
+        "ux_research"
       ]
     }
   },

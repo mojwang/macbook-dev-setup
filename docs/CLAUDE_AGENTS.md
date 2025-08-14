@@ -65,6 +65,94 @@ Claude Code's Task tool enables launching specialized agents for complex, multi-
 "Implement a new installer for Docker Desktop with proper error handling"
 ```
 
+## Product Discovery Agents
+
+### Product Manager Agent
+**Purpose**: Comprehensive product management and discovery  
+**Triggers**:
+- PRD provided
+- Feature requests
+- Product discovery needed
+- Validation required
+
+**Responsibilities**:
+- Product discovery and validation
+- Risk assessment (Value, Usability, Feasibility, Viability)
+- Customer problem identification
+- Opportunity assessment
+- Prioritization (ICE/RICE frameworks)
+- Outcome-based roadmapping
+- PRD parsing and task breakdown
+
+**Techniques**:
+- Jobs-to-be-done framework
+- Design thinking
+- Lean startup methodology
+- Dual-track agile
+- Rapid prototyping
+
+**Example Activation**:
+```
+"Conduct product discovery for the new payment feature"
+```
+
+### Customer Persona Agent
+**Purpose**: Simulate diverse customer perspectives  
+**Triggers**:
+- Customer research needed
+- Interview simulation
+- Feedback collection
+
+**Responsibilities**:
+- Generate realistic user personas
+- Respond to interviews in character
+- Provide product feedback
+- Express pain points and needs
+- Simulate different user types
+
+**Example Activation**:
+```
+"Interview 5 different personas about the checkout experience"
+```
+
+### Market Research Agent
+**Purpose**: Market analysis and competitive intelligence  
+**Triggers**:
+- Market analysis requests
+- Competitive research
+- Market sizing needed
+
+**Responsibilities**:
+- Competitive analysis
+- Market sizing estimates
+- Trend analysis
+- Technology adoption tracking
+- Industry insights
+
+**Example Activation**:
+```
+"Analyze the competitive landscape for developer tools"
+```
+
+### UX Research Agent
+**Purpose**: Usability and user experience evaluation  
+**Triggers**:
+- Usability testing
+- Heuristic evaluation
+- Accessibility checks
+
+**Responsibilities**:
+- Nielsen's heuristic evaluation
+- Cognitive walkthroughs
+- Accessibility assessment (WCAG)
+- Information architecture review
+- Usability testing simulation
+
+**Example Activation**:
+```
+"Perform heuristic evaluation of the onboarding flow"
+```
+
 ## Specialized Agents
 
 ### 4. Shell Script Specialist Agent
@@ -382,7 +470,19 @@ Common issues and solutions:
 
 ## Examples
 
-### Example 1: Full System Update
+### Example 1: Product Discovery Sprint
+```
+User: "I want to build a CLI tool for managing git worktrees"
+
+Agents activated:
+1. Product Manager - Define opportunity and risks
+2. Customer Persona - Interview developer personas
+3. Market Research - Analyze existing solutions
+4. UX Research - Evaluate usability patterns
+5. Product Manager - Synthesize and prioritize
+```
+
+### Example 2: Full System Update
 ```
 User: "Update all dependencies and ensure everything still works"
 
