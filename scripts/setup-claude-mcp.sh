@@ -33,6 +33,9 @@ cleanup_mcp() {
         rm -f "${CLAUDE_CONFIG_FILE}.tmp" 2>/dev/null || true
     fi
     
+    # Clean up old validation cache files
+    cleanup_old_cache_files 2>/dev/null || true
+    
     # Call default cleanup
     default_cleanup
 }
@@ -110,6 +113,10 @@ SERVER_KEY_NAMES=("EXA_API_KEY" "FIGMA_API_KEY")
 # API key file location
 API_KEYS_FILE="$HOME/.config/zsh/51-api-keys.zsh"
 
+# Validation cache file (valid for the duration of the session)
+VALIDATION_CACHE_FILE="/tmp/mcp-validated-keys-$(date +%Y%m%d)"
+VALIDATION_CACHE_DURATION=3600  # Cache validation for 1 hour
+
 # Claude Desktop config path
 CLAUDE_CONFIG_DIR="$HOME/Library/Application Support/Claude"
 CLAUDE_CONFIG_FILE="$CLAUDE_CONFIG_DIR/claude_desktop_config.json"
@@ -130,6 +137,85 @@ load_api_keys() {
                 print_info "Loaded existing $key_name from config"
             fi
         done
+    fi
+}
+
+# Check if an API key validation is cached and still valid
+is_validation_cached() {
+    local key_name="$1"
+    
+    # Check if cache file exists
+    if [[ ! -f "$VALIDATION_CACHE_FILE" ]]; then
+        return 1
+    fi
+    
+    # Check if key is in cache
+    local cache_entry=$(grep "^${key_name}:" "$VALIDATION_CACHE_FILE" 2>/dev/null)
+    if [[ -z "$cache_entry" ]]; then
+        return 1
+    fi
+    
+    # Check if cache entry is still valid (within duration)
+    local cached_time=$(echo "$cache_entry" | cut -d: -f2)
+    local current_time=$(date +%s)
+    local age=$((current_time - cached_time))
+    
+    if [[ $age -lt $VALIDATION_CACHE_DURATION ]]; then
+        return 0
+    else
+        # Remove expired entry
+        grep -v "^${key_name}:" "$VALIDATION_CACHE_FILE" > "${VALIDATION_CACHE_FILE}.tmp" 2>/dev/null || true
+        mv "${VALIDATION_CACHE_FILE}.tmp" "$VALIDATION_CACHE_FILE" 2>/dev/null || true
+        return 1
+    fi
+}
+
+# Add a validated key to the cache
+cache_validation() {
+    local key_name="$1"
+    local timestamp=$(date +%s)
+    
+    # Create cache file if it doesn't exist
+    touch "$VALIDATION_CACHE_FILE" 2>/dev/null || true
+    
+    # Remove any existing entry for this key
+    grep -v "^${key_name}:" "$VALIDATION_CACHE_FILE" > "${VALIDATION_CACHE_FILE}.tmp" 2>/dev/null || true
+    mv "${VALIDATION_CACHE_FILE}.tmp" "$VALIDATION_CACHE_FILE" 2>/dev/null || true
+    
+    # Add new entry
+    echo "${key_name}:${timestamp}" >> "$VALIDATION_CACHE_FILE"
+}
+
+# Clean up old cache files to prevent accumulation
+cleanup_old_cache_files() {
+    local current_time=$(date +%s)
+    local one_day_ago=$((current_time - 86400))  # 86400 seconds = 1 day
+    local files_removed=0
+    
+    # Iterate through cache files
+    for cache_file in /tmp/mcp-validated-keys-*; do
+        if [[ -f "$cache_file" ]]; then
+            # Get file modification time (macOS compatible)
+            local file_time=$(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null || echo "0")
+            
+            # Check if file is older than 1 day or empty
+            if [[ $file_time -lt $one_day_ago ]] || [[ ! -s "$cache_file" ]]; then
+                rm -f "$cache_file" 2>/dev/null && ((files_removed++))
+            fi
+        fi
+    done
+    
+    # Count remaining cache files
+    local cache_count=$(find /tmp -name "mcp-validated-keys-*" -type f 2>/dev/null | wc -l)
+    
+    # If more than 7 cache files (a week's worth), clean up all but today's
+    if [[ $cache_count -gt 7 ]]; then
+        find /tmp -name "mcp-validated-keys-*" -type f ! -name "*$(date +%Y%m%d)*" -delete 2>/dev/null || true
+    fi
+    
+    # Optional: Report cleanup if in verbose mode
+    if [[ $files_removed -gt 0 ]] && [[ "${VERBOSE:-}" == "true" ]]; then
+        print_info "Cleaned up $files_removed old cache file(s)"
     fi
 }
 
@@ -255,10 +341,19 @@ validate_api_key() {
     local server_name="$1"
     local key_name="$2"
     local key_value="${!key_name}"
+    local skip_cache="${3:-false}"  # Optional flag to skip cache check
     
     if [[ -z "$key_value" ]]; then
         return 1
     fi
+    
+    # Check if validation is cached (unless explicitly skipping cache)
+    if [[ "$skip_cache" != "true" ]] && is_validation_cached "$key_name"; then
+        print_info "$server_name API key validation cached (valid)"
+        return 0
+    fi
+    
+    local validation_result=2  # Default to unknown
     
     case "$server_name" in
         "exa")
@@ -271,11 +366,11 @@ validate_api_key() {
                 --connect-timeout 5 2>/dev/null || echo "000")
             
             if [[ "$response" == "200" ]]; then
-                return 0  # Valid key
+                validation_result=0  # Valid key
             elif [[ "$response" == "401" ]] || [[ "$response" == "403" ]]; then
-                return 1  # Invalid/revoked key
+                validation_result=1  # Invalid/revoked key
             else
-                return 2  # Network error or other issue - assume key is still valid
+                validation_result=2  # Network error or other issue - assume key is still valid
             fi
             ;;
         "figma")
@@ -286,18 +381,25 @@ validate_api_key() {
                 --connect-timeout 5 2>/dev/null || echo "000")
             
             if [[ "$response" == "200" ]]; then
-                return 0  # Valid key
+                validation_result=0  # Valid key
             elif [[ "$response" == "403" ]]; then
-                return 1  # Invalid/revoked key
+                validation_result=1  # Invalid/revoked key
             else
-                return 2  # Network error or other issue - assume key is still valid
+                validation_result=2  # Network error or other issue - assume key is still valid
             fi
             ;;
         *)
             # Unknown server type, skip validation
-            return 2
+            validation_result=2
             ;;
     esac
+    
+    # Cache successful validation
+    if [[ $validation_result -eq 0 ]]; then
+        cache_validation "$key_name"
+    fi
+    
+    return $validation_result
 }
 
 # Prompt for API key
@@ -311,6 +413,29 @@ prompt_for_api_key() {
         print_warning "$server_name requires API key ($key_name) but running in non-interactive mode"
         print_info "To configure $server_name, set $key_name in ~/.config/zsh/51-api-keys.zsh"
         return 1
+    fi
+    
+    # Check if key already exists in the file but not loaded
+    if [[ -f "$API_KEYS_FILE" ]] && grep -q "^export ${key_name}=" "$API_KEYS_FILE" 2>/dev/null; then
+        # Key exists in file, try to load it
+        source "$API_KEYS_FILE" 2>/dev/null || true
+        if [[ -n "${!key_name}" ]]; then
+            # Check if validation is cached
+            if is_validation_cached "$key_name"; then
+                print_success "✓ $server_name API key already validated (using existing key)"
+                return 0
+            fi
+            
+            print_info "Found existing $server_name API key, validating..."
+            # Validate the existing key
+            if validate_api_key "$server_name" "$key_name"; then
+                print_success "✓ $server_name API key is valid (using existing key)"
+                return 0
+            else
+                print_warning "✗ Existing $server_name API key appears to be invalid or expired"
+                print_info "Please provide a new API key to replace the invalid one"
+            fi
+        fi
     fi
     
     print_info "The $server_name server requires an API key."
@@ -330,17 +455,22 @@ prompt_for_api_key() {
     if [[ -n "$api_key" ]]; then
         # Validate the key before saving
         export "$key_name=$api_key"
+        print_info "Validating API key..."
         if validate_api_key "$server_name" "$key_name"; then
             save_api_key "$key_name" "$api_key"
-            print_success "$server_name API key saved and validated"
+            print_success "✓ $server_name API key saved and validated successfully"
+            print_info "  Key will be loaded automatically in future sessions"
             return 0
         else
             unset "$key_name"
-            print_error "Invalid $server_name API key. Please check and try again."
+            print_error "✗ Invalid $server_name API key"
+            print_info "  Please verify your key and try again"
+            print_info "  Hint: Make sure you copied the entire key without spaces"
             return 1
         fi
     else
-        print_warning "Skipping $server_name configuration (no API key provided)"
+        print_warning "○ Skipping $server_name (no API key provided)"
+        print_info "  You can add it later to ~/.config/zsh/51-api-keys.zsh"
         return 1
     fi
 }
@@ -401,46 +531,101 @@ get_api_key_name() {
 # Configure API keys for servers that need them
 configure_api_keys() {
     local server_name="$1"
-    local validate="${2:-false}"  # Optional validation flag
+    local validate="${2:-true}"  # Changed default to true for better UX
+    local interactive="${3:-true}"  # Whether to prompt for keys if missing
+    
+    # Special handling for TaskMaster - API keys are optional
+    if [[ "$server_name" == "taskmaster" ]]; then
+        print_info "Configuring TaskMaster Product Manager..."
+        
+        # Check for ANTHROPIC_API_KEY
+        if [[ -n "$ANTHROPIC_API_KEY" ]]; then
+            print_success "  ✓ AI-powered task generation enabled (ANTHROPIC_API_KEY set)"
+        else
+            print_info "  ℹ Basic features available (ANTHROPIC_API_KEY not set)"
+            
+            # Ask if they want to add it
+            if [[ -t 0 ]] && [[ "${CI:-false}" != "true" ]]; then
+                echo -n "  Would you like to add ANTHROPIC_API_KEY for AI features? (y/N): "
+                read -r response
+                if [[ "$response" =~ ^[Yy]$ ]]; then
+                    echo "  Get your API key from: https://console.anthropic.com/settings/keys"
+                    echo -n "  Enter your Anthropic API key: "
+                    read -r api_key
+                    if [[ -n "$api_key" ]]; then
+                        save_api_key "ANTHROPIC_API_KEY" "$api_key"
+                        export ANTHROPIC_API_KEY="$api_key"
+                        print_success "  ANTHROPIC_API_KEY saved"
+                    fi
+                fi
+            fi
+        fi
+        
+        # Check for PERPLEXITY_API_KEY
+        if [[ -n "$PERPLEXITY_API_KEY" ]]; then
+            print_success "  ✓ Research features enabled (PERPLEXITY_API_KEY set)"
+        else
+            print_info "  ℹ Research features disabled (PERPLEXITY_API_KEY not set)"
+        fi
+        
+        print_info "TaskMaster can be used with available features"
+        return 0
+    fi
     
     # Check if this server needs an API key
     local key_name=$(get_api_key_name "$server_name")
     if [[ -n "$key_name" ]]; then
         # Check if key already exists
         if check_api_key "$key_name"; then
-            # Optionally validate the existing key
+            # Validate the existing key if requested
             if [[ "$validate" == "true" ]]; then
+                # Check if validation is cached first
+                if is_validation_cached "$key_name"; then
+                    print_success "✓ $server_name API key already validated (cached)"
+                    return 0
+                fi
+                
                 print_info "Validating $server_name API key..."
                 local validation_result
                 validate_api_key "$server_name" "$key_name"
                 validation_result=$?
                 
                 if [[ $validation_result -eq 0 ]]; then
-                    print_success "$server_name API key is valid"
+                    print_success "✓ $server_name API key is valid"
                     return 0
                 elif [[ $validation_result -eq 1 ]]; then
-                    print_error "$server_name API key is invalid or revoked"
-                    print_info "Please provide a new API key"
-                    # Prompt for a new key
-                    if prompt_for_api_key "$server_name" "$key_name"; then
-                        return 0
+                    print_error "✗ $server_name API key is invalid or revoked"
+                    if [[ "$interactive" == "true" ]]; then
+                        print_info "Please provide a new API key"
+                        # Prompt for a new key
+                        if prompt_for_api_key "$server_name" "$key_name"; then
+                            return 0
+                        else
+                            return 1
+                        fi
                     else
+                        print_warning "Skipping $server_name (invalid key, non-interactive mode)"
                         return 1
                     fi
                 else
                     # Network error or unknown - assume key is still valid
-                    print_info "$server_name API key already configured (validation skipped)"
+                    print_info "○ $server_name API key configured (validation skipped - network issue)"
                     return 0
                 fi
             else
-                print_info "$server_name API key already configured"
+                print_info "✓ $server_name API key already configured (validation disabled)"
                 return 0
             fi
         else
-            # Prompt for the key
-            if prompt_for_api_key "$server_name" "$key_name"; then
-                return 0
+            # No key exists - prompt only if in interactive mode
+            if [[ "$interactive" == "true" ]]; then
+                if prompt_for_api_key "$server_name" "$key_name"; then
+                    return 0
+                else
+                    return 1
+                fi
             else
+                print_warning "○ $server_name requires API key (not configured)"
                 return 1
             fi
         fi
@@ -865,20 +1050,22 @@ print_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --help           Show this help message"
-    echo "  --check          Check MCP server status"
-    echo "  --update         Update all MCP servers"
-    echo "  --remove         Remove MCP configuration"
-    echo "  --validate-keys  Validate existing API keys"
+    echo "  --help              Show this help message"
+    echo "  --check             Check MCP server status"
+    echo "  --update            Update all MCP servers"
+    echo "  --remove            Remove MCP configuration"
+    echo "  --validate-keys     Validate existing API keys"
+    echo "  --skip-validation   Skip API key validation for faster setup/update"
     echo ""
     echo "Environment Variables:"
     echo "  MCP_ROOT_DIR   Root directory for MCP servers (default: ~/repos/mcp-servers)"
     echo ""
     echo "Examples:"
-    echo "  $0                    # Install and configure MCP servers"
-    echo "  $0 --check           # Check server status"
-    echo "  $0 --update          # Update all servers"
-    echo "  $0 --validate-keys   # Check if API keys are still valid"
+    echo "  $0                         # Install and configure MCP servers"
+    echo "  $0 --check                # Check server status"
+    echo "  $0 --update               # Update all servers"
+    echo "  $0 --update --skip-validation  # Fast update without key validation"
+    echo "  $0 --validate-keys        # Check if API keys are still valid"
 }
 
 # Check MCP server status
@@ -945,7 +1132,12 @@ check_status() {
 
 # Update all servers
 update_servers() {
+    local skip_validation="${1:-false}"
+    
     print_info "Updating MCP Servers"
+    if [[ "$skip_validation" == "true" ]]; then
+        print_info "API key validation disabled for faster update"
+    fi
     echo ""
     
     # Load existing API keys
@@ -1030,8 +1222,9 @@ update_servers() {
             local server_type="${MCP_SERVER_TYPES[$server_name]}"
             if [[ "$server_type" == "npx" ]]; then
                 print_info "$server_name is an npx-based server, no update needed"
-                # Just check API keys
-                configure_api_keys "$server_name"
+                # Just check API keys (skip validation if flag is set)
+                local validate_keys=$([[ "$skip_validation" == "true" ]] && echo "false" || echo "true")
+                configure_api_keys "$server_name" "$validate_keys" "false"  # non-interactive
                 updated_servers+=("$server_name")
                 continue
             fi
@@ -1057,8 +1250,9 @@ update_servers() {
                         repo_updated=true
                     fi
                     
-                    # Configure API keys if needed
-                    configure_api_keys "$server_name"
+                    # Configure API keys if needed (skip validation if flag is set)
+                    local validate_keys=$([[ "$skip_validation" == "true" ]] && echo "false" || echo "true")
+                    configure_api_keys "$server_name" "$validate_keys" "false"  # non-interactive
                     
                     # Rebuild the server
                     if [[ -f "$server_path/package.json" ]]; then
@@ -1206,26 +1400,62 @@ remove_configuration() {
 # Main installation flow
 main() {
     # Parse command line arguments
-    case "${1:-}" in
-        --help|-h)
-            print_usage
-            exit 0
-            ;;
-        --check)
+    local skip_validation=false
+    local action=""
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help|-h)
+                print_usage
+                exit 0
+                ;;
+            --check)
+                action="check"
+                shift
+                ;;
+            --update)
+                action="update"
+                shift
+                ;;
+            --validate-keys)
+                action="validate"
+                shift
+                ;;
+            --remove)
+                action="remove"
+                shift
+                ;;
+            --skip-validation)
+                skip_validation=true
+                shift
+                ;;
+            *)
+                print_error "Unknown option: $1"
+                print_usage
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Execute the requested action
+    case "$action" in
+        check)
             check_status
             exit 0
             ;;
-        --update)
+        update)
             check_macos
             check_prerequisites
-            update_servers
+            # Clean up old cache files at the start of update
+            cleanup_old_cache_files
+            update_servers "$skip_validation"
             exit 0
             ;;
-        --validate-keys)
+        validate)
             validate_all_keys
             exit $?
             ;;
-        --remove)
+        remove)
             remove_configuration
             exit 0
             ;;
@@ -1233,7 +1463,7 @@ main() {
             # Default: install
             ;;
         *)
-            print_error "Unknown option: $1"
+            print_error "Unknown action: $action"
             print_usage
             exit 1
             ;;
@@ -1246,6 +1476,9 @@ main() {
     
     check_macos
     check_prerequisites
+    
+    # Clean up old cache files at the start of installation
+    cleanup_old_cache_files
     
     # Load existing API keys
     load_api_keys
