@@ -45,6 +45,15 @@ These servers are maintained by the community:
    - AI-optimized search engine integration
    - Better web search results for AI agents
 
+6. **taskmaster** (https://github.com/eyaltoledano/claude-task-master)
+   - AI-powered task management and project planning
+   - **Dual role functionality:**
+     - **As "taskmaster" MCP server**: Direct task commands (`task-master list`, `task-master next`)
+     - **As "Product Manager" sub-agent**: Product discovery, customer validation, risk assessment
+   - Features PRD parsing, task generation, and complexity analysis
+   - Optional research capabilities with Perplexity API
+   - **Naming convention**: Use "taskmaster" for MCP operations, "Product Manager" for agent workflows
+
 ## Pieces MCP
 
 Pieces MCP requires special configuration:
@@ -157,6 +166,12 @@ Run the setup script to install all servers:
 During installation, you'll be prompted for API keys for servers that require them:
 - **Exa**: Get your API key from https://dashboard.exa.ai/api-keys
 - **Figma**: Get your API key from https://www.figma.com/developers/api#access-tokens
+- **Taskmaster** (optional): 
+  - Requires ANTHROPIC_API_KEY and OPENAI_API_KEY (usually already configured)
+  - Optionally uses PERPLEXITY_API_KEY for research features (https://www.perplexity.ai/settings/api)
+  - Works without Perplexity but with limited research capabilities
+  - When used as MCP server: Direct task management commands
+  - When used as "Product Manager" agent: Comprehensive product discovery workflows
 
 API keys are securely stored in `~/.config/zsh/51-api-keys.zsh` and automatically loaded by your shell.
 
@@ -207,6 +222,12 @@ To debug MCP connection failures:
 **Configuration gets corrupted:**
 - Backup exists at `~/.setup-backups/configs/claude-mcp/`
 - Or use `./scripts/fix-mcp-servers.sh` to reset
+
+**Product Manager (TaskMaster) not showing research options:**
+- Check if Perplexity API key is set: `echo $PERPLEXITY_API_KEY`
+- If not set, research features are disabled but product management still works
+- Add key to `~/.config/zsh/51-api-keys.zsh` and restart Claude to enable
+- Product discovery features work via AI simulation even without Perplexity
 
 If a server fails to build or install:
 1. Check that all prerequisites are installed
