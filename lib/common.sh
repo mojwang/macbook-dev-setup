@@ -627,6 +627,12 @@ declare -A MCP_SERVER_NPX_PACKAGES=(
     ["taskmaster"]="task-master-ai"
 )
 
+# Get the type of an MCP server
+get_mcp_server_type() {
+    local server_name="$1"
+    echo "${MCP_SERVER_TYPES[$server_name]:-}"
+}
+
 # MCP servers that require API keys
 declare -A MCP_SERVER_API_KEYS=(
     ["figma"]="FIGMA_API_KEY"
