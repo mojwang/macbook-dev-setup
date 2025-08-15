@@ -2,6 +2,11 @@
 
 # Setup Claude Code MCP (Model Context Protocol) servers
 # Installs and configures official MCP servers for global use
+#
+# Exit codes:
+#   0 - Success
+#   1 - Error/failure
+#   2 - No updates needed (used by update command)
 
 set -e
 
@@ -174,6 +179,9 @@ is_validation_cached() {
 cache_validation() {
     local key_name="$1"
     local timestamp=$(date +%s)
+    
+    # Set secure permissions before creating cache file
+    umask 077
     
     # Create cache file if it doesn't exist
     touch "$VALIDATION_CACHE_FILE" 2>/dev/null || true
@@ -363,7 +371,7 @@ validate_api_key() {
                 -H "x-api-key: $key_value" \
                 -H "Content-Type: application/json" \
                 -d '{"query":"test","numResults":1}' \
-                --connect-timeout 5 2>/dev/null || echo "000")
+                --connect-timeout 5 --max-time 10 2>/dev/null || echo "000")
             
             if [[ "$response" == "200" ]]; then
                 validation_result=0  # Valid key
@@ -378,7 +386,7 @@ validate_api_key() {
             local response=$(curl -s -o /dev/null -w "%{http_code}" \
                 "https://api.figma.com/v1/me" \
                 -H "X-Figma-Token: $key_value" \
-                --connect-timeout 5 2>/dev/null || echo "000")
+                --connect-timeout 5 --max-time 10 2>/dev/null || echo "000")
             
             if [[ "$response" == "200" ]]; then
                 validation_result=0  # Valid key
@@ -673,7 +681,7 @@ build_node_server() {
     local server_name=$(basename "$server_path")
     
     # Skip building npx-based servers
-    local server_type="${MCP_SERVER_TYPES[$server_name]}"
+    local server_type=$(get_mcp_server_type "$server_name")
     if [[ "$server_type" == "npx" ]]; then
         print_info "Skipping build for $server_name (npx-based server)"
         return 0
@@ -880,7 +888,7 @@ install_community_servers() {
         IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
         
         # Skip cloning for npx-based servers
-        local server_type="${MCP_SERVER_TYPES[$server_name]}"
+        local server_type=$(get_mcp_server_type "$server_name")
         if [[ "$server_type" == "npx" ]]; then
             print_info "$server_name is an npx-based server, skipping clone"
             # Configure API keys if needed
@@ -1219,7 +1227,7 @@ update_servers() {
             IFS='|' read -r server_name server_url server_checksum <<< "$parsed_info"
             
             # Skip updating npx-based servers
-            local server_type="${MCP_SERVER_TYPES[$server_name]}"
+            local server_type=$(get_mcp_server_type "$server_name")
             if [[ "$server_type" == "npx" ]]; then
                 print_info "$server_name is an npx-based server, no update needed"
                 # Just check API keys (skip validation if flag is set)

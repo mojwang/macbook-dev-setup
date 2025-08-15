@@ -117,12 +117,17 @@ configure_claude_desktop() {
     python3 -c "
 import json
 import sys
+import os
 
 config_file = '$CLAUDE_DESKTOP_CONFIG'
 
 try:
-    with open(config_file, 'r') as f:
-        config = json.load(f)
+    # Read existing config
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+    else:
+        config = {}
     
     # Add TaskMaster configuration
     if 'mcpServers' not in config:
@@ -138,12 +143,23 @@ try:
         }
     }
     
-    with open(config_file, 'w') as f:
-        json.dump(config, f, indent=2)
-    
-    print('✓ TaskMaster added to Claude Desktop configuration')
+    # Write config with proper error handling
+    try:
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+        print('✓ TaskMaster added to Claude Desktop configuration')
+    except IOError as e:
+        print(f'✗ Failed to write config file: {e}')
+        sys.exit(1)
+        
+except json.JSONDecodeError as e:
+    print(f'✗ Invalid JSON in config file: {e}')
+    sys.exit(1)
+except FileNotFoundError as e:
+    print(f'✗ Config file not found: {e}')
+    sys.exit(1)
 except Exception as e:
-    print(f'✗ Failed to update Claude Desktop config: {e}')
+    print(f'✗ Unexpected error updating config: {e}')
     sys.exit(1)
 "
 }
