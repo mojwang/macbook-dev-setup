@@ -1,3 +1,20 @@
+# [3.4.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.3.0...v3.4.0) (2025-08-15)
+
+
+### Bug Fixes
+
+* add missing get_mcp_server_type function ([044afe9](https://github.com/mojwang/macbook-dev-setup/commit/044afe99e35c26d0bf02084a95dc03d5ee4bd19f))
+* **security:** address PR review findings for MCP and TaskMaster ([3decde6](https://github.com/mojwang/macbook-dev-setup/commit/3decde6af179c060c83b955b6324744fb0dcd88e))
+
+
+### Features
+
+* **agents:** evolve TaskMaster into Product Manager with discovery workflows ([5ece657](https://github.com/mojwang/macbook-dev-setup/commit/5ece65708e774051b709919a084573b086bdd11d))
+* **claude:** add smart Git auto-commit rules and flexible commit style matching ([6c26bf9](https://github.com/mojwang/macbook-dev-setup/commit/6c26bf9149e1e1753bb37ba235d038fa6886665d))
+* **mcp:** add intelligent API key validation with caching and cleanup ([a4f9992](https://github.com/mojwang/macbook-dev-setup/commit/a4f999294206583ad67330b8f9812cb6235d9b3b))
+* **mcp:** add TaskMaster AI integration with smart research handling ([24b0445](https://github.com/mojwang/macbook-dev-setup/commit/24b044597dc71ee7846922388b5dff61688317d8))
+* **mcp:** complete TaskMaster/Product Manager integration updates ([d28f28c](https://github.com/mojwang/macbook-dev-setup/commit/d28f28c8b758b849737197e1cf120e9623ea36db))
+
 # [3.3.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.2.3...v3.3.0) (2025-08-08)
 
 
