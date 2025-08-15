@@ -41,6 +41,8 @@ add_claude_code_server() {
         if [[ -z "${!api_key_var}" ]]; then
             print_warning "Skipping $server_name ($api_key_var not set)"
             return 1
+        else
+            print_info "$server_name API key is configured ($api_key_var)"
         fi
     fi
     
