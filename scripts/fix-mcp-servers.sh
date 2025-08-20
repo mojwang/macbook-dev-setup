@@ -108,6 +108,8 @@ for server in "${servers[@]}"; do
             if [[ -z "${!api_key_var}" ]]; then
                 print_warning "Skipping $server ($api_key_var not set)"
                 continue
+            else
+                print_info "$server API key is configured ($api_key_var)"
             fi
         fi
         
