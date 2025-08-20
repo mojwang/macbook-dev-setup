@@ -1,3 +1,10 @@
+## [3.4.1](https://github.com/mojwang/macbook-dev-setup/compare/v3.4.0...v3.4.1) (2025-08-20)
+
+
+### Bug Fixes
+
+* **mcp:** improve API key status messaging ([be15589](https://github.com/mojwang/macbook-dev-setup/commit/be15589e8bdaefe71f53b8b2ab15fd2ea62464fe))
+
 # [3.4.0](https://github.com/mojwang/macbook-dev-setup/compare/v3.3.0...v3.4.0) (2025-08-15)
 
 
