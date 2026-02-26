@@ -36,10 +36,19 @@ fi
 if [[ $(sw_vers -productVersion) == "26."* ]]; then
     print_warning "macOS 26.x detected (beta/pre-release)"
     print_info "Xcode CLT issues are expected on beta versions"
-    
-    # Try to reset Xcode path
-    sudo xcode-select --reset 2>/dev/null || true
-    
+
+    if [[ -t 0 && -t 1 ]]; then
+        response=""
+        read -r -p "Run 'sudo xcode-select --reset' to fix Xcode CLT? [y/N]: " response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            sudo xcode-select --reset 2>/dev/null || true
+        else
+            print_info "Skipped. Run 'sudo xcode-select --reset' manually if needed."
+        fi
+    else
+        print_warning "Non-interactive environment; run 'sudo xcode-select --reset' manually."
+    fi
+
     print_info "Consider downloading Xcode 26 beta from:"
     print_info "https://developer.apple.com/download/"
 fi
