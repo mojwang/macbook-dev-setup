@@ -425,6 +425,10 @@ main_setup() {
             else
                 brew bundle --file="homebrew/Brewfile"
             fi
+            # Install machine-specific packages if present
+            if [[ -f "homebrew/Brewfile.local" ]]; then
+                brew bundle --file="homebrew/Brewfile.local"
+            fi
         fi
         
         print_step "Checking for package updates..."

@@ -63,6 +63,10 @@ private/
 
 # Homebrew lockfile (can be sensitive)
 homebrew/Brewfile.lock.json
+homebrew/Brewfile.local
+
+# Local setup overrides
+config/setup.local.yaml
 # GPG signing configured
 health-report.txt
 

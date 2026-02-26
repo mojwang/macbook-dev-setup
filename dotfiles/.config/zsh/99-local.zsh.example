@@ -1,0 +1,19 @@
+# Machine-local configuration — copy to 99-local.zsh and customize
+# This file is gitignored and won't be overwritten by setup
+
+# Machine identity (optional, for conditional logic)
+# export MACHINE_TYPE="work"  # or "personal"
+
+# Override API keys for this machine's Claude account
+# export ANTHROPIC_API_KEY="your-key"
+# export EXA_API_KEY="your-key"
+
+# Skip specific MCP servers on this machine (comma-separated)
+# export MCP_SKIP_SERVERS="figma,exa"
+
+# Work-specific overrides
+# export HTTP_PROXY="http://proxy.company.com:8080"
+# export NO_PROXY="localhost,127.0.0.1,.company.com"
+
+# Machine-specific aliases
+# alias vpn="open /Applications/CorporateVPN.app"
