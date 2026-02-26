@@ -40,7 +40,8 @@ brew "git-gui"
 brew "diff-so-fancy"
 brew "commitizen"
 brew "gping"                 # Ping with graph
-brew "tldr"                  # Simplified man pages
+brew "tealdeer"              # Fast tldr client in Rust
+# brew "tldr"                # Now using tealdeer instead
 brew "scc"                   # Source lines counter
 brew "entr"                  # File watcher
 brew "ast-grep"              # Structural search for code
@@ -75,7 +76,8 @@ brew "azure-cli"            # Azure CLI
 brew "kubectl"              # Kubernetes CLI
 brew "helm"                 # Kubernetes package manager
 brew "minikube"             # Local Kubernetes
-brew "terraform"            # Infrastructure as code
+brew "tfenv"                # Terraform version manager
+# brew "terraform"          # Now managed via tfenv
 brew "ansible"              # Configuration management
 brew "docker-compose"       # Multi-container Docker apps
 
