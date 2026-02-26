@@ -79,21 +79,40 @@ auto_fix_xcode_clt() {
     # Check if git works (good proxy for CLT health)
     if ! git --version &>/dev/null; then
         print_warning "Xcode Command Line Tools issue detected"
-        
-        # First try to reset the path
-        sudo xcode-select --reset 2>/dev/null && xcode_fixed=true
-        
-        # If that doesn't work, trigger reinstall
-        if ! $xcode_fixed && ! git --version &>/dev/null; then
-            print_info "Triggering Xcode CLT installation..."
-            sudo rm -rf /Library/Developer/CommandLineTools 2>/dev/null
-            xcode-select --install 2>/dev/null
-            
-            print_warning "Xcode CLT installation started. Please complete the installation dialog."
-            print_info "Re-run this script after installation completes."
-            return 2  # Special code for manual intervention needed
+
+        # In non-interactive environments, signal manual intervention
+        if [[ ! -t 0 || ! -t 1 ]]; then
+            print_warning "Non-interactive environment detected. Manual intervention required."
+            print_info "Run 'sudo xcode-select --reset' manually to fix Xcode CLT issues."
+            return 2
         fi
-        
+
+        # Ask for confirmation before using sudo
+        local response
+        read -r -p "Attempt to fix with 'sudo xcode-select --reset'? [y/N]: " response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            sudo xcode-select --reset 2>/dev/null && xcode_fixed=true
+        else
+            print_info "Skipped automatic Xcode CLT reset."
+        fi
+
+        # If that doesn't work, offer to trigger reinstall
+        if ! $xcode_fixed && ! git --version &>/dev/null; then
+            read -r -p "Reinstall Xcode CLT? This will remove and re-download. [y/N]: " response
+            if [[ "$response" =~ ^[Yy]$ ]]; then
+                print_info "Triggering Xcode CLT installation..."
+                sudo rm -rf /Library/Developer/CommandLineTools 2>/dev/null
+                xcode-select --install 2>/dev/null
+
+                print_warning "Xcode CLT installation started. Please complete the installation dialog."
+                print_info "Re-run this script after installation completes."
+                return 2  # Special code for manual intervention needed
+            else
+                print_info "Skipped Xcode CLT reinstall. You may need to fix this manually."
+                return 2
+            fi
+        fi
+
         if $xcode_fixed; then
             print_success "Fixed Xcode Command Line Tools"
             return 0
@@ -147,7 +166,9 @@ auto_fix_npm() {
             
             # Fix npm permissions
             if [[ -d "/usr/local/lib/node_modules" ]]; then
-                sudo chown -R $(whoami) /usr/local/lib/node_modules 2>/dev/null && npm_fixed=true
+                local current_user
+                current_user="$(id -un)"
+                sudo chown -R "$current_user" /usr/local/lib/node_modules 2>/dev/null && npm_fixed=true
             fi
             
             # Also fix npm cache
@@ -174,7 +195,13 @@ auto_fix_shell_config() {
     if [[ "$SHELL" != */zsh ]]; then
         print_warning "Shell is not set to zsh"
         if command -v zsh &>/dev/null; then
-            chsh -s $(which zsh) && shell_fixed=true
+            if [[ -t 0 ]]; then
+                local zsh_path
+                zsh_path="$(command -v zsh)"
+                chsh -s "$zsh_path" && shell_fixed=true
+            else
+                print_warning "Non-interactive environment; run 'chsh -s $(command -v zsh)' manually."
+            fi
         fi
     fi
     
@@ -247,8 +274,9 @@ run_auto_fixes() {
     auto_fix_rosetta && any_fixes=true
     
     # Fix deprecated packages if script exists
-    if [[ -x "$(dirname "$1")/scripts/fix-deprecated-packages.sh" ]]; then
-        "$(dirname "$1")/scripts/fix-deprecated-packages.sh" &>/dev/null && any_fixes=true
+    local repo_root="${1:-.}"
+    if [[ -x "${repo_root}/scripts/fix-deprecated-packages.sh" ]]; then
+        "${repo_root}/scripts/fix-deprecated-packages.sh" &>/dev/null && any_fixes=true
     fi
     
     # Summary
@@ -287,9 +315,13 @@ preflight_check() {
         issues+=("Low disk space: ${free_space}GB free (minimum: 10GB)")
     fi
     
-    # Check internet connectivity
-    if ! ping -c 1 8.8.8.8 &>/dev/null; then
-        issues+=("No internet connection detected")
+    # Check internet connectivity (prefer HTTPS over ICMP which may be blocked)
+    if command -v curl &>/dev/null; then
+        if ! curl -s --max-time 5 https://www.apple.com >/dev/null 2>&1; then
+            issues+=("No internet connection detected (HTTPS check failed)")
+        fi
+    elif ! ping -c 1 -W 5 8.8.8.8 &>/dev/null; then
+        issues+=("No internet connection detected (ICMP check failed)")
     fi
     
     # Check if running as root (shouldn't be)
