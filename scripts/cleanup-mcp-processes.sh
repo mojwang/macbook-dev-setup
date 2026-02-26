@@ -4,6 +4,14 @@
 
 set -e
 
+# Signal handling for graceful interruption
+trap 'echo -e "\n\nCleanup interrupted by user"; exit 130' INT TERM
+
+DRY_RUN=false
+if [[ "${1:-}" == "--dry-run" ]]; then
+    DRY_RUN=true
+fi
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  MCP PROCESS CLEANUP"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -13,6 +21,14 @@ echo ""
 BEFORE=$(ps aux | grep -E 'mcp|npx.*model|uvx.*mcp|node.*mcp' | grep -v grep | wc -l | tr -d ' ')
 echo "Current MCP processes: $BEFORE"
 echo ""
+
+if $DRY_RUN; then
+    echo "DRY RUN - Would kill the following processes:"
+    echo ""
+    ps aux | grep -E 'mcp|npx.*model|uvx.*mcp|node.*mcp' | grep -v grep || echo "  (none found)"
+    echo ""
+    exit 0
+fi
 
 # Warning
 echo "⚠️  This will kill all MCP server processes."
