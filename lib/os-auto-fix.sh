@@ -28,6 +28,11 @@ auto_fix_permissions() {
     done < <(find "$script_dir" -type f -name "*.sh" 2>/dev/null)
     
     if [[ ${#issues_found[@]} -gt 0 ]]; then
+        local failed_count=$(( ${#issues_found[@]} - fixed_count ))
+        if [[ $failed_count -gt 0 ]]; then
+            print_warning "Fixed $fixed_count permission issue(s), $failed_count failed"
+            return 2  # Partial fix — some chmod calls failed
+        fi
         print_success "Auto-fixed $fixed_count permission issue(s)"
         return 0
     else
@@ -166,6 +171,10 @@ auto_fix_npm() {
             
             # Fix npm permissions
             if [[ -d "/usr/local/lib/node_modules" ]]; then
+                if [[ ! -t 0 || ! -t 1 ]]; then
+                    print_warning "Non-interactive environment; fix npm permissions manually with sudo chown."
+                    return 2
+                fi
                 local current_user
                 current_user="$(id -un)"
                 sudo chown -R "$current_user" /usr/local/lib/node_modules 2>/dev/null && npm_fixed=true

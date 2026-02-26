@@ -80,9 +80,10 @@ COMMUNITY_SERVERS=(
 if [[ -n "${MCP_SKIP_SERVERS:-}" ]]; then
     IFS=',' read -ra _skip_list <<< "$MCP_SKIP_SERVERS"
     _filter_servers() {
-        local -n _arr=$1
+        local _arr_name="$1"
         local filtered=()
-        for item in "${_arr[@]}"; do
+        eval "local items=(\"\${${_arr_name}[@]}\")"
+        for item in "${items[@]}"; do
             local name="${item%%:*}"
             local skip=false
             for s in "${_skip_list[@]}"; do
@@ -90,7 +91,7 @@ if [[ -n "${MCP_SKIP_SERVERS:-}" ]]; then
             done
             [[ "$skip" == false ]] && filtered+=("$item")
         done
-        _arr=("${filtered[@]}")
+        eval "${_arr_name}=(\"\${filtered[@]}\")"
     }
     _filter_servers OFFICIAL_SERVERS
     _filter_servers COMMUNITY_SERVERS
