@@ -417,10 +417,18 @@ steps:
 
 ### Manual Triggers
 ```bash
-# Helper scripts for manual agent activation
-./scripts/claude-agents/run-security-check.sh
-./scripts/claude-agents/run-quality-suite.sh
-./scripts/claude-agents/optimize-performance.sh
+# Agent selection helper
+./scripts/which-agent.sh          # Interactive decision tree
+agents                            # Quick reference alias
+
+# Direct test execution
+./tests/run_tests.sh              # Run test suite
+./scripts/claude-agents/agent-benchmarks.sh  # Benchmark agents
+
+# Ask Claude directly for specialized agent tasks:
+# "Perform security analysis on my shell scripts"  → Security Agent
+# "Run quality checks on my recent changes"        → Quality Agent
+# "Optimize shell startup time"                    → Performance Agent
 ```
 
 ## Configuration
