@@ -148,6 +148,13 @@ if ! install_packages; then
     fi
 fi
 
+# Install local overrides if present (machine-specific packages)
+if [[ -f "homebrew/Brewfile.local" ]]; then
+    print_success "Installing local packages from Brewfile.local..."
+    HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="homebrew/Brewfile.local" || \
+        print_warning "Some local packages failed to install"
+fi
+
 # Update all packages
 echo "Updating Homebrew and installed packages..."
 if ! brew update; then
