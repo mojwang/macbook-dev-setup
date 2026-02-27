@@ -103,6 +103,15 @@ tmpd() {
     cd "$tmp_dir"
 }
 
+# Corporate gh wrapper - auto-adds -R ORG/REPO when in a git repo
+ghrepo() {
+    if [[ -e .git/ ]] && [[ -n "$GH_CORP_ORG" ]]; then
+        $(which gh) -R "${GH_CORP_ORG}/$(basename $PWD)" "$@"
+    else
+        $(which gh) "$@"
+    fi
+}
+
 # Show expanded aliases before execution
 # This function runs before each command is executed
 preexec() {
