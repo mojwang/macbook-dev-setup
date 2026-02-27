@@ -3,6 +3,11 @@
 # OS Auto-Fix Library
 # Detects and automatically resolves common macOS update issues
 # Particularly focused on permission and path issues after OS updates
+#
+# NOTE: This library is sourced (not executed directly), so set -e is not used.
+# Functions return non-zero for "no action needed" (1) and "manual intervention" (2),
+# which would cause set -e to exit the parent script. Signal-safe cleanup is handled
+# by the sourcing script (setup.sh) via lib/signal-safety.sh.
 
 # =============================================================================
 # Permission Auto-Fix
@@ -25,7 +30,7 @@ auto_fix_permissions() {
                 print_success "Fixed permissions: ${script#$script_dir/}"
             }
         fi
-    done < <(find "$script_dir" -type f -name "*.sh" 2>/dev/null)
+    done < <(find "$script_dir" -maxdepth 3 -type f -name "*.sh" 2>/dev/null)
     
     if [[ ${#issues_found[@]} -gt 0 ]]; then
         local failed_count=$(( ${#issues_found[@]} - fixed_count ))
@@ -46,7 +51,12 @@ auto_fix_permissions() {
 
 # Detect and fix Homebrew path issues
 auto_fix_homebrew_path() {
-    local brew_path="/opt/homebrew/bin/brew"  # Apple Silicon path
+    local brew_path
+    if [[ $(uname -m) == "arm64" ]]; then
+        brew_path="/opt/homebrew/bin/brew"
+    else
+        brew_path="/usr/local/bin/brew"
+    fi
     local path_fixed=false
     
     # Check if brew is in PATH
@@ -106,7 +116,9 @@ auto_fix_xcode_clt() {
             read -r -p "Reinstall Xcode CLT? This will remove and re-download. [y/N]: " response
             if [[ "$response" =~ ^[Yy]$ ]]; then
                 print_info "Triggering Xcode CLT installation..."
-                sudo rm -rf /Library/Developer/CommandLineTools 2>/dev/null
+                if [[ -d /Library/Developer/CommandLineTools ]]; then
+                    sudo rm -rf /Library/Developer/CommandLineTools 2>/dev/null
+                fi
                 xcode-select --install 2>/dev/null
 
                 print_warning "Xcode CLT installation started. Please complete the installation dialog."
@@ -278,7 +290,11 @@ run_auto_fixes() {
     [[ $xcode_result -eq 2 ]] && manual_intervention=true
     
     auto_fix_python && any_fixes=true
-    auto_fix_npm && any_fixes=true
+    local npm_result
+    auto_fix_npm
+    npm_result=$?
+    [[ $npm_result -eq 0 ]] && any_fixes=true
+    [[ $npm_result -eq 2 ]] && manual_intervention=true
     auto_fix_shell_config && any_fixes=true
     auto_fix_rosetta && any_fixes=true
     
