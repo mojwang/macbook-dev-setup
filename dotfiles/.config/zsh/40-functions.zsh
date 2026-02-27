@@ -105,10 +105,21 @@ tmpd() {
 
 # Corporate gh wrapper - auto-adds -R ORG/REPO when in a git repo
 ghrepo() {
-    if [[ -e .git/ ]] && [[ -n "$GH_CORP_ORG" ]]; then
-        $(which gh) -R "${GH_CORP_ORG}/$(basename $PWD)" "$@"
+    if ! command -v gh &>/dev/null; then
+        echo "gh CLI not found" >&2
+        return 1
+    fi
+    if git rev-parse --is-inside-work-tree &>/dev/null && [[ -n "$GH_CORP_ORG" ]]; then
+        local repo_name
+        repo_name=$(git remote get-url origin 2>/dev/null | sed -n 's|.*/\([^/]*\)\.git.*|\1|p')
+        repo_name="${repo_name:-$(git remote get-url origin 2>/dev/null | sed -n 's|.*/||p')}"
+        if [[ -n "$repo_name" ]]; then
+            command gh -R "${GH_CORP_ORG}/${repo_name}" "$@"
+        else
+            command gh "$@"
+        fi
     else
-        $(which gh) "$@"
+        command gh "$@"
     fi
 }
 
