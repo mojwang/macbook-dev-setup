@@ -76,6 +76,28 @@ COMMUNITY_SERVERS=(
     "exa:https://github.com/exa-labs/exa-mcp-server.git"
 )
 
+# Filter out skipped servers via MCP_SKIP_SERVERS env var (comma-separated)
+if [[ -n "${MCP_SKIP_SERVERS:-}" ]]; then
+    IFS=',' read -ra _skip_list <<< "$MCP_SKIP_SERVERS"
+    _filter_servers() {
+        local _arr_name="$1"
+        local filtered=()
+        eval "local items=(\"\${${_arr_name}[@]}\")"
+        for item in "${items[@]}"; do
+            local name="${item%%:*}"
+            local skip=false
+            for s in "${_skip_list[@]}"; do
+                if [[ "$name" == "$s" ]]; then skip=true; break; fi
+            done
+            [[ "$skip" == false ]] && filtered+=("$item")
+        done
+        eval "${_arr_name}=(\"\${filtered[@]}\")"
+    }
+    _filter_servers OFFICIAL_SERVERS
+    _filter_servers COMMUNITY_SERVERS
+    print_info "Skipping MCP servers: ${MCP_SKIP_SERVERS}"
+fi
+
 # Function to get build paths for a server type
 get_build_paths() {
     local server_type="$1"

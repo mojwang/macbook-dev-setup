@@ -4,7 +4,7 @@
 # Simplified interface with smart defaults
 # For macOS Apple Silicon
 
-VERSION="3.4.1"
+VERSION="3.5.0"
 
 # Check bash version (requires bash 4+ for features like indirect expansion)
 check_bash_version() {
@@ -34,6 +34,9 @@ source "$(dirname "$0")/lib/common.sh"
 
 # Load backup manager
 source "$(dirname "$0")/lib/backup-manager.sh"
+
+# Load OS auto-fix library
+source "$(dirname "$0")/lib/os-auto-fix.sh"
 
 # Environment variables for power users
 VERBOSE="${SETUP_VERBOSE:-false}"
@@ -342,8 +345,24 @@ main_setup() {
         export RESTORE_POINT="$restore_point"
     fi
     
-    # Run prerequisites check
+    # Run prerequisites check and auto-fix
     print_step "Checking prerequisites..."
+    
+    # Run pre-flight checks and auto-fixes
+    if ! preflight_check; then
+        print_error "Pre-flight checks failed. Please fix the issues above and try again."
+        exit 1
+    fi
+    
+    # Auto-fix common issues before proceeding
+    run_auto_fixes "$(dirname "$0")"
+    local auto_fix_result=$?
+    
+    if [[ $auto_fix_result -eq 2 ]]; then
+        # Manual intervention needed
+        exit 1
+    fi
+    
     # Basic prerequisite checks inline since lib files may not exist
     if ! xcode-select -p &>/dev/null; then
         print_error "Xcode Command Line Tools not installed"
@@ -371,6 +390,7 @@ main_setup() {
         ./scripts/setup-claude-global.sh
         
         print_step "Setting up Claude MCP servers..."
+        [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
         ./scripts/setup-claude-mcp.sh
         
 
@@ -378,6 +398,7 @@ main_setup() {
         if command -v code &>/dev/null || [[ -d "/Applications/Visual Studio Code.app" ]]; then
             print_step "Setting up Claude Code MCP servers..."
             if command -v claude &>/dev/null; then
+                [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
                 ./scripts/setup-claude-code-mcp.sh
             else
                 print_info "Claude Code CLI not found - install Claude Code extension in VS Code"
@@ -403,6 +424,10 @@ main_setup() {
                 brew bundle --file="homebrew/Brewfile.minimal"
             else
                 brew bundle --file="homebrew/Brewfile"
+            fi
+            # Install machine-specific packages if present
+            if [[ -f "homebrew/Brewfile.local" ]]; then
+                brew bundle --file="homebrew/Brewfile.local"
             fi
         fi
         
@@ -447,6 +472,7 @@ main_setup() {
         
         print_step "Updating Claude MCP servers..."
         if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
+            [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
             ./scripts/setup-claude-mcp.sh --update
         fi
         
@@ -454,6 +480,7 @@ main_setup() {
         if command -v code &>/dev/null && command -v claude &>/dev/null; then
             print_step "Updating Claude Code MCP servers..."
             # The script will automatically only reconnect servers that were actually updated
+            [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
             ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
         fi
     fi
@@ -516,7 +543,18 @@ case "${1:-}" in
         ;;
     
     "fix")
-        run_diagnostics
+        echo -e "${BLUE}» Running Comprehensive Diagnostics & Auto-Fix${NC}"
+        echo "============================================="
+        
+        # First run auto-fixes
+        run_auto_fixes "$(dirname "$0")"
+        fix_result=$?
+        
+        # Then run additional diagnostics
+        if [[ $fix_result -ne 2 ]]; then
+            # Only run diagnostics if we don't need manual intervention
+            run_diagnostics
+        fi
         ;;
     
     "warp")

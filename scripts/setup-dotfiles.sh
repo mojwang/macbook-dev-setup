@@ -76,6 +76,11 @@ if [[ -d "dotfiles/.config/zsh" ]]; then
         if [[ -f ~/.config/zsh/51-api-keys.zsh ]]; then
             chmod 600 ~/.config/zsh/51-api-keys.zsh
         fi
+        # Create local overrides from template if not already present
+        if [[ ! -f ~/.config/zsh/99-local.zsh ]] && [[ -f "dotfiles/.config/zsh/99-local.zsh.example" ]]; then
+            (umask 077 && cp "dotfiles/.config/zsh/99-local.zsh.example" ~/.config/zsh/99-local.zsh)
+            print_info "Created ~/.config/zsh/99-local.zsh — customize for this machine"
+        fi
         print_success "Zsh modular configuration installed"
     else
         print_warning "Failed to install Zsh modular configuration"
