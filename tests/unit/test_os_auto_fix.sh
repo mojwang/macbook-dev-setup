@@ -45,9 +45,12 @@ rm -rf "$tmpdir"
 # =============================================================================
 
 it "should pass preflight on a healthy system"
-# On a normal dev machine this should pass
-if [[ $EUID -ne 0 ]] && [[ $(sw_vers -productVersion 2>/dev/null | cut -d. -f1) -ge 12 ]]; then
-    assert_true "preflight_check &>/dev/null" "Preflight should pass on healthy system"
+# On a normal dev machine this should pass — guard for Linux CI where sw_vers is absent
+if [[ $EUID -ne 0 ]] && command -v sw_vers >/dev/null 2>&1; then
+    mac_major=$(sw_vers -productVersion 2>/dev/null | cut -d. -f1)
+    if [[ "$mac_major" =~ ^[0-9]+$ ]] && [[ $mac_major -ge 12 ]]; then
+        assert_true "preflight_check &>/dev/null" "Preflight should pass on healthy system"
+    fi
 fi
 
 it "should fail when run as root"
