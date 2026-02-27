@@ -64,6 +64,7 @@ private/
 # Homebrew lockfile (can be sensitive)
 homebrew/Brewfile.lock.json
 homebrew/Brewfile.local
+homebrew/profiles/work-*.conf
 
 # Local setup overrides
 config/setup.local.yaml

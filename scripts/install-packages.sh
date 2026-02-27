@@ -28,7 +28,7 @@ if ! command -v brew &> /dev/null; then
 fi
 
 # Check if Brewfile exists
-BREWFILE="homebrew/Brewfile"
+BREWFILE="${BREWFILE:-homebrew/Brewfile}"
 if [[ ! -f "$BREWFILE" ]]; then
     print_error "Brewfile not found at $BREWFILE"
     exit 1

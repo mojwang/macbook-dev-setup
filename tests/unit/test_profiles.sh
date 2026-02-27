@@ -1,0 +1,394 @@
+#!/usr/bin/env bash
+
+# Unit tests for lib/profiles.sh
+
+_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_PROJECT_ROOT="$(cd "$_TEST_DIR/../.." && pwd)"
+
+# Source test framework
+source "$_TEST_DIR/../test_framework.sh"
+
+# Source the library under test
+source "$_PROJECT_ROOT/lib/signal-safety.sh" 2>/dev/null || true
+source "$_PROJECT_ROOT/lib/profiles.sh" 2>/dev/null || true
+
+# Setup test fixtures
+TEST_FIXTURES_DIR=$(mktemp -d /tmp/test_profiles.XXXXXX)
+TEST_PROFILES_DIR="$TEST_FIXTURES_DIR/profiles"
+mkdir -p "$TEST_PROFILES_DIR"
+
+# Create test profile files
+cat > "$TEST_PROFILES_DIR/personal.conf" << 'EOF'
+# Personal profile - no exclusions
+skip_mcp_setup=false
+EOF
+
+cat > "$TEST_PROFILES_DIR/work.conf" << 'EOF'
+# Work profile
+exclude=claude,withgraphite/tap/graphite
+skip_mcp_setup=false
+EOF
+
+cat > "$TEST_PROFILES_DIR/work-acme.conf" << 'EOF'
+# Acme corp profile
+inherit=work
+exclude=1password
+add=brew:acme-vpn-tool,cask:acme-browser
+skip_mcp_setup=true
+EOF
+
+cat > "$TEST_PROFILES_DIR/deep-child.conf" << 'EOF'
+# Profile with deep inheritance (should warn)
+inherit=work-acme
+exclude=slack
+EOF
+
+# Create test Brewfile
+cat > "$TEST_FIXTURES_DIR/Brewfile" << 'EOF'
+tap "homebrew/autoupdate"
+tap "oven-sh/bun"
+
+# Core development tools
+brew "git"
+brew "gh"
+brew "withgraphite/tap/graphite"
+
+# Applications
+cask "claude"
+cask "1password"
+cask "slack"
+cask "visual-studio-code"
+
+# Fonts
+cask "font-symbols-only-nerd-font"
+EOF
+
+# Override the profiles dir for tests
+PROFILES_DIR="$TEST_PROFILES_DIR"
+
+# Cleanup on exit
+cleanup_test_fixtures() {
+    rm -rf "$TEST_FIXTURES_DIR"
+}
+trap cleanup_test_fixtures EXIT
+
+# ============================================================================
+describe "parse_profile_value"
+# ============================================================================
+
+it "should parse a simple key=value"
+result=$(parse_profile_value "$TEST_PROFILES_DIR/work.conf" "exclude")
+assert_equals "claude,withgraphite/tap/graphite" "$result" "Should parse exclude value"
+
+it "should parse skip_mcp_setup"
+result=$(parse_profile_value "$TEST_PROFILES_DIR/work.conf" "skip_mcp_setup")
+assert_equals "false" "$result" "Should parse skip_mcp_setup=false"
+
+it "should parse inherit key"
+result=$(parse_profile_value "$TEST_PROFILES_DIR/work-acme.conf" "inherit")
+assert_equals "work" "$result" "Should parse inherit=work"
+
+it "should return empty for missing key"
+result=$(parse_profile_value "$TEST_PROFILES_DIR/personal.conf" "exclude")
+assert_empty "$result" "Missing key should return empty"
+
+it "should return empty for missing file"
+result=$(parse_profile_value "$TEST_PROFILES_DIR/nonexistent.conf" "exclude")
+assert_empty "$result" "Missing file should return empty"
+
+it "should ignore comment lines"
+result=$(parse_profile_value "$TEST_PROFILES_DIR/work.conf" "#")
+assert_empty "$result" "Comment prefix should not match as key"
+
+# ============================================================================
+describe "resolve_profile - no inheritance"
+# ============================================================================
+
+it "should resolve personal profile with no excludes"
+resolve_profile "personal"
+assert_equals "0" "${#PROFILE_EXCLUDES[@]}" "Personal should have 0 excludes"
+assert_equals "false" "$PROFILE_SKIP_MCP" "Personal should not skip MCP"
+
+it "should resolve work profile with excludes"
+resolve_profile "work"
+assert_equals "2" "${#PROFILE_EXCLUDES[@]}" "Work should have 2 excludes"
+assert_contains "${PROFILE_EXCLUDES[*]}" "claude" "Should exclude claude"
+assert_contains "${PROFILE_EXCLUDES[*]}" "withgraphite/tap/graphite" "Should exclude graphite"
+assert_equals "false" "$PROFILE_SKIP_MCP" "Work should not skip MCP"
+
+# ============================================================================
+describe "resolve_profile - with inheritance"
+# ============================================================================
+
+it "should merge excludes from parent and child"
+resolve_profile "work-acme"
+assert_contains "${PROFILE_EXCLUDES[*]}" "claude" "Should inherit claude exclude from work"
+assert_contains "${PROFILE_EXCLUDES[*]}" "withgraphite/tap/graphite" "Should inherit graphite exclude from work"
+assert_contains "${PROFILE_EXCLUDES[*]}" "1password" "Should have 1password from child"
+
+it "should merge adds from child"
+resolve_profile "work-acme"
+assert_equals "2" "${#PROFILE_ADDS[@]}" "Should have 2 add entries"
+assert_contains "${PROFILE_ADDS[*]}" "brew:acme-vpn-tool" "Should add acme-vpn-tool"
+assert_contains "${PROFILE_ADDS[*]}" "cask:acme-browser" "Should add acme-browser"
+
+it "should override options from child"
+resolve_profile "work-acme"
+assert_equals "true" "$PROFILE_SKIP_MCP" "Child should override skip_mcp_setup to true"
+
+# ============================================================================
+describe "resolve_profile - deep inheritance warning"
+# ============================================================================
+
+it "should warn on deep inheritance but still resolve"
+# Capture warning output without subshell losing global state
+resolve_profile "deep-child" > /tmp/test_deep_inherit_out.txt 2>&1
+output=$(cat /tmp/test_deep_inherit_out.txt)
+rm -f /tmp/test_deep_inherit_out.txt
+assert_contains "$output" "Deep inheritance" "Should warn about deep inheritance"
+# Should still have the excludes from work-acme (its parent)
+assert_contains "${PROFILE_EXCLUDES[*]}" "1password" "Should still get parent excludes"
+assert_contains "${PROFILE_EXCLUDES[*]}" "slack" "Should have child's own excludes"
+
+# ============================================================================
+describe "resolve_profile - missing profile"
+# ============================================================================
+
+it "should fail gracefully for missing profile"
+if resolve_profile "nonexistent" 2>/dev/null; then
+    fail_test "Should fail for missing profile"
+else
+    pass_test "Missing profile returns non-zero"
+fi
+
+# ============================================================================
+describe "filter_brewfile - excludes"
+# ============================================================================
+
+it "should exclude matching packages"
+resolve_profile "work"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+filtered_content=$(cat "$filtered")
+assert_not_contains "$filtered_content" 'brew "withgraphite/tap/graphite"' "Graphite should be excluded"
+assert_not_contains "$filtered_content" 'cask "claude"' "Claude cask should be excluded"
+
+it "should preserve non-excluded packages"
+resolve_profile "work"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+filtered_content=$(cat "$filtered")
+assert_contains "$filtered_content" 'brew "git"' "git should be preserved"
+assert_contains "$filtered_content" 'brew "gh"' "gh should be preserved"
+assert_contains "$filtered_content" 'cask "1password"' "1password should be preserved"
+assert_contains "$filtered_content" 'cask "slack"' "slack should be preserved"
+
+it "should preserve tap lines"
+resolve_profile "work"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+filtered_content=$(cat "$filtered")
+assert_contains "$filtered_content" 'tap "homebrew/autoupdate"' "tap lines should be preserved"
+assert_contains "$filtered_content" 'tap "oven-sh/bun"' "tap lines should be preserved"
+
+it "should preserve comments"
+resolve_profile "work"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+filtered_content=$(cat "$filtered")
+assert_contains "$filtered_content" "# Core development tools" "Comments should be preserved"
+
+# ============================================================================
+describe "filter_brewfile - adds"
+# ============================================================================
+
+it "should append add entries"
+resolve_profile "work-acme"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+filtered_content=$(cat "$filtered")
+assert_contains "$filtered_content" 'brew "acme-vpn-tool"' "Should append brew add entry"
+assert_contains "$filtered_content" 'cask "acme-browser"' "Should append cask add entry"
+
+it "should exclude and add in same profile"
+resolve_profile "work-acme"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+filtered_content=$(cat "$filtered")
+assert_not_contains "$filtered_content" 'cask "claude"' "Claude should be excluded"
+assert_not_contains "$filtered_content" 'cask "1password"' "1password should be excluded"
+assert_contains "$filtered_content" 'cask "acme-browser"' "acme-browser should be added"
+
+# ============================================================================
+describe "filter_brewfile - no changes needed"
+# ============================================================================
+
+it "should return original path when no excludes or adds"
+resolve_profile "personal"
+filtered=$(filter_brewfile "$TEST_FIXTURES_DIR/Brewfile")
+assert_equals "$TEST_FIXTURES_DIR/Brewfile" "$filtered" "Should return original path for personal profile"
+
+# ============================================================================
+describe "Profile files exist"
+# ============================================================================
+
+it "should have personal.conf in project"
+assert_file_exists "$_PROJECT_ROOT/homebrew/profiles/personal.conf" "personal.conf should exist"
+
+it "should have work.conf in project"
+assert_file_exists "$_PROJECT_ROOT/homebrew/profiles/work.conf" "work.conf should exist"
+
+# ============================================================================
+describe "Gitignore has work-*.conf pattern"
+# ============================================================================
+
+it "should gitignore company-specific work profiles"
+gitignore_content=$(cat "$_PROJECT_ROOT/.gitignore")
+assert_contains "$gitignore_content" "homebrew/profiles/work-*.conf" "Gitignore should have work-*.conf pattern"
+
+# ============================================================================
+describe "list_profiles"
+# ============================================================================
+
+it "should list available profiles"
+output=$(list_profiles)
+assert_contains "$output" "personal" "Should list personal profile"
+assert_contains "$output" "work" "Should list work profile"
+
+it "should show profile descriptions"
+output=$(list_profiles)
+assert_contains "$output" "Personal profile" "Should show personal description"
+assert_contains "$output" "Work profile" "Should show work description"
+
+it "should show usage hint"
+output=$(list_profiles)
+assert_contains "$output" "--profile" "Should show usage hint"
+
+# ============================================================================
+describe "Verbose logging"
+# ============================================================================
+
+it "should not break resolution when VERBOSE is true"
+VERBOSE=true
+resolve_profile "work" > /dev/null 2>&1
+assert_equals "2" "${#PROFILE_EXCLUDES[@]}" "Work profile should still resolve with VERBOSE=true"
+VERBOSE=false
+
+it "should emit verbose output when enabled"
+VERBOSE=true
+output=$(resolve_profile "work" 2>&1)
+VERBOSE=false
+assert_contains "$output" "Loading profile" "Verbose should show loading message"
+assert_contains "$output" "excludes" "Verbose should show resolved counts"
+
+# ============================================================================
+describe "validate_profile - valid profiles"
+# ============================================================================
+
+it "should pass validation for personal profile"
+if validate_profile "personal" 2>/dev/null; then
+    pass_test "personal profile passes validation"
+else
+    fail_test "personal profile should pass validation"
+fi
+
+it "should pass validation for work profile"
+if validate_profile "work" 2>/dev/null; then
+    pass_test "work profile passes validation"
+else
+    fail_test "work profile should pass validation"
+fi
+
+it "should pass validation for profile with inheritance"
+if validate_profile "work-acme" 2>/dev/null; then
+    pass_test "work-acme profile passes validation"
+else
+    fail_test "work-acme profile should pass validation"
+fi
+
+# ============================================================================
+describe "validate_profile - invalid profiles"
+# ============================================================================
+
+it "should fail for nonexistent profile"
+if validate_profile "nonexistent" 2>/dev/null; then
+    fail_test "nonexistent profile should fail validation"
+else
+    pass_test "nonexistent profile fails validation"
+fi
+
+it "should fail for unknown keys"
+cat > "$TEST_PROFILES_DIR/bad-keys.conf" << 'EOF'
+# Bad profile with unknown keys
+exclude=slack
+bogus_key=something
+EOF
+output=$(validate_profile "bad-keys" 2>&1)
+rc=$?
+assert_equals "1" "$rc" "Should return non-zero for unknown keys"
+assert_contains "$output" "Unknown key" "Should report unknown key"
+assert_contains "$output" "bogus_key" "Should name the bad key"
+
+it "should fail for invalid syntax"
+cat > "$TEST_PROFILES_DIR/bad-syntax.conf" << 'EOF'
+# Bad profile with invalid syntax
+exclude=slack
+this is not valid
+EOF
+output=$(validate_profile "bad-syntax" 2>&1)
+rc=$?
+assert_equals "1" "$rc" "Should return non-zero for bad syntax"
+assert_contains "$output" "Invalid syntax" "Should report invalid syntax"
+
+it "should fail when parent profile does not exist"
+cat > "$TEST_PROFILES_DIR/orphan.conf" << 'EOF'
+# Profile with missing parent
+inherit=does-not-exist
+exclude=slack
+EOF
+output=$(validate_profile "orphan" 2>&1)
+rc=$?
+assert_equals "1" "$rc" "Should return non-zero for missing parent"
+assert_contains "$output" "not found" "Should report missing parent"
+
+it "should warn on deep inheritance"
+output=$(validate_profile "deep-child" 2>&1)
+assert_contains "$output" "Deep inheritance" "Should warn about deep inheritance"
+
+# ============================================================================
+describe "Error handling flow - resolve_profile guards print_profile_summary"
+# ============================================================================
+
+it "should prevent print_profile_summary after resolve_profile failure"
+# Simulate the guard pattern used in setup.sh:
+#   if ! resolve_profile "$SETUP_PROFILE"; then exit 1; fi
+#   print_profile_summary "$SETUP_PROFILE"
+summary_ran=false
+if resolve_profile "nonexistent" 2>/dev/null; then
+    summary_ran=true
+    print_profile_summary "nonexistent" > /dev/null 2>&1
+fi
+assert_equals "false" "$summary_ran" "print_profile_summary should not run after resolve_profile failure"
+
+it "should allow print_profile_summary after resolve_profile success"
+summary_ran=false
+if resolve_profile "work" 2>/dev/null; then
+    summary_ran=true
+fi
+assert_equals "true" "$summary_ran" "print_profile_summary should run after resolve_profile success"
+
+# ============================================================================
+describe "--validate-profile in help text"
+# ============================================================================
+
+it "should document --validate-profile in setup.sh help"
+help_content=$(cat "$_PROJECT_ROOT/setup.sh")
+assert_contains "$help_content" "--validate-profile" "setup.sh should document --validate-profile"
+
+# ============================================================================
+describe "--list-profiles in help text"
+# ============================================================================
+
+it "should document --list-profiles in setup.sh help"
+help_content=$(cat "$_PROJECT_ROOT/setup.sh")
+assert_contains "$help_content" "--list-profiles" "setup.sh should document --list-profiles"
+
+# ============================================================================
+# Summary
+# ============================================================================
+
+print_test_summary

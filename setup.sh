@@ -38,6 +38,9 @@ source "$(dirname "$0")/lib/backup-manager.sh"
 # Load OS auto-fix library
 source "$(dirname "$0")/lib/os-auto-fix.sh"
 
+# Load profile-based Brewfile filtering
+source "$(dirname "$0")/lib/profiles.sh"
+
 # Environment variables for power users
 VERBOSE="${SETUP_VERBOSE:-false}"
 LOG_FILE="${SETUP_LOG:-}"
@@ -64,10 +67,17 @@ Commands:
     advanced   Interactive mode for advanced options
     help       Show this help message
 
+Options:
+    --profile NAME          Use a profile to filter packages (e.g., work, personal)
+                            Profiles live in homebrew/profiles/<name>.conf
+    --list-profiles         List available profiles
+    --validate-profile NAME Validate a profile config for errors
+
 Examples:
-    ./setup.sh              # First run: full setup. Later: sync & update
-    ./setup.sh preview      # See what would happen
-    ./setup.sh minimal      # Quick essential setup
+    ./setup.sh                      # First run: full setup. Later: sync & update
+    ./setup.sh preview              # See what would happen
+    ./setup.sh minimal              # Quick essential setup
+    ./setup.sh --profile work       # Setup with work profile (excludes GenAI tools)
 
 For power users - use environment variables:
     SETUP_VERBOSE=1 ./setup.sh      # Verbose output
@@ -379,6 +389,12 @@ main_setup() {
         print_step "Installing packages..."
         if [[ "$is_minimal" == "true" ]]; then
             BREWFILE="homebrew/Brewfile.minimal" ./scripts/install-packages.sh
+        elif [[ -n "$SETUP_PROFILE" ]]; then
+            if ! resolve_profile "$SETUP_PROFILE"; then
+                exit 1
+            fi
+            print_profile_summary "$SETUP_PROFILE"
+            BREWFILE=$(filter_brewfile "homebrew/Brewfile") ./scripts/install-packages.sh
         else
             ./scripts/install-packages.sh
         fi
@@ -389,20 +405,24 @@ main_setup() {
         print_step "Setting up global Claude configuration..."
         ./scripts/setup-claude-global.sh
         
-        print_step "Setting up Claude MCP servers..."
-        [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
-        ./scripts/setup-claude-mcp.sh
-        
+        if [[ "${PROFILE_SKIP_MCP:-false}" != "true" ]]; then
+            print_step "Setting up Claude MCP servers..."
+            [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
+            ./scripts/setup-claude-mcp.sh
 
-        # Setup Claude Code MCP servers if VS Code is installed
-        if command -v code &>/dev/null || [[ -d "/Applications/Visual Studio Code.app" ]]; then
-            print_step "Setting up Claude Code MCP servers..."
-            if command -v claude &>/dev/null; then
-                [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
-                ./scripts/setup-claude-code-mcp.sh
-            else
-                print_info "Claude Code CLI not found - install Claude Code extension in VS Code"
+
+            # Setup Claude Code MCP servers if VS Code is installed
+            if command -v code &>/dev/null || [[ -d "/Applications/Visual Studio Code.app" ]]; then
+                print_step "Setting up Claude Code MCP servers..."
+                if command -v claude &>/dev/null; then
+                    [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
+                    ./scripts/setup-claude-code-mcp.sh
+                else
+                    print_info "Claude Code CLI not found - install Claude Code extension in VS Code"
+                fi
             fi
+        else
+            print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
         fi
         
         print_step "Configuring applications..."
@@ -422,6 +442,14 @@ main_setup() {
             brew update
             if [[ "$is_minimal" == "true" ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
                 brew bundle --file="homebrew/Brewfile.minimal"
+            elif [[ -n "$SETUP_PROFILE" ]]; then
+                if ! resolve_profile "$SETUP_PROFILE"; then
+                    exit 1
+                fi
+                print_profile_summary "$SETUP_PROFILE"
+                local filtered_brewfile
+                filtered_brewfile=$(filter_brewfile "homebrew/Brewfile")
+                brew bundle --file="$filtered_brewfile"
             else
                 brew bundle --file="homebrew/Brewfile"
             fi
@@ -470,18 +498,22 @@ main_setup() {
             ./scripts/setup-claude-global.sh
         fi
         
-        print_step "Updating Claude MCP servers..."
-        if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
-            [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
-            ./scripts/setup-claude-mcp.sh --update
-        fi
-        
-        # Update Claude Code MCP servers if VS Code and Claude CLI are installed
-        if command -v code &>/dev/null && command -v claude &>/dev/null; then
-            print_step "Updating Claude Code MCP servers..."
-            # The script will automatically only reconnect servers that were actually updated
-            [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
-            ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
+        if [[ "${PROFILE_SKIP_MCP:-false}" != "true" ]]; then
+            print_step "Updating Claude MCP servers..."
+            if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
+                [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
+                ./scripts/setup-claude-mcp.sh --update
+            fi
+
+            # Update Claude Code MCP servers if VS Code and Claude CLI are installed
+            if command -v code &>/dev/null && command -v claude &>/dev/null; then
+                print_step "Updating Claude Code MCP servers..."
+                # The script will automatically only reconnect servers that were actually updated
+                [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
+                ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
+            fi
+        else
+            print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
         fi
     fi
     
@@ -521,6 +553,43 @@ main_setup() {
         fi
     fi
 }
+
+# Pre-parse --profile flag from arguments
+SETUP_PROFILE=""
+REMAINING_ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --profile)
+            if [[ -n "${2:-}" ]]; then
+                SETUP_PROFILE="$2"
+                shift 2
+            else
+                print_error "--profile requires a profile name"
+                exit 1
+            fi
+            ;;
+        --list-profiles)
+            list_profiles
+            exit 0
+            ;;
+        --validate-profile)
+            if [[ -n "${2:-}" ]]; then
+                if validate_profile "$2"; then
+                    print_success "Profile '$2' is valid"
+                fi
+                exit $?
+            else
+                print_error "--validate-profile requires a profile name"
+                exit 1
+            fi
+            ;;
+        *)
+            REMAINING_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+set -- "${REMAINING_ARGS[@]}"
 
 # Main script logic
 case "${1:-}" in
