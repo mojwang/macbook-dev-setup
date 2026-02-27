@@ -68,9 +68,10 @@ Commands:
     help       Show this help message
 
 Options:
-    --profile NAME   Use a profile to filter packages (e.g., work, personal)
-                     Profiles live in homebrew/profiles/<name>.conf
-    --list-profiles  List available profiles
+    --profile NAME          Use a profile to filter packages (e.g., work, personal)
+                            Profiles live in homebrew/profiles/<name>.conf
+    --list-profiles         List available profiles
+    --validate-profile NAME Validate a profile config for errors
 
 Examples:
     ./setup.sh                      # First run: full setup. Later: sync & update
@@ -570,6 +571,17 @@ while [[ $# -gt 0 ]]; do
         --list-profiles)
             list_profiles
             exit 0
+            ;;
+        --validate-profile)
+            if [[ -n "${2:-}" ]]; then
+                if validate_profile "$2"; then
+                    print_success "Profile '$2' is valid"
+                fi
+                exit $?
+            else
+                print_error "--validate-profile requires a profile name"
+                exit 1
+            fi
             ;;
         *)
             REMAINING_ARGS+=("$1")

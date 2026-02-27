@@ -65,6 +65,11 @@ resolve_profile() {
         return 1
     fi
 
+    # Validate profile syntax before processing
+    if ! validate_profile "$name"; then
+        return 1
+    fi
+
     [[ "${VERBOSE:-false}" == true ]] && print_info "Loading profile: $conf_file"
 
     # Reset state
@@ -233,6 +238,75 @@ list_profiles() {
 
     echo ""
     echo "Usage: ./setup.sh --profile <name>"
+}
+
+# Validate a profile config file for syntax errors
+# Checks: file exists, valid keys, parent exists, no deep inheritance
+# Usage: validate_profile <name>
+# Returns 0 on success, 1 on error (with error messages on stderr)
+validate_profile() {
+    local name="$1"
+    local conf_file="$PROFILES_DIR/${name}.conf"
+    local errors=0
+
+    if [[ ! -f "$conf_file" ]]; then
+        print_error "Profile not found: $conf_file"
+        return 1
+    fi
+
+    # Check for unknown keys
+    local valid_keys="inherit exclude add skip_mcp_setup"
+    local line_num=0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        ((line_num++))
+        # Skip comments and blank lines
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "${line// /}" ]] && continue
+
+        # Extract key from key=value
+        if [[ "$line" =~ ^[[:space:]]*([a-zA-Z_]+)[[:space:]]*= ]]; then
+            local key="${BASH_REMATCH[1]}"
+            local key_valid=false
+            for vk in $valid_keys; do
+                if [[ "$key" == "$vk" ]]; then
+                    key_valid=true
+                    break
+                fi
+            done
+            if [[ "$key_valid" == false ]]; then
+                print_error "Unknown key '$key' at line $line_num in $conf_file"
+                ((errors++))
+            fi
+        else
+            print_error "Invalid syntax at line $line_num in $conf_file: $line"
+            ((errors++))
+        fi
+    done < "$conf_file"
+
+    # Check inheritance
+    local parent
+    parent=$(parse_profile_value "$conf_file" "inherit")
+    if [[ -n "$parent" ]]; then
+        local parent_file="$PROFILES_DIR/${parent}.conf"
+        if [[ ! -f "$parent_file" ]]; then
+            print_error "Parent profile '$parent' not found: $parent_file"
+            ((errors++))
+        else
+            # Check for deep inheritance
+            local grandparent
+            grandparent=$(parse_profile_value "$parent_file" "inherit")
+            if [[ -n "$grandparent" ]]; then
+                print_warning "Deep inheritance: $name -> $parent -> $grandparent (only single-level supported)"
+            fi
+        fi
+    fi
+
+    if [[ $errors -gt 0 ]]; then
+        print_error "Profile '$name' has $errors error(s)"
+        return 1
+    fi
+
+    return 0
 }
 
 # Print a summary of what the profile does

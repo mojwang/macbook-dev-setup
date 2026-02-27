@@ -276,6 +276,110 @@ assert_contains "$output" "Loading profile" "Verbose should show loading message
 assert_contains "$output" "excludes" "Verbose should show resolved counts"
 
 # ============================================================================
+describe "validate_profile - valid profiles"
+# ============================================================================
+
+it "should pass validation for personal profile"
+if validate_profile "personal" 2>/dev/null; then
+    pass_test "personal profile passes validation"
+else
+    fail_test "personal profile should pass validation"
+fi
+
+it "should pass validation for work profile"
+if validate_profile "work" 2>/dev/null; then
+    pass_test "work profile passes validation"
+else
+    fail_test "work profile should pass validation"
+fi
+
+it "should pass validation for profile with inheritance"
+if validate_profile "work-acme" 2>/dev/null; then
+    pass_test "work-acme profile passes validation"
+else
+    fail_test "work-acme profile should pass validation"
+fi
+
+# ============================================================================
+describe "validate_profile - invalid profiles"
+# ============================================================================
+
+it "should fail for nonexistent profile"
+if validate_profile "nonexistent" 2>/dev/null; then
+    fail_test "nonexistent profile should fail validation"
+else
+    pass_test "nonexistent profile fails validation"
+fi
+
+it "should fail for unknown keys"
+cat > "$TEST_PROFILES_DIR/bad-keys.conf" << 'EOF'
+# Bad profile with unknown keys
+exclude=slack
+bogus_key=something
+EOF
+output=$(validate_profile "bad-keys" 2>&1)
+rc=$?
+assert_equals "1" "$rc" "Should return non-zero for unknown keys"
+assert_contains "$output" "Unknown key" "Should report unknown key"
+assert_contains "$output" "bogus_key" "Should name the bad key"
+
+it "should fail for invalid syntax"
+cat > "$TEST_PROFILES_DIR/bad-syntax.conf" << 'EOF'
+# Bad profile with invalid syntax
+exclude=slack
+this is not valid
+EOF
+output=$(validate_profile "bad-syntax" 2>&1)
+rc=$?
+assert_equals "1" "$rc" "Should return non-zero for bad syntax"
+assert_contains "$output" "Invalid syntax" "Should report invalid syntax"
+
+it "should fail when parent profile does not exist"
+cat > "$TEST_PROFILES_DIR/orphan.conf" << 'EOF'
+# Profile with missing parent
+inherit=does-not-exist
+exclude=slack
+EOF
+output=$(validate_profile "orphan" 2>&1)
+rc=$?
+assert_equals "1" "$rc" "Should return non-zero for missing parent"
+assert_contains "$output" "not found" "Should report missing parent"
+
+it "should warn on deep inheritance"
+output=$(validate_profile "deep-child" 2>&1)
+assert_contains "$output" "Deep inheritance" "Should warn about deep inheritance"
+
+# ============================================================================
+describe "Error handling flow - resolve_profile guards print_profile_summary"
+# ============================================================================
+
+it "should prevent print_profile_summary after resolve_profile failure"
+# Simulate the guard pattern used in setup.sh:
+#   if ! resolve_profile "$SETUP_PROFILE"; then exit 1; fi
+#   print_profile_summary "$SETUP_PROFILE"
+summary_ran=false
+if resolve_profile "nonexistent" 2>/dev/null; then
+    summary_ran=true
+    print_profile_summary "nonexistent" > /dev/null 2>&1
+fi
+assert_equals "false" "$summary_ran" "print_profile_summary should not run after resolve_profile failure"
+
+it "should allow print_profile_summary after resolve_profile success"
+summary_ran=false
+if resolve_profile "work" 2>/dev/null; then
+    summary_ran=true
+fi
+assert_equals "true" "$summary_ran" "print_profile_summary should run after resolve_profile success"
+
+# ============================================================================
+describe "--validate-profile in help text"
+# ============================================================================
+
+it "should document --validate-profile in setup.sh help"
+help_content=$(cat "$_PROJECT_ROOT/setup.sh")
+assert_contains "$help_content" "--validate-profile" "setup.sh should document --validate-profile"
+
+# ============================================================================
 describe "--list-profiles in help text"
 # ============================================================================
 
