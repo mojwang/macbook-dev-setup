@@ -70,6 +70,7 @@ Commands:
 Options:
     --profile NAME   Use a profile to filter packages (e.g., work, personal)
                      Profiles live in homebrew/profiles/<name>.conf
+    --list-profiles  List available profiles
 
 Examples:
     ./setup.sh                      # First run: full setup. Later: sync & update
@@ -388,7 +389,10 @@ main_setup() {
         if [[ "$is_minimal" == "true" ]]; then
             BREWFILE="homebrew/Brewfile.minimal" ./scripts/install-packages.sh
         elif [[ -n "$SETUP_PROFILE" ]]; then
-            resolve_profile "$SETUP_PROFILE" && print_profile_summary "$SETUP_PROFILE"
+            if ! resolve_profile "$SETUP_PROFILE"; then
+                exit 1
+            fi
+            print_profile_summary "$SETUP_PROFILE"
             BREWFILE=$(filter_brewfile "homebrew/Brewfile") ./scripts/install-packages.sh
         else
             ./scripts/install-packages.sh
@@ -438,7 +442,10 @@ main_setup() {
             if [[ "$is_minimal" == "true" ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
                 brew bundle --file="homebrew/Brewfile.minimal"
             elif [[ -n "$SETUP_PROFILE" ]]; then
-                resolve_profile "$SETUP_PROFILE" && print_profile_summary "$SETUP_PROFILE"
+                if ! resolve_profile "$SETUP_PROFILE"; then
+                    exit 1
+                fi
+                print_profile_summary "$SETUP_PROFILE"
                 local filtered_brewfile
                 filtered_brewfile=$(filter_brewfile "homebrew/Brewfile")
                 brew bundle --file="$filtered_brewfile"
@@ -559,6 +566,10 @@ while [[ $# -gt 0 ]]; do
                 print_error "--profile requires a profile name"
                 exit 1
             fi
+            ;;
+        --list-profiles)
+            list_profiles
+            exit 0
             ;;
         *)
             REMAINING_ARGS+=("$1")

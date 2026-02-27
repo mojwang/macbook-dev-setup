@@ -65,6 +65,8 @@ resolve_profile() {
         return 1
     fi
 
+    [[ "${VERBOSE:-false}" == true ]] && print_info "Loading profile: $conf_file"
+
     # Reset state
     PROFILE_EXCLUDES=()
     PROFILE_ADDS=()
@@ -80,6 +82,8 @@ resolve_profile() {
         if [[ ! -f "$parent_file" ]]; then
             print_warning "Parent profile not found: $parent_file (ignoring inheritance)"
         else
+            [[ "${VERBOSE:-false}" == true ]] && print_info "Inheriting from parent: $parent ($parent_file)"
+
             # Check for deep inheritance (grandparent)
             local grandparent
             grandparent=$(parse_profile_value "$parent_file" "inherit")
@@ -94,6 +98,8 @@ resolve_profile() {
 
     # Load child values (merges excludes/adds, overrides options)
     _load_profile_values "$conf_file" "child"
+
+    [[ "${VERBOSE:-false}" == true ]] && print_info "Resolved ${#PROFILE_EXCLUDES[@]} excludes, ${#PROFILE_ADDS[@]} adds"
 
     return 0
 }
@@ -198,7 +204,35 @@ filter_brewfile() {
         done
     fi
 
+    [[ "${VERBOSE:-false}" == true ]] && print_info "Filtered Brewfile: $filtered"
+
     echo "$filtered"
+}
+
+# List available profiles
+# Usage: list_profiles
+list_profiles() {
+    echo "Available profiles:"
+    echo ""
+
+    local found=false
+    for conf_file in "$PROFILES_DIR"/*.conf; do
+        [[ ! -f "$conf_file" ]] && continue
+        found=true
+        local name
+        name=$(basename "$conf_file" .conf)
+        # Extract first comment line as description
+        local description
+        description=$(grep -m1 '^#' "$conf_file" | sed 's/^#[[:space:]]*//')
+        printf "  %-20s %s\n" "$name" "$description"
+    done
+
+    if [[ "$found" == false ]]; then
+        echo "  (none found in $PROFILES_DIR)"
+    fi
+
+    echo ""
+    echo "Usage: ./setup.sh --profile <name>"
 }
 
 # Print a summary of what the profile does

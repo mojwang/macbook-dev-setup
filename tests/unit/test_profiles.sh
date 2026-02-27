@@ -241,6 +241,49 @@ gitignore_content=$(cat "$_PROJECT_ROOT/.gitignore")
 assert_contains "$gitignore_content" "homebrew/profiles/work-*.conf" "Gitignore should have work-*.conf pattern"
 
 # ============================================================================
+describe "list_profiles"
+# ============================================================================
+
+it "should list available profiles"
+output=$(list_profiles)
+assert_contains "$output" "personal" "Should list personal profile"
+assert_contains "$output" "work" "Should list work profile"
+
+it "should show profile descriptions"
+output=$(list_profiles)
+assert_contains "$output" "Personal profile" "Should show personal description"
+assert_contains "$output" "Work profile" "Should show work description"
+
+it "should show usage hint"
+output=$(list_profiles)
+assert_contains "$output" "--profile" "Should show usage hint"
+
+# ============================================================================
+describe "Verbose logging"
+# ============================================================================
+
+it "should not break resolution when VERBOSE is true"
+VERBOSE=true
+resolve_profile "work" > /dev/null 2>&1
+assert_equals "2" "${#PROFILE_EXCLUDES[@]}" "Work profile should still resolve with VERBOSE=true"
+VERBOSE=false
+
+it "should emit verbose output when enabled"
+VERBOSE=true
+output=$(resolve_profile "work" 2>&1)
+VERBOSE=false
+assert_contains "$output" "Loading profile" "Verbose should show loading message"
+assert_contains "$output" "excludes" "Verbose should show resolved counts"
+
+# ============================================================================
+describe "--list-profiles in help text"
+# ============================================================================
+
+it "should document --list-profiles in setup.sh help"
+help_content=$(cat "$_PROJECT_ROOT/setup.sh")
+assert_contains "$help_content" "--list-profiles" "setup.sh should document --list-profiles"
+
+# ============================================================================
 # Summary
 # ============================================================================
 
