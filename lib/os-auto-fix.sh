@@ -68,9 +68,11 @@ auto_fix_homebrew_path() {
             eval "$($brew_path shellenv)"
             
             # Check if we need to update shell config
-            if ! grep -q '/opt/homebrew/bin' ~/.zshrc 2>/dev/null; then
+            local brew_dir
+            brew_dir="$(dirname "$brew_path")"
+            if ! grep -q "$brew_dir" ~/.zshrc 2>/dev/null; then
                 print_info "Adding Homebrew to ~/.zshrc..."
-                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
+                echo "eval \"\$(${brew_path} shellenv)\"" >> ~/.zshrc
                 path_fixed=true
             fi
             
@@ -342,11 +344,13 @@ preflight_check() {
     
     # Check internet connectivity (prefer HTTPS over ICMP which may be blocked)
     if command -v curl &>/dev/null; then
-        if ! curl -s --max-time 5 https://www.apple.com >/dev/null 2>&1; then
+        # 10s timeout — intentionally shorter than 30s standard for pre-flight UX
+        if ! curl -s --max-time 10 https://www.apple.com >/dev/null 2>&1; then
             issues+=("No internet connection detected (HTTPS check failed)")
         fi
     elif ! ping -c 1 -W 5 8.8.8.8 &>/dev/null; then
-        issues+=("No internet connection detected (ICMP check failed)")
+        # ICMP fallback — may fail behind firewalls; warn rather than block
+        print_warning "ICMP connectivity check failed (may be blocked by firewall)"
     fi
     
     # Check if running as root (shouldn't be)
