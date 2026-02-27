@@ -114,6 +114,17 @@ assert_true "echo '$output' | grep -q 'arm64'" "Should handle Apple Silicon"
 assert_true "echo '$output' | grep -q '/usr/local/bin/brew'" "Should handle Intel path"
 
 # =============================================================================
+# Architecture-Aware zshrc Path Tests
+# =============================================================================
+
+it "should use architecture-aware path for zshrc Homebrew config"
+output=$(declare -f auto_fix_homebrew_path)
+assert_false "echo '$output' | grep -q \"echo.*eval.*opt/homebrew.*zshrc\"" \
+    "Should not hardcode /opt/homebrew path in zshrc append"
+assert_true "echo '$output' | grep -q 'brew_path.*shellenv'" \
+    "Should use brew_path variable for shellenv in zshrc"
+
+# =============================================================================
 # Path Validation Before rm -rf Tests
 # =============================================================================
 
