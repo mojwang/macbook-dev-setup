@@ -103,5 +103,39 @@ output=$(declare -f auto_fix_npm)
 assert_false "echo '$output' | grep -q '\$(whoami)'" "Should not use \$(whoami) inline"
 assert_true "echo '$output' | grep -q 'id -un'" "Should use id -un for current user"
 
+# =============================================================================
+# Architecture Detection Tests
+# =============================================================================
+
+it "should detect architecture for Homebrew path"
+output=$(declare -f auto_fix_homebrew_path)
+assert_true "echo '$output' | grep -q 'uname -m'" "Should detect architecture"
+assert_true "echo '$output' | grep -q 'arm64'" "Should handle Apple Silicon"
+assert_true "echo '$output' | grep -q '/usr/local/bin/brew'" "Should handle Intel path"
+
+# =============================================================================
+# Path Validation Before rm -rf Tests
+# =============================================================================
+
+it "should validate path exists before rm -rf"
+output=$(declare -f auto_fix_xcode_clt)
+assert_true "echo '$output' | grep -q '\-d /Library/Developer/CommandLineTools'" "Should check directory exists before rm -rf"
+
+# =============================================================================
+# Find Depth Limit Tests
+# =============================================================================
+
+it "should limit find depth in permission scan"
+output=$(declare -f auto_fix_permissions)
+assert_true "echo '$output' | grep -q 'maxdepth'" "Should limit find depth"
+
+# =============================================================================
+# NPM Manual Intervention Propagation Tests
+# =============================================================================
+
+it "should propagate npm manual intervention in run_auto_fixes"
+output=$(declare -f run_auto_fixes)
+assert_true "echo '$output' | grep -q 'npm_result'" "Should capture npm exit code"
+
 # Print results
 print_summary
