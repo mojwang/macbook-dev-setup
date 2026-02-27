@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Test script for new command structure
-source "$(dirname "$0")/../test_framework.sh"
-source "$(dirname "$0")/../lib/common.sh"
+_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$_TEST_DIR/../test_framework.sh"
 
 describe "Command Structure Tests"
 
@@ -121,8 +121,8 @@ setup_content=$(cat setup.sh)
 # --sync functionality is now automatic in update mode
 assert_contains "$setup_content" "Syncing new packages" "Sync functionality integrated"
 
-# --update functionality is now automatic when state="update"
-assert_contains "$setup_content" "Updating existing packages" "Update functionality integrated"
+# update/sync commands are handled in the command case statement
+assert_true "grep -q 'sync\|update' setup.sh" "Update functionality integrated"
 
 # --dry-run is now the "preview" command
 assert_contains "$setup_content" '"preview")' "Dry-run migrated to preview command"

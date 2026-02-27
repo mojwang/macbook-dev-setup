@@ -2,11 +2,14 @@
 
 # Unit tests for lib/common.sh
 
-# Source test framework
-source "$(dirname "$0")/../test_framework.sh"
+_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_PROJECT_ROOT="$(cd "$_TEST_DIR/../.." && pwd)"
 
-# Source the library to test
-source "$ROOT_DIR/lib/common.sh"
+# Source test framework
+source "$_TEST_DIR/../test_framework.sh"
+
+# Source the library to test (may already be loaded via runner; suppress readonly errors)
+source "$_PROJECT_ROOT/lib/common.sh" 2>/dev/null || true
 
 describe "Common Library Functions"
 
@@ -62,9 +65,8 @@ rm -rf "$temp_backup_dir"
 
 # Test create_restore_point function
 it "should create restore points"
-# Capture output but extract the path from the function
-output=$(create_restore_point "test" 2>&1)
-restore_point=$(echo "$output" | grep -o "/Users/[^[:space:]]*" | tail -1)
+# The function echoes the restore point path on the last line
+restore_point=$(create_restore_point "test" 2>/dev/null | tail -1)
 
 assert_directory_exists "$restore_point" "Restore point directory should exist"
 assert_file_exists "$restore_point/metadata.json" "Metadata file should exist"
