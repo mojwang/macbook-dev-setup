@@ -103,6 +103,26 @@ tmpd() {
     cd "$tmp_dir"
 }
 
+# Corporate gh wrapper - auto-adds -R ORG/REPO when in a git repo
+ghrepo() {
+    if ! command -v gh &>/dev/null; then
+        echo "gh CLI not found" >&2
+        return 1
+    fi
+    if git rev-parse --is-inside-work-tree &>/dev/null && [[ -n "$GH_CORP_ORG" ]]; then
+        local repo_name
+        repo_name=$(git remote get-url origin 2>/dev/null | sed -n 's|.*/\([^/]*\)\.git.*|\1|p')
+        repo_name="${repo_name:-$(git remote get-url origin 2>/dev/null | sed -n 's|.*/||p')}"
+        if [[ -n "$repo_name" ]]; then
+            command gh -R "${GH_CORP_ORG}/${repo_name}" "$@"
+        else
+            command gh "$@"
+        fi
+    else
+        command gh "$@"
+    fi
+}
+
 # Show expanded aliases before execution
 # This function runs before each command is executed
 preexec() {
