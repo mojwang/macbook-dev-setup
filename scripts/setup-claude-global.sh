@@ -36,7 +36,7 @@ CLAUDE_GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
 TEMPLATE_FILE="$(dirname "$0")/../config/global-claude.md"
 
 # Version information
-TEMPLATE_VERSION="1.1.0"
+TEMPLATE_VERSION="2.0.0"
 VERSION_MARKER="# Claude Global Config Version:"
 
 setup_global_claude() {
@@ -82,6 +82,7 @@ setup_global_claude() {
             echo "  Version: ${current_version:-unknown} → ${TEMPLATE_VERSION}"
             echo "  Changes: +${lines_added} added, -${lines_removed} removed"
             echo ""
+            ui_diff_style_select
             ui_diff "$CLAUDE_GLOBAL_MD" "$TEMPLATE_FILE"
 
             # Check if we're in CI or non-interactive mode

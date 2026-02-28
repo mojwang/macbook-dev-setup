@@ -9,6 +9,9 @@ VERSION="2.0.0-validate"
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
 
+# Load UI presentation layer
+source "$(dirname "$0")/lib/ui.sh"
+
 # Load backup manager for validation
 source "$(dirname "$0")/lib/backup-manager.sh" 2>/dev/null || true
 
@@ -36,16 +39,9 @@ detect_setup_state() {
     echo "$state"
 }
 
-# Add missing print_section function
-print_section() {
-    echo ""
-    echo -e "${BLUE}→ $1${NC}"
-    echo "$(echo "$1" | sed 's/./-/g')"
-}
-
 # Validate backup system
 validate_backup_system() {
-    print_section "Validating Backup System"
+    ui_section_header "Validating Backup System"
     
     local issues=0
     
@@ -87,7 +83,7 @@ validate_backup_system() {
 
 # Validate Warp detection and setup
 validate_warp_detection() {
-    print_section "Validating Warp Terminal Detection"
+    ui_section_header "Validating Warp Terminal Detection"
     
     local issues=0
     local warp_detected=false
@@ -130,7 +126,7 @@ validate_warp_detection() {
 
 # Validate fix/diagnostics functionality
 validate_diagnostics() {
-    print_section "Validating Diagnostics System"
+    ui_section_header "Validating Diagnostics System"
     
     local issues=0
     
@@ -188,7 +184,7 @@ validate_diagnostics() {
 
 # Validate environment variables
 validate_environment_vars() {
-    print_section "Validating Environment Variables"
+    ui_section_header "Validating Environment Variables"
     
     echo "Current environment settings:"
     echo "  SETUP_VERBOSE: ${SETUP_VERBOSE}"
@@ -205,7 +201,7 @@ validate_environment_vars() {
 
 # Validate new command structure
 validate_command_structure() {
-    print_section "Validating Command Structure"
+    ui_section_header "Validating Command Structure"
     
     local commands=("help" "preview" "minimal" "fix" "warp" "backup" "advanced")
     local issues=0
@@ -231,8 +227,7 @@ run_preview() {
     local setup_state=$(detect_setup_state)
     local is_minimal="${1:-false}"
     
-    echo -e "${BLUE}» Preview Mode${NC}"
-    echo "==============="
+    ui_section_header "Preview Mode"
     echo ""
     
     # Show detected state
@@ -265,7 +260,7 @@ run_preview() {
     fi
     
     # Check prerequisites
-    print_section "Checking Prerequisites"
+    ui_section_header "Checking Prerequisites"
     
     local issues=0
     
@@ -297,7 +292,7 @@ run_preview() {
     fi
     
     # Validate configuration files
-    print_section "Validating Configuration Files"
+    ui_section_header "Validating Configuration Files"
     
     local required_files=(
         "homebrew/Brewfile"
@@ -325,7 +320,7 @@ run_preview() {
     
     # Show what would be installed
     if [[ "$setup_state" == "fresh" ]] || [[ "$is_minimal" == "true" ]]; then
-        print_section "Packages to Install"
+        ui_section_header "Packages to Install"
         
         local brewfile="homebrew/Brewfile"
         if [[ "$is_minimal" == "true" ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
@@ -361,7 +356,7 @@ run_preview() {
     
     # Show update information
     if [[ "$setup_state" == "update" ]]; then
-        print_section "Updates Available"
+        ui_section_header "Updates Available"
         
         if command -v brew &>/dev/null; then
             # Skip Homebrew outdated check in CI environment or if explicitly disabled
@@ -418,12 +413,10 @@ run_preview() {
     
     # Summary
     local duration=$(($(date +%s) - SCRIPT_START_TIME))
-    echo ""
-    print_section "Summary"
-    echo "Setup state: $setup_state"
-    echo "Total issues found: $total_issues"
-    echo "Preview completed in: ${duration}s"
-    echo ""
+    ui_summary_box "Preview Summary" \
+        "Setup state: $setup_state" \
+        "Total issues found: $total_issues" \
+        "Preview completed in: ${duration}s"
     
     if [[ $total_issues -eq 0 ]]; then
         print_success "Ready to run setup!"
