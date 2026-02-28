@@ -214,6 +214,98 @@ assert_contains "$output" "==" "Should use ANSI fallback in CI"
 _hide_gum
 
 # ============================================================================
+describe "ui_diff - SETUP_DIFF_STYLE support"
+# ============================================================================
+
+it "should pass --diff-so-fancy flag by default (fallback mode)"
+_hide_rich_tools
+tmp_a=$(mktemp)
+tmp_b=$(mktemp)
+echo "aaa" > "$tmp_a"
+echo "bbb" > "$tmp_b"
+# With delta hidden, falls through to raw diff regardless of style
+output=$(SETUP_DIFF_STYLE="diff-so-fancy" ui_diff "$tmp_a" "$tmp_b" 2>&1)
+assert_not_empty "$output" "Should produce diff output"
+rm -f "$tmp_a" "$tmp_b"
+_hide_gum
+
+it "should respect SETUP_DIFF_STYLE=unified in fallback mode"
+_hide_rich_tools
+tmp_a=$(mktemp)
+tmp_b=$(mktemp)
+echo "line1" > "$tmp_a"
+echo "line2" > "$tmp_b"
+output=$(SETUP_DIFF_STYLE="unified" ui_diff "$tmp_a" "$tmp_b" 2>&1)
+assert_not_empty "$output" "Should produce diff output with unified style"
+rm -f "$tmp_a" "$tmp_b"
+_hide_gum
+
+it "should respect SETUP_DIFF_STYLE=color-only in fallback mode"
+_hide_rich_tools
+tmp_a=$(mktemp)
+tmp_b=$(mktemp)
+echo "foo" > "$tmp_a"
+echo "bar" > "$tmp_b"
+output=$(SETUP_DIFF_STYLE="color-only" ui_diff "$tmp_a" "$tmp_b" 2>&1)
+assert_not_empty "$output" "Should produce diff output with color-only style"
+rm -f "$tmp_a" "$tmp_b"
+_hide_gum
+
+# ============================================================================
+describe "ui_diff_style_select - non-interactive defaults"
+# ============================================================================
+
+it "should default to diff-so-fancy when non-interactive"
+unset SETUP_DIFF_STYLE
+CI=true ui_diff_style_select
+assert_equals "diff-so-fancy" "$SETUP_DIFF_STYLE" "Should default to diff-so-fancy"
+
+it "should preserve existing SETUP_DIFF_STYLE"
+export SETUP_DIFF_STYLE="side-by-side"
+ui_diff_style_select
+assert_equals "side-by-side" "$SETUP_DIFF_STYLE" "Should not override existing value"
+unset SETUP_DIFF_STYLE
+
+# ============================================================================
+describe "TUI sourcing in setup scripts"
+# ============================================================================
+
+it "should source ui.sh in setup-validate.sh"
+if grep -q 'source.*ui\.sh' "$_PROJECT_ROOT/setup-validate.sh"; then
+    pass_test "setup-validate.sh sources ui.sh"
+else
+    fail_test "setup-validate.sh does not source ui.sh"
+fi
+
+it "should source ui.sh in setup-warp.sh"
+if grep -q 'source.*ui\.sh' "$_PROJECT_ROOT/scripts/setup-warp.sh"; then
+    pass_test "setup-warp.sh sources ui.sh"
+else
+    fail_test "setup-warp.sh does not source ui.sh"
+fi
+
+it "should source ui.sh in setup-help.sh"
+if grep -q 'source.*ui\.sh' "$_PROJECT_ROOT/scripts/setup-help.sh"; then
+    pass_test "setup-help.sh sources ui.sh"
+else
+    fail_test "setup-help.sh does not source ui.sh"
+fi
+
+it "should not have local print_section in setup-validate.sh"
+if grep -q 'print_section()' "$_PROJECT_ROOT/setup-validate.sh"; then
+    fail_test "setup-validate.sh still has local print_section"
+else
+    pass_test "setup-validate.sh has no local print_section"
+fi
+
+it "should not have local print_section in setup-warp.sh"
+if grep -q 'print_section()' "$_PROJECT_ROOT/scripts/setup-warp.sh"; then
+    fail_test "setup-warp.sh still has local print_section"
+else
+    pass_test "setup-warp.sh has no local print_section"
+fi
+
+# ============================================================================
 # Cleanup
 # ============================================================================
 _restore_path
