@@ -9,14 +9,8 @@ set -e
 # Load common library
 source "$(dirname "$0")/../lib/common.sh"
 
-# Add missing print_section function if not defined
-if ! type print_section &>/dev/null; then
-    print_section() {
-        echo ""
-        echo -e "${BLUE}→ $1${NC}"
-        echo "$(echo "$1" | sed 's/./-/g')"
-    }
-fi
+# Load UI presentation layer
+source "$(dirname "$0")/../lib/ui.sh"
 
 # Check if Warp is installed
 check_warp_installed() {
@@ -26,7 +20,7 @@ check_warp_installed() {
         echo "This script optimizes your setup for Warp Terminal."
         echo "Install Warp from: https://www.warp.dev"
         echo ""
-        if ! confirm "Continue anyway?" "y"; then
+        if ! ui_confirm "Continue anyway?" "y"; then
             exit 0
         fi
     else
@@ -36,7 +30,7 @@ check_warp_installed() {
 
 # Install power tools for Warp
 install_power_tools() {
-    print_section "Power Tools for Enhanced Developer Experience"
+    ui_section_header "Power Tools for Enhanced Developer Experience"
     
     # Only install non-intrusive tools by default
     local safe_tools=(
@@ -74,7 +68,7 @@ install_power_tools() {
     echo "• navi - Interactive command cheatsheets"
     echo ""
     
-    if confirm "Would you like to see and install optional tools?" "n"; then
+    if ui_confirm "Would you like to see and install optional tools?" "n"; then
         for tool in "${optional_tools[@]}"; do
             case $tool in
                 "atuin")
@@ -99,7 +93,7 @@ install_power_tools() {
                     ;;
             esac
             
-            if confirm "Install $tool?" "n"; then
+            if ui_confirm "Install $tool?" "n"; then
                 print_info "Installing $tool..."
                 if brew install "$tool" 2>/dev/null; then
                     print_success "$tool installed"
@@ -113,7 +107,7 @@ install_power_tools() {
 
 # Create Warp workflows
 setup_warp_workflows() {
-    print_section "Setting up Warp Workflows"
+    ui_section_header "Setting up Warp Workflows"
     
     local warp_dir="$HOME/.warp"
     local workflows_dir="$warp_dir/workflows"
@@ -178,7 +172,7 @@ EOF
 
 # Configure shell for Warp optimizations
 configure_shell_for_warp() {
-    print_section "Configuring Shell for Warp"
+    ui_section_header "Configuring Shell for Warp"
     
     local zsh_config_dir="$HOME/.config/zsh"
     mkdir -p "$zsh_config_dir"
@@ -309,7 +303,7 @@ EOF
 
 # Configure git for better Warp integration
 configure_git_for_warp() {
-    print_section "Configuring Git for Warp"
+    ui_section_header "Configuring Git for Warp"
     
     # Set up delta as the default pager if installed
     if command -v delta &> /dev/null; then
@@ -326,7 +320,7 @@ configure_git_for_warp() {
 
 # Create helpful aliases for Warp
 create_warp_aliases() {
-    print_section "Creating Warp-Specific Aliases"
+    ui_section_header "Creating Warp-Specific Aliases"
     
     local aliases_file="$HOME/.config/zsh/35-warp-aliases.zsh"
     
@@ -374,29 +368,22 @@ EOF
 
 # Show completion message
 show_completion() {
-    echo ""
-    print_success "Warp Terminal Optimization Complete!"
-    echo ""
-    echo "What's been configured:"
-    echo "✓ Power tools installed (atuin, delta, direnv, mcfly, navi)"
-    echo "✓ Warp workflows created in ~/.warp/workflows/"
-    echo "✓ Shell optimizations for Warp's features"
-    echo "✓ Git configured with delta for better diffs"
-    echo "✓ Custom aliases and functions"
+    ui_summary_box "Warp Terminal Optimization Complete!" \
+        "Power tools installed (atuin, delta, direnv, mcfly, navi)" \
+        "Warp workflows created in ~/.warp/workflows/" \
+        "Shell optimizations for Warp's features" \
+        "Git configured with delta for better diffs" \
+        "Custom aliases and functions"
+
     echo ""
     echo "Next steps:"
     echo "1. Restart your terminal (or run: source ~/.zshrc)"
     echo "2. Try these commands:"
-    echo "   • warp workflow list     - See available workflows"
-    echo "   • glog                   - Beautiful git log"
-    echo "   • api GET httpbin.org/ip - Test API with formatting"
-    echo "   • project <name>         - Smart project navigation"
-    echo "   • atuin search           - Search command history"
-    echo ""
-    echo "For more Warp features:"
-    echo "   • Use Cmd+P for command palette"
-    echo "   • Use Cmd+D to duplicate blocks"
-    echo "   • Type naturally - Warp AI will help with commands"
+    echo "   warp workflow list     - See available workflows"
+    echo "   glog                   - Beautiful git log"
+    echo "   api GET httpbin.org/ip - Test API with formatting"
+    echo "   project <name>         - Smart project navigation"
+    echo "   atuin search           - Search command history"
 }
 
 # Main execution
@@ -405,15 +392,14 @@ main() {
     local auto_mode="${1:-}"
     
     if [[ "$auto_mode" != "--auto" ]]; then
-        echo -e "${BLUE}» Warp Terminal Optimization${NC}"
-        echo "============================="
+        ui_section_header "Warp Terminal Optimization"
         echo ""
         
         check_warp_installed
     fi
     
     # Core optimizations that enhance the experience
-    print_section "Installing Core Enhancements"
+    ui_section_header "Installing Core Enhancements"
     
     # Always install these as they're non-intrusive
     install_power_tools
@@ -421,7 +407,7 @@ main() {
     configure_git_for_warp
     
     # Only create workflows and aliases if confirmed or in manual mode
-    if [[ "$auto_mode" != "--auto" ]] || confirm "Add Warp workflows and custom aliases?" "y"; then
+    if [[ "$auto_mode" != "--auto" ]] || ui_confirm "Add Warp workflows and custom aliases?" "y"; then
         setup_warp_workflows
         create_warp_aliases
     fi
