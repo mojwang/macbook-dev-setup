@@ -35,9 +35,17 @@ assert_equals "0" "$exit_code" "Script exits successfully"
 # Verify the global CLAUDE.md was created
 assert_file_exists "$TEST_HOME/.claude/CLAUDE.md" "Global CLAUDE.md created"
 
-# Verify content matches template
-if diff -q "$ROOT_DIR/config/global-claude.md" "$TEST_HOME/.claude/CLAUDE.md" >/dev/null 2>&1; then
-    assert_true "true" "Content matches template"
+# Verify content matches template (strip metadata headers before comparing)
+strip_metadata_header() {
+    local file="$1"
+    if head -1 "$file" | grep -q "^# Claude Global Config Version:"; then
+        tail -n +5 "$file"
+    else
+        cat "$file"
+    fi
+}
+if diff -q "$ROOT_DIR/config/global-claude.md" <(strip_metadata_header "$TEST_HOME/.claude/CLAUDE.md") >/dev/null 2>&1; then
+    assert_true "true" "Content matches template (after stripping metadata)"
 else
     assert_false "true" "Content does not match template"
 fi

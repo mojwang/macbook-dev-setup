@@ -134,6 +134,68 @@ assert_true "grep -q '^# Claude Global Config Version:' '$TEST_CLAUDE_MD'"
 assert_true "grep -q '^# Last Updated:' '$TEST_CLAUDE_MD'"
 assert_true "grep -q '^# Source:' '$TEST_CLAUDE_MD'"
 
+# Source setup-claude-global.sh functions for strip_metadata_header tests
+# We need the function but not the full script execution, so extract it
+strip_metadata_header() {
+    local file="$1"
+    if head -1 "$file" | grep -q "^# Claude Global Config Version:"; then
+        tail -n +5 "$file"  # Skip 3 metadata lines + 1 blank separator
+    else
+        cat "$file"          # No metadata — return as-is
+    fi
+}
+
+# Test 10: strip_metadata_header correctly strips metadata
+test_case "strip_metadata_header strips metadata from installed file"
+test_file_with_meta=$(mktemp)
+{
+    echo "# Claude Global Config Version: 2.0.0"
+    echo "# Last Updated: 2026-02-28 08:00:00"
+    echo "# Source: macbook-dev-setup/config/global-claude.md"
+    echo ""
+    echo "# Actual content"
+    echo "Some instructions here"
+} > "$test_file_with_meta"
+stripped=$(strip_metadata_header "$test_file_with_meta")
+assert_not_contains "$stripped" "Claude Global Config Version" "Metadata version line should be stripped"
+assert_not_contains "$stripped" "Last Updated" "Metadata timestamp line should be stripped"
+assert_contains "$stripped" "Actual content" "Body content should be preserved"
+assert_contains "$stripped" "Some instructions here" "Body content should be preserved"
+rm -f "$test_file_with_meta"
+
+# Test 11: strip_metadata_header passes through file without metadata
+test_case "strip_metadata_header passes through file without metadata headers"
+test_file_no_meta=$(mktemp)
+{
+    echo "# Raw template content"
+    echo "No metadata here"
+} > "$test_file_no_meta"
+stripped=$(strip_metadata_header "$test_file_no_meta")
+assert_contains "$stripped" "Raw template content" "Content should pass through unchanged"
+assert_contains "$stripped" "No metadata here" "All lines should be preserved"
+rm -f "$test_file_no_meta"
+
+# Test 12: Same content with different timestamps is considered identical
+test_case "Same content with different timestamps is considered identical"
+template_file=$(mktemp)
+installed_file=$(mktemp)
+echo "# My Config" > "$template_file"
+echo "rule: do stuff" >> "$template_file"
+{
+    echo "# Claude Global Config Version: 2.0.0"
+    echo "# Last Updated: 2026-01-01 00:00:00"
+    echo "# Source: macbook-dev-setup/config/global-claude.md"
+    echo ""
+    echo "# My Config"
+    echo "rule: do stuff"
+} > "$installed_file"
+if diff -q "$template_file" <(strip_metadata_header "$installed_file") >/dev/null 2>&1; then
+    pass_test "Files with same body but different timestamps are identical"
+else
+    fail_test "Files should be identical after stripping metadata"
+fi
+rm -f "$template_file" "$installed_file"
+
 # Summary
 echo ""
 print_test_summary

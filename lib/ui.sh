@@ -237,18 +237,18 @@ ui_diff_style_select() {
 
     # Non-interactive — use default
     if ! _ui_is_interactive; then
-        export SETUP_DIFF_STYLE="diff-so-fancy"
+        export SETUP_DIFF_STYLE="side-by-side"
         return 0
     fi
 
     local style
     style=$(ui_choose "Select diff display style:" \
-        "diff-so-fancy" \
         "side-by-side" \
+        "diff-so-fancy" \
         "unified" \
         "color-only") || true
 
-    export SETUP_DIFF_STYLE="${style:-diff-so-fancy}"
+    export SETUP_DIFF_STYLE="${style:-side-by-side}"
 }
 
 export -f ui_diff_style_select
@@ -256,14 +256,14 @@ export -f ui_diff_style_select
 # =============================================================================
 # ui_diff "file_a" "file_b"
 # Shows a pretty diff between two files.
-# Respects SETUP_DIFF_STYLE: diff-so-fancy (default), side-by-side,
+# Respects SETUP_DIFF_STYLE: side-by-side (default), diff-so-fancy,
 # unified, color-only.
 # =============================================================================
 
 ui_diff() {
     local file_a="$1"
     local file_b="$2"
-    local style="${SETUP_DIFF_STYLE:-diff-so-fancy}"
+    local style="${SETUP_DIFF_STYLE:-side-by-side}"
 
     if _ui_has delta; then
         local delta_args=()
