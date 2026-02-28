@@ -24,11 +24,13 @@ brew "openjdk"               # Java Development Kit
 
 # Modern CLI replacements
 brew "bat"                   # Enhanced cat
+brew "delta"                 # Enhanced diff (side-by-side, syntax highlighting)
 brew "eza"                   # Enhanced ls
 brew "fd"                    # Enhanced find
 brew "fzf"                   # Fuzzy finder
 brew "ripgrep"               # Enhanced grep
 brew "zoxide"                # Smart cd
+brew "gum"                   # Rich shell script UI (Charm)
 brew "zsh-autosuggestions"   # Fish-like autosuggestions for zsh
 
 # Development utilities

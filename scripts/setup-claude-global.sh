@@ -12,6 +12,9 @@ source "$(dirname "$0")/../lib/common.sh"
 # ROOT_DIR is already set by common.sh
 source "$ROOT_DIR/lib/signal-safety.sh"
 
+# Load UI presentation layer
+source "$ROOT_DIR/lib/ui.sh"
+
 # Claude global setup specific cleanup
 cleanup_claude_global() {
     # Clean up any temporary files
@@ -69,9 +72,18 @@ setup_global_claude() {
         local diff_output=""
         if ! diff -q "$TEMPLATE_FILE" "$CLAUDE_GLOBAL_MD" >/dev/null 2>&1; then
             diff_output=$(diff -u "$CLAUDE_GLOBAL_MD" "$TEMPLATE_FILE" || true)
-            print_info "Differences found between template and existing file:"
-            echo "$diff_output"
-            
+
+            # Count added/removed lines
+            local lines_added lines_removed
+            lines_added=$(echo "$diff_output" | grep -c '^+[^+]' || true)
+            lines_removed=$(echo "$diff_output" | grep -c '^-[^-]' || true)
+
+            ui_section_header "CLAUDE.md Update Available"
+            echo "  Version: ${current_version:-unknown} → ${TEMPLATE_VERSION}"
+            echo "  Changes: +${lines_added} added, -${lines_removed} removed"
+            echo ""
+            ui_diff "$CLAUDE_GLOBAL_MD" "$TEMPLATE_FILE"
+
             # Check if we're in CI or non-interactive mode
             if [[ "${CI:-false}" == "true" ]] || [[ ! -t 0 ]]; then
                 print_info "Running in non-interactive mode, keeping existing file"
@@ -79,8 +91,7 @@ setup_global_claude() {
                     print_warning "Note: Template version ($TEMPLATE_VERSION) differs from installed version ($current_version)"
                 fi
             else
-                # Use confirm function which handles non-interactive mode
-                if confirm "Do you want to update the global CLAUDE.md?" "n"; then
+                if ui_confirm "Update global CLAUDE.md to version ${TEMPLATE_VERSION}?" "n"; then
                     # Backup existing file with PID to prevent collisions
                     backup_file="$CLAUDE_GLOBAL_MD.backup.$(date +%Y%m%d_%H%M%S)_$$"
                     cp "$CLAUDE_GLOBAL_MD" "$backup_file"

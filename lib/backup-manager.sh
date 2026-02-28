@@ -204,7 +204,8 @@ migrate_old_backups() {
     local migrated=0
     
     # Migrate dotfiles backups
-    for old_backup in ~/.dotfiles_backup_*; do
+    # Use $HOME instead of ~ to avoid bash tilde expansion caching issues
+    for old_backup in "$HOME"/.dotfiles_backup_*; do
         if [[ -d "$old_backup" ]]; then
             local timestamp=$(basename "$old_backup" | sed 's/.*_//')
             local new_dir="$BACKUP_ROOT/dotfiles/$timestamp"
@@ -232,7 +233,7 @@ EOF
     done
     
     # Migrate setup backups
-    for old_backup in ~/.setup_backup_*; do
+    for old_backup in "$HOME"/.setup_backup_*; do
         if [[ -d "$old_backup" ]]; then
             local timestamp=$(basename "$old_backup" | sed 's/.*_//')
             local new_dir="$BACKUP_ROOT/restore-points/$timestamp"
@@ -260,7 +261,7 @@ EOF
     done
     
     # Migrate generic .backup and .bak files
-    for old_backup in ~/*.backup ~/*.bak; do
+    for old_backup in "$HOME"/*.backup "$HOME"/*.bak; do
         if [[ -f "$old_backup" ]]; then
             local basename=$(basename "$old_backup")
             local name_without_ext="${basename%.*}"

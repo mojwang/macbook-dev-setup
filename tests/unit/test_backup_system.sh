@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
 # Test script for backup system functionality
-source "$(dirname "$0")/../test_framework.sh"
-source "$(dirname "$0")/../lib/common.sh"
+
+_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_PROJECT_ROOT="$(cd "$_TEST_DIR/../.." && pwd)"
+
+# Source test framework
+source "$_TEST_DIR/../test_framework.sh"
+
+# Source common library
+source "$_PROJECT_ROOT/lib/common.sh" 2>/dev/null || true
 
 describe "Backup System Tests"
 
@@ -13,18 +20,16 @@ export SETUP_BACKUP_ROOT="$test_backup_root"
 export SETUP_MAX_BACKUPS=10
 
 # Now source the backup manager to get it to use our test root
-source "$(dirname "$0")/../lib/backup-manager.sh"
+source "$_PROJECT_ROOT/lib/backup-manager.sh"
 
 # Cleanup function
 cleanup_test_env() {
     rm -rf "$test_backup_root"
+    rm -rf "${test_migration_home:-/nonexistent}" 2>/dev/null
     rm -f "$HOME/.test_backup_file"*
     rm -f "$HOME/.test_latest_file"
     rm -f "$HOME/.test_metadata"
     rm -f "$HOME/.test_permissions"
-    # Clean up any other test files
-    rm -f "$test_backup_root/test.backup" 2>/dev/null
-    rm -f "$test_backup_root/test.bak" 2>/dev/null
 }
 
 # Set up cleanup trap to ensure cleanup happens on exit or interruption
@@ -119,28 +124,31 @@ MAX_BACKUPS=10
 
 # Test 5: Old backup migration
 it "should migrate old backups to new structure"
-# Create test directory structure
-mkdir -p "$test_backup_root"
+# Use a separate temp directory as HOME so it doesn't overlap with BACKUP_ROOT
+test_migration_home=$(mktemp -d /tmp/test_migration_home.XXXXXX)
 
-# Create isolated old backups in test directory
-old_backup_1="$test_backup_root/test.backup"
-old_backup_2="$test_backup_root/test.bak"
+# Create old backup files in the fake HOME
+old_backup_1="$test_migration_home/test.backup"
+old_backup_2="$test_migration_home/test.bak"
 echo "old backup 1" > "$old_backup_1"
 echo "old backup 2" > "$old_backup_2"
 
-# Temporarily change HOME to test directory for migration
+# Temporarily change HOME to the fake directory for migration
 original_home="$HOME"
-export HOME="$test_backup_root"
+export HOME="$test_migration_home"
 
-# Run migration
+# Run migration (it will find ~/*.backup and move them into BACKUP_ROOT)
 migrate_old_backups >/dev/null 2>&1
 
 # Restore HOME
 export HOME="$original_home"
 
-# Check if old backups were moved
+# Check if old backups were moved out of the fake HOME
 assert_false "[[ -f '$old_backup_1' ]]" "Old .backup file migrated"
 assert_false "[[ -f '$old_backup_2' ]]" "Old .bak file migrated"
+
+# Cleanup
+rm -rf "$test_migration_home"
 
 # Test 6: Backup metadata
 it "should create backups with metadata"
