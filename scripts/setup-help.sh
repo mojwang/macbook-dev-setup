@@ -5,15 +5,12 @@
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-PURPLE='\033[0;35m'
+# Load common library and UI layer
+source "$(dirname "$0")/../lib/common.sh"
+source "$(dirname "$0")/../lib/ui.sh"
+
+# BOLD is used throughout but not defined by common.sh
 BOLD='\033[1m'
-NC='\033[0m' # No Color
 
 # Help categories - using simple arrays for compatibility
 CATEGORIES=("tools" "aliases" "functions" "features" "all")
@@ -27,7 +24,7 @@ DESCRIPTIONS=(
 
 # Function to display header
 display_header() {
-    echo -e "\n${BOLD}${BLUE}MacBook Dev Setup - Help System${NC}"
+    ui_section_header "MacBook Dev Setup - Help System"
     echo -e "${CYAN}Learn about your development environment${NC}\n"
 }
 
