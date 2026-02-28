@@ -36,7 +36,7 @@ CLAUDE_GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
 TEMPLATE_FILE="$(dirname "$0")/../config/global-claude.md"
 
 # Version information
-TEMPLATE_VERSION="1.1.0"
+TEMPLATE_VERSION="2.0.0"
 VERSION_MARKER="# Claude Global Config Version:"
 
 setup_global_claude() {

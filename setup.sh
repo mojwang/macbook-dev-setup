@@ -438,12 +438,11 @@ main_setup() {
         
     else
         # Update existing installation
-        print_step "Syncing new packages..."
-        # Inline package sync
+        ui_section_header "Package Sync"
         if command -v brew &>/dev/null; then
-            brew update
+            ui_spinner "Updating Homebrew" brew update
             if [[ "$is_minimal" == "true" ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
-                brew bundle --file="homebrew/Brewfile.minimal"
+                ui_spinner "Syncing packages (minimal)" brew bundle --file="homebrew/Brewfile.minimal"
             elif [[ -n "$SETUP_PROFILE" ]]; then
                 if ! resolve_profile "$SETUP_PROFILE"; then
                     exit 1
@@ -451,22 +450,21 @@ main_setup() {
                 print_profile_summary "$SETUP_PROFILE"
                 local filtered_brewfile
                 filtered_brewfile=$(filter_brewfile "homebrew/Brewfile")
-                brew bundle --file="$filtered_brewfile"
+                ui_spinner "Syncing packages (profile: $SETUP_PROFILE)" brew bundle --file="$filtered_brewfile"
             else
-                brew bundle --file="homebrew/Brewfile"
+                ui_spinner "Syncing packages" brew bundle --file="homebrew/Brewfile"
             fi
             # Install machine-specific packages if present
             if [[ -f "homebrew/Brewfile.local" ]]; then
-                brew bundle --file="homebrew/Brewfile.local"
+                ui_spinner "Syncing local packages" brew bundle --file="homebrew/Brewfile.local"
             fi
         fi
-        
-        print_step "Checking for package updates..."
-        # Inline package updates with better output
+
+        ui_section_header "Package Updates"
         if command -v brew &>/dev/null; then
-            # Check what needs updating
+            # Check what needs updating — output kept visible (user needs the list)
             local outdated_packages=$(brew outdated -q 2>/dev/null)
-            
+
             if [[ -n "$outdated_packages" ]]; then
                 local package_count=$(echo "$outdated_packages" | wc -l | tr -d ' ')
                 print_info "Found $package_count outdated packages"
@@ -474,45 +472,44 @@ main_setup() {
                 if [[ $package_count -gt 10 ]]; then
                     echo "... and $((package_count - 10)) more"
                 fi
-                
-                print_step "Updating packages..."
-                brew upgrade -q
+
+                ui_spinner "Upgrading $package_count packages" brew upgrade -q
                 print_success "Updated $package_count packages"
             else
                 print_info "All packages are up to date"
             fi
-            
+
             # Cleanup old versions
             local cleanup_size=$(brew cleanup -n 2>/dev/null | grep "Would remove" | sed 's/.*Would remove: //' || echo "0B")
             if [[ "$cleanup_size" != "0B" ]]; then
-                print_info "Cleaning up old versions ($cleanup_size)..."
-                brew cleanup -q
+                ui_spinner "Cleaning up old versions" brew cleanup -q
             fi
         fi
-        
-        print_step "Updating configurations..."
+
+        ui_section_header "Configuration Sync"
+        # Not wrapped in spinner — needs user interaction for diff review
         if [[ -f "./scripts/setup-dotfiles.sh" ]]; then
+            print_step "Updating dotfiles..."
             ./scripts/setup-dotfiles.sh --update
         fi
-        
-        print_step "Updating global Claude configuration..."
+
+        # Not wrapped in spinner — needs user interaction for diff review
         if [[ -f "./scripts/setup-claude-global.sh" ]]; then
+            print_step "Updating global Claude configuration..."
             ./scripts/setup-claude-global.sh
         fi
-        
+
         if [[ "${PROFILE_SKIP_MCP:-false}" != "true" ]]; then
-            print_step "Updating Claude MCP servers..."
+            ui_section_header "MCP Server Sync"
             if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
                 [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
-                ./scripts/setup-claude-mcp.sh --update
+                ui_spinner "Updating Claude MCP servers" ./scripts/setup-claude-mcp.sh --update
             fi
 
             # Update Claude Code MCP servers if VS Code and Claude CLI are installed
             if command -v code &>/dev/null && command -v claude &>/dev/null; then
-                print_step "Updating Claude Code MCP servers..."
-                # The script will automatically only reconnect servers that were actually updated
                 [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
-                ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
+                ui_spinner "Updating Claude Code MCP servers" ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
             fi
         else
             print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
