@@ -82,6 +82,7 @@ setup_global_claude() {
             echo "  Version: ${current_version:-unknown} → ${TEMPLATE_VERSION}"
             echo "  Changes: +${lines_added} added, -${lines_removed} removed"
             echo ""
+            ui_diff_style_select
             ui_diff "$CLAUDE_GLOBAL_MD" "$TEMPLATE_FILE"
 
             # Check if we're in CI or non-interactive mode

@@ -86,6 +86,7 @@ For power users - use environment variables:
     SETUP_VERBOSE=1 ./setup.sh      # Verbose output
     SETUP_JOBS=8 ./setup.sh         # Custom parallel jobs
     SETUP_LOG=file.log ./setup.sh   # Log to file
+    SETUP_DIFF_STYLE=unified ./setup.sh  # Diff style: diff-so-fancy|side-by-side|unified|color-only
 
 EOF
 }

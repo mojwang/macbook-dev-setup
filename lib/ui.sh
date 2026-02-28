@@ -219,16 +219,61 @@ ui_spinner() {
 export -f ui_spinner
 
 # =============================================================================
+# ui_diff_style_select
+# Prompts for diff style when SETUP_DIFF_STYLE is unset and delta is available.
+# Sets and exports SETUP_DIFF_STYLE for the session.
+# =============================================================================
+
+ui_diff_style_select() {
+    # Already set — nothing to do
+    if [[ -n "${SETUP_DIFF_STYLE:-}" ]]; then
+        return 0
+    fi
+
+    # No delta — nothing to configure
+    if ! _ui_has delta; then
+        return 0
+    fi
+
+    # Non-interactive — use default
+    if ! _ui_is_interactive; then
+        export SETUP_DIFF_STYLE="diff-so-fancy"
+        return 0
+    fi
+
+    local style
+    style=$(ui_choose "Select diff display style:" \
+        "diff-so-fancy" \
+        "side-by-side" \
+        "unified" \
+        "color-only") || true
+
+    export SETUP_DIFF_STYLE="${style:-diff-so-fancy}"
+}
+
+export -f ui_diff_style_select
+
+# =============================================================================
 # ui_diff "file_a" "file_b"
-# Shows a pretty diff between two files
+# Shows a pretty diff between two files.
+# Respects SETUP_DIFF_STYLE: diff-so-fancy (default), side-by-side,
+# unified, color-only.
 # =============================================================================
 
 ui_diff() {
     local file_a="$1"
     local file_b="$2"
+    local style="${SETUP_DIFF_STYLE:-diff-so-fancy}"
 
     if _ui_has delta; then
-        diff -u "$file_a" "$file_b" | delta --side-by-side 2>/dev/null || \
+        local delta_args=()
+        case "$style" in
+            side-by-side)  delta_args+=(--side-by-side) ;;
+            unified)       ;; # no extra flags
+            color-only)    delta_args+=(--color-only) ;;
+            *)             delta_args+=(--diff-so-fancy) ;; # default
+        esac
+        diff -u "$file_a" "$file_b" | delta "${delta_args[@]}" 2>/dev/null || \
         diff -u "$file_a" "$file_b" | delta 2>/dev/null || \
         diff -u "$file_a" "$file_b"
     elif _ui_has bat; then
