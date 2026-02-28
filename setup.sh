@@ -32,6 +32,9 @@ check_bash_version
 # Load common library
 source "$(dirname "$0")/lib/common.sh"
 
+# Load UI presentation layer
+source "$(dirname "$0")/lib/ui.sh"
+
 # Load backup manager
 source "$(dirname "$0")/lib/backup-manager.sh"
 
@@ -154,23 +157,22 @@ check_and_setup_warp() {
 
 # Interactive advanced options menu
 show_advanced_menu() {
-    echo ""
-    echo "Advanced Setup Options:"
-    echo "======================"
-    echo "1. Use custom configuration file"
-    echo "2. Set parallel jobs (current: $PARALLEL_JOBS)"
-    echo "3. Skip creating backups"
-    echo "4. Enable verbose logging"
-    echo "5. Select installation profile"
-    echo "6. Show current configuration"
-    echo "7. Return to main setup"
-    echo ""
-    
-    read -p "Choose option (1-7): " choice
-    
-    case $choice in
-        1)
-            read -p "Enter configuration file path: " config_file
+    local menu_options=(
+        "Use custom configuration file"
+        "Set parallel jobs (current: $PARALLEL_JOBS)"
+        "Skip creating backups"
+        "Enable verbose logging"
+        "Select installation profile"
+        "Show current configuration"
+        "Return to main setup"
+    )
+
+    local choice
+    choice=$(ui_choose "Advanced Setup Options:" "${menu_options[@]}") || return 0
+
+    case "$choice" in
+        "Use custom configuration file")
+            read -r -p "Enter configuration file path: " config_file
             if [[ -f "$config_file" ]]; then
                 export SETUP_CONFIG="$config_file"
                 print_success "Using configuration: $config_file"
@@ -179,8 +181,8 @@ show_advanced_menu() {
             fi
             show_advanced_menu
             ;;
-        2)
-            read -p "Enter number of parallel jobs (1-16): " jobs
+        "Set parallel jobs"*)
+            read -r -p "Enter number of parallel jobs (1-16): " jobs
             if [[ "$jobs" =~ ^[0-9]+$ ]] && [[ "$jobs" -ge 1 ]] && [[ "$jobs" -le 16 ]]; then
                 PARALLEL_JOBS="$jobs"
                 print_success "Parallel jobs set to: $jobs"
@@ -189,48 +191,53 @@ show_advanced_menu() {
             fi
             show_advanced_menu
             ;;
-        3)
+        "Skip creating backups")
             export SETUP_NO_BACKUP=true
             print_success "Backup creation disabled"
             show_advanced_menu
             ;;
-        4)
+        "Enable verbose logging")
             VERBOSE=true
             print_success "Verbose logging enabled"
             show_advanced_menu
             ;;
-        5)
-            echo ""
-            echo "Available profiles:"
-            echo "1. Web Developer (Node.js, React, TypeScript)"
-            echo "2. Data Scientist (Python, Jupyter, pandas)"
-            echo "3. DevOps Engineer (Docker, Kubernetes, Terraform)"
-            echo "4. Full Stack (Everything)"
-            read -p "Select profile (1-4): " profile
-            case $profile in
-                1) export SETUP_PROFILE="web_developer" ;;
-                2) export SETUP_PROFILE="data_scientist" ;;
-                3) export SETUP_PROFILE="devops_engineer" ;;
-                4) export SETUP_PROFILE="full_stack" ;;
-                *) print_error "Invalid profile selection" ;;
-            esac
+        "Select installation profile")
+            # Dynamically discover profiles from homebrew/profiles/*.conf
+            local profile_opts=()
+            for conf in homebrew/profiles/*.conf; do
+                [[ -f "$conf" ]] || continue
+                local pname
+                pname=$(basename "$conf" .conf)
+                # Read first comment line as description
+                local pdesc
+                pdesc=$(grep -m1 '^#' "$conf" | sed 's/^# *//' || echo "$pname")
+                profile_opts+=("${pname} — ${pdesc}")
+            done
+            if [[ ${#profile_opts[@]} -eq 0 ]]; then
+                print_warning "No profiles found in homebrew/profiles/"
+            else
+                local selected
+                selected=$(ui_choose "Select installation profile:" "${profile_opts[@]}") || true
+                if [[ -n "$selected" ]]; then
+                    # Extract profile name (before the " — ")
+                    export SETUP_PROFILE="${selected%% —*}"
+                    print_success "Profile set to: $SETUP_PROFILE"
+                fi
+            fi
             show_advanced_menu
             ;;
-        6)
-            echo ""
-            echo "Current Configuration:"
-            echo "===================="
-            echo "Parallel Jobs: $PARALLEL_JOBS"
-            echo "Verbose: $VERBOSE"
-            echo "Log File: ${LOG_FILE:-none}"
-            echo "Profile: ${SETUP_PROFILE:-default}"
-            echo "Config File: ${SETUP_CONFIG:-default}"
-            echo "No Backup: ${SETUP_NO_BACKUP:-false}"
-            echo ""
-            read -p "Press Enter to continue..."
+        "Show current configuration")
+            ui_summary_box "Current Configuration" \
+                "Parallel Jobs: $PARALLEL_JOBS" \
+                "Verbose: $VERBOSE" \
+                "Log File: ${LOG_FILE:-none}" \
+                "Profile: ${SETUP_PROFILE:-default}" \
+                "Config File: ${SETUP_CONFIG:-default}" \
+                "No Backup: ${SETUP_NO_BACKUP:-false}"
+            read -r -p "Press Enter to continue..."
             show_advanced_menu
             ;;
-        7)
+        "Return to main setup")
             return 0
             ;;
         *)
@@ -243,8 +250,7 @@ show_advanced_menu() {
 # Run diagnostics and fix common issues
 run_diagnostics() {
     echo ""
-    echo -e "${BLUE}→ Running Diagnostics${NC}"
-    echo "===================="
+    ui_section_header "Running Diagnostics"
     
     local issues_found=0
     
@@ -320,11 +326,9 @@ main_setup() {
     
     # Show what we're doing
     if [[ "$setup_state" == "fresh" ]]; then
-        echo -e "${BLUE}» Fresh Installation Detected${NC}"
-        echo "================================"
+        ui_section_header "Fresh Installation Detected"
     else
-        echo -e "${BLUE}» Update & Sync Mode${NC}"
-        echo "===================="
+        ui_section_header "Update & Sync Mode"
     fi
     
     # Create restore point unless disabled
@@ -383,25 +387,26 @@ main_setup() {
     # Install or update based on state
     if [[ "$setup_state" == "fresh" ]]; then
         # Fresh installation
-        print_step "Installing Homebrew..."
-        ./scripts/install-homebrew.sh
-        
+        ui_spinner "Installing Homebrew" ./scripts/install-homebrew.sh
+
         print_step "Installing packages..."
         if [[ "$is_minimal" == "true" ]]; then
-            BREWFILE="homebrew/Brewfile.minimal" ./scripts/install-packages.sh
+            ui_spinner "Installing packages (minimal)" env BREWFILE="homebrew/Brewfile.minimal" ./scripts/install-packages.sh
         elif [[ -n "$SETUP_PROFILE" ]]; then
             if ! resolve_profile "$SETUP_PROFILE"; then
                 exit 1
             fi
             print_profile_summary "$SETUP_PROFILE"
-            BREWFILE=$(filter_brewfile "homebrew/Brewfile") ./scripts/install-packages.sh
+            ui_spinner "Installing packages (profile: $SETUP_PROFILE)" env BREWFILE=$(filter_brewfile "homebrew/Brewfile") ./scripts/install-packages.sh
         else
-            ./scripts/install-packages.sh
+            ui_spinner "Installing packages" ./scripts/install-packages.sh
         fi
-        
+
+        # Not wrapped in spinner — needs user interaction for email/org prompts
         print_step "Setting up dotfiles..."
         ./scripts/setup-dotfiles.sh
-        
+
+        # Not wrapped in spinner — needs user interaction for diff review
         print_step "Setting up global Claude configuration..."
         ./scripts/setup-claude-global.sh
         
@@ -425,14 +430,11 @@ main_setup() {
             print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
         fi
         
-        print_step "Configuring applications..."
-        ./scripts/setup-applications.sh
-        
-        print_step "Configuring terminal fonts..."
-        ./scripts/setup-terminal-fonts.sh
-        
-        print_step "Configuring macOS settings..."
-        ./scripts/setup-macos.sh
+        ui_spinner "Configuring applications" ./scripts/setup-applications.sh
+
+        ui_spinner "Configuring terminal fonts" ./scripts/setup-terminal-fonts.sh
+
+        ui_spinner "Configuring macOS settings" ./scripts/setup-macos.sh
         
     else
         # Update existing installation
@@ -524,20 +526,22 @@ main_setup() {
     local duration=$(($(date +%s) - SCRIPT_START_TIME))
     local minutes=$((duration / 60))
     local seconds=$((duration % 60))
-    
-    echo ""
-    echo -e "${GREEN}✓ Setup Complete!${NC}"
-    echo "=================="
-    echo "Time: ${minutes}m ${seconds}s"
-    
+
+    local summary_lines=()
+    summary_lines+=("Mode: ${setup_state}")
+    summary_lines+=("Time: ${minutes}m ${seconds}s")
+    [[ -n "${SETUP_PROFILE:-}" ]] && summary_lines+=("Profile: ${SETUP_PROFILE}")
+    [[ "$is_minimal" == "true" ]] && summary_lines+=("Profile: minimal")
+
     # Show MCP server status if available
     if command -v claude &>/dev/null; then
-        echo ""
-        echo "MCP Servers Status:"
-        claude mcp list | grep -E "✓ Connected|✗ Failed" | head -5
-        echo "Run 'claude mcp list' for full status"
+        local mcp_status
+        mcp_status=$(claude mcp list 2>/dev/null | grep -cE "✓ Connected" || true)
+        summary_lines+=("MCP Servers: ${mcp_status} connected")
     fi
-    
+
+    ui_summary_box "Setup Complete!" "${summary_lines[@]}"
+
     if [[ "$setup_state" == "fresh" ]]; then
         echo ""
         echo -e "${YELLOW}⚠️  IMPORTANT: Restart your terminal to apply changes${NC}"
@@ -612,8 +616,7 @@ case "${1:-}" in
         ;;
     
     "fix")
-        echo -e "${BLUE}» Running Comprehensive Diagnostics & Auto-Fix${NC}"
-        echo "============================================="
+        ui_section_header "Running Comprehensive Diagnostics & Auto-Fix"
         
         # First run auto-fixes
         run_auto_fixes "$(dirname "$0")"

@@ -8,6 +8,9 @@ source "$(dirname "$0")/../lib/common.sh"
 # Load backup manager
 source "$(dirname "$0")/../lib/backup-manager.sh"
 
+# Load UI presentation layer
+source "$(dirname "$0")/../lib/ui.sh"
+
 print_step "Setting up dotfiles..."
 
 # Check if dotfiles directory exists
@@ -191,24 +194,17 @@ fi
 
 # Auto-detect GitHub Corporate Organization for ghrepo function
 if command_exists gh && gh auth status &>/dev/null; then
-    current_org=$(grep '^export GH_CORP_ORG=' ~/.config/zsh/51-api-keys.zsh 2>/dev/null | sed 's/.*="\(.*\)"/\1/' || echo "")
+    current_org="${GH_CORP_ORG:-}"
+    if [[ -z "$current_org" ]]; then
+        current_org=$(grep '^export GH_CORP_ORG=' ~/.config/zsh/51-api-keys.zsh 2>/dev/null | sed 's/.*="\(.*\)"/\1/' || echo "")
+    fi
     if [[ -z "$current_org" || "$current_org" == '${GH_CORP_ORG:-}' ]]; then
         orgs=($(gh api /user/orgs --jq '.[].login' 2>/dev/null))
         if (( ${#orgs[@]} == 1 )); then
             selected="${orgs[0]}"
             print_success "Auto-detected GitHub org: $selected"
         elif (( ${#orgs[@]} > 1 )); then
-            echo "Multiple GitHub organizations found:"
-            for i in "${!orgs[@]}"; do
-                echo "  $((i+1)). ${orgs[$i]}"
-            done
-            if [[ -t 0 ]]; then
-                echo -n "Select org for ghrepo (1-${#orgs[@]}): "
-                read -r choice
-                if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#orgs[@]} )); then
-                    selected="${orgs[$((choice-1))]}"
-                fi
-            fi
+            selected=$(ui_choose "Select GitHub org for ghrepo:" "${orgs[@]}") || true
         fi
         if [[ -n "${selected:-}" ]]; then
             # Update the live api-keys file
