@@ -7,6 +7,8 @@ brew "gh"                    # GitHub CLI
 brew "withgraphite/tap/graphite"  # Stacked PRs workflow
 brew "docker"
 brew "docker-completion"
+brew "git-lfs"               # Git Large File Storage
+brew "watchman"              # File watching service (Meta)
 
 # Programming languages & package managers
 brew "node"
