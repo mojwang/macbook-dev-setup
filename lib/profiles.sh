@@ -78,6 +78,7 @@ resolve_profile() {
     PROFILE_ADDS=()
     PROFILE_SKIP_MCP="false"
     PROFILE_MODULES=()
+    PROFILE_MODULES_STR=""
 
     # Check for inheritance
     local parent
@@ -109,6 +110,9 @@ resolve_profile() {
     [[ "${VERBOSE:-false}" == true ]] && print_info "Resolved ${#PROFILE_EXCLUDES[@]} excludes, ${#PROFILE_ADDS[@]} adds, ${#PROFILE_MODULES[@]} modules"
 
     export PROFILE_MODULES
+    # Bash arrays can't cross process boundaries; export as delimited string for subprocesses
+    PROFILE_MODULES_STR=$(IFS=','; echo "${PROFILE_MODULES[*]}")
+    export PROFILE_MODULES_STR
     return 0
 }
 
@@ -158,7 +162,13 @@ _load_profile_values() {
         for item in "${new_modules[@]}"; do
             item="${item#"${item%%[![:space:]]*}"}"
             item="${item%"${item##*[![:space:]]}"}"
-            [[ -n "$item" ]] && PROFILE_MODULES+=("$item")
+            if [[ -n "$item" ]]; then
+                local duplicate=false
+                for existing in ${PROFILE_MODULES[@]+"${PROFILE_MODULES[@]}"}; do
+                    [[ "$existing" == "$item" ]] && duplicate=true && break
+                done
+                [[ "$duplicate" == false ]] && PROFILE_MODULES+=("$item")
+            fi
         done
     fi
 }

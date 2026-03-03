@@ -11,6 +11,12 @@ source "$(dirname "$0")/../lib/backup-manager.sh"
 # Load UI presentation layer
 source "$(dirname "$0")/../lib/ui.sh"
 
+# Reconstruct PROFILE_MODULES from exported string (bash arrays don't survive subprocess boundaries)
+PROFILE_MODULES=()
+if [[ -n "${PROFILE_MODULES_STR:-}" ]]; then
+    IFS=',' read -ra PROFILE_MODULES <<< "$PROFILE_MODULES_STR"
+fi
+
 print_step "Setting up dotfiles..."
 
 # Check if dotfiles directory exists
@@ -93,7 +99,7 @@ if [[ -d "dotfiles/.config/zsh" ]]; then
     if [[ -n "${SETUP_PROFILE:-}" ]]; then
         # Deploy composable modules (from modules= key in profile conf)
         for module in ${PROFILE_MODULES[@]+"${PROFILE_MODULES[@]}"}; do
-            local module_dir="dotfiles/.config/zsh/modules/$module"
+            module_dir="dotfiles/.config/zsh/modules/$module"
             if [[ -d "$module_dir" ]]; then
                 echo "Deploying Zsh module: $module..."
                 if cp "$module_dir"/*.zsh ~/.config/zsh/ 2>/dev/null; then
@@ -107,7 +113,7 @@ if [[ -d "dotfiles/.config/zsh" ]]; then
         done
 
         # Deploy profile-specific overlays
-        local profile_dir="dotfiles/.config/zsh/profiles/$SETUP_PROFILE"
+        profile_dir="dotfiles/.config/zsh/profiles/$SETUP_PROFILE"
         if [[ -d "$profile_dir" ]]; then
             echo "Deploying Zsh overlay for profile: $SETUP_PROFILE..."
             if cp "$profile_dir"/*.zsh ~/.config/zsh/ 2>/dev/null; then
