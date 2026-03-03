@@ -557,7 +557,7 @@ main_setup() {
 }
 
 # Pre-parse --profile flag from arguments
-SETUP_PROFILE=""
+export SETUP_PROFILE=""
 REMAINING_ARGS=()
 while [[ $# -gt 0 ]]; do
     case "$1" in

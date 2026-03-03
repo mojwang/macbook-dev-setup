@@ -88,6 +88,35 @@ if [[ -d "dotfiles/.config/zsh" ]]; then
     else
         print_warning "Failed to install Zsh modular configuration"
     fi
+
+    # Deploy profile module Zsh configs
+    if [[ -n "${SETUP_PROFILE:-}" ]]; then
+        # Deploy composable modules (from modules= key in profile conf)
+        for module in ${PROFILE_MODULES[@]+"${PROFILE_MODULES[@]}"}; do
+            local module_dir="dotfiles/.config/zsh/modules/$module"
+            if [[ -d "$module_dir" ]]; then
+                echo "Deploying Zsh module: $module..."
+                if cp "$module_dir"/*.zsh ~/.config/zsh/ 2>/dev/null; then
+                    print_success "Module '$module' installed"
+                else
+                    print_warning "No .zsh files found in $module_dir"
+                fi
+            else
+                print_warning "Module directory not found: $module_dir"
+            fi
+        done
+
+        # Deploy profile-specific overlays
+        local profile_dir="dotfiles/.config/zsh/profiles/$SETUP_PROFILE"
+        if [[ -d "$profile_dir" ]]; then
+            echo "Deploying Zsh overlay for profile: $SETUP_PROFILE..."
+            if cp "$profile_dir"/*.zsh ~/.config/zsh/ 2>/dev/null; then
+                print_success "Profile overlay '$SETUP_PROFILE' installed"
+            else
+                print_warning "No .zsh files found in $profile_dir"
+            fi
+        fi
+    fi
 else
     print_warning "Zsh configuration directory not found"
 fi
