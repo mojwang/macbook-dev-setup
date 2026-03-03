@@ -255,10 +255,12 @@ _hide_gum
 describe "ui_diff_style_select - non-interactive defaults"
 # ============================================================================
 
-it "should default to diff-so-fancy when non-interactive"
+it "should default to side-by-side when non-interactive"
+_restore_path  # Need delta on PATH for this test
 unset SETUP_DIFF_STYLE
 CI=true ui_diff_style_select
-assert_equals "diff-so-fancy" "$SETUP_DIFF_STYLE" "Should default to diff-so-fancy"
+assert_equals "side-by-side" "$SETUP_DIFF_STYLE" "Should default to side-by-side"
+_hide_gum
 
 it "should preserve existing SETUP_DIFF_STYLE"
 export SETUP_DIFF_STYLE="side-by-side"

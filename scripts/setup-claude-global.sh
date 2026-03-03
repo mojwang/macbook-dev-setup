@@ -22,6 +22,9 @@ cleanup_claude_global() {
     
     # Clean up incomplete installations
     [[ -n "${CLAUDE_GLOBAL_MD:-}" ]] && [[ -f "${CLAUDE_GLOBAL_MD}.tmp" ]] && rm -f "${CLAUDE_GLOBAL_MD}.tmp" 2>/dev/null || true
+
+    # Clean up stripped metadata temp file
+    [[ -n "${stripped_tmp:-}" ]] && [[ -f "${stripped_tmp:-}" ]] && rm -f "${stripped_tmp}" 2>/dev/null || true
     
     # Call default cleanup
     default_cleanup
@@ -68,10 +71,10 @@ setup_global_claude() {
             current_version=$(grep "^$VERSION_MARKER" "$CLAUDE_GLOBAL_MD" | sed "s/^$VERSION_MARKER *//")
         fi
         
-        # Cache diff result to avoid running twice
+        # Cache diff result to avoid running twice (compare stripped content)
         local diff_output=""
-        if ! diff -q "$TEMPLATE_FILE" "$CLAUDE_GLOBAL_MD" >/dev/null 2>&1; then
-            diff_output=$(diff -u "$CLAUDE_GLOBAL_MD" "$TEMPLATE_FILE" || true)
+        if ! diff -q "$TEMPLATE_FILE" <(strip_metadata_header "$CLAUDE_GLOBAL_MD") >/dev/null 2>&1; then
+            diff_output=$(diff -u <(strip_metadata_header "$CLAUDE_GLOBAL_MD") "$TEMPLATE_FILE" || true)
 
             # Count added/removed lines
             local lines_added lines_removed
@@ -83,7 +86,11 @@ setup_global_claude() {
             echo "  Changes: +${lines_added} added, -${lines_removed} removed"
             echo ""
             ui_diff_style_select
-            ui_diff "$CLAUDE_GLOBAL_MD" "$TEMPLATE_FILE"
+            local stripped_tmp
+            stripped_tmp=$(mktemp)
+            strip_metadata_header "$CLAUDE_GLOBAL_MD" > "$stripped_tmp"
+            ui_diff "$stripped_tmp" "$TEMPLATE_FILE"
+            rm -f "$stripped_tmp"
 
             # Check if we're in CI or non-interactive mode
             if [[ "${CI:-false}" == "true" ]] || [[ ! -t 0 ]]; then
@@ -144,6 +151,17 @@ install_template_with_metadata() {
     mv -f "$temp_file" "$CLAUDE_GLOBAL_MD"
 }
 
+# Strip metadata header lines from an installed CLAUDE.md so we can
+# compare its body against the raw template.
+strip_metadata_header() {
+    local file="$1"
+    if head -1 "$file" | grep -q "^# Claude Global Config Version:"; then
+        tail -n +5 "$file"  # Skip 3 metadata lines + 1 blank separator
+    else
+        cat "$file"          # No metadata — return as-is
+    fi
+}
+
 # Main execution
 case "${1:-}" in
     --check)
@@ -155,9 +173,9 @@ case "${1:-}" in
         
         # Just check if it exists and is up to date
         if [[ -f "$CLAUDE_GLOBAL_MD" ]]; then
-            # Check content differences
+            # Check content differences (strip metadata before comparing)
             content_matches=true
-            if ! diff -q "$TEMPLATE_FILE" "$CLAUDE_GLOBAL_MD" >/dev/null 2>&1; then
+            if ! diff -q "$TEMPLATE_FILE" <(strip_metadata_header "$CLAUDE_GLOBAL_MD") >/dev/null 2>&1; then
                 content_matches=false
             fi
             
