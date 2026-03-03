@@ -43,6 +43,33 @@ inherit=work-acme
 exclude=slack
 EOF
 
+cat > "$TEST_PROFILES_DIR/with-modules.conf" << 'EOF'
+# Profile with modules
+modules=android,web
+EOF
+
+cat > "$TEST_PROFILES_DIR/parent-modules.conf" << 'EOF'
+# Parent profile with module
+modules=android
+EOF
+
+cat > "$TEST_PROFILES_DIR/child-modules.conf" << 'EOF'
+# Child that inherits and adds modules
+inherit=parent-modules
+modules=web
+EOF
+
+cat > "$TEST_PROFILES_DIR/child-dup-modules.conf" << 'EOF'
+# Child that inherits with duplicate module
+inherit=parent-modules
+modules=android,ios
+EOF
+
+cat > "$TEST_PROFILES_DIR/whitespace-modules.conf" << 'EOF'
+# Profile with whitespace in modules
+modules= android , web , ios
+EOF
+
 # Create test Brewfile
 cat > "$TEST_FIXTURES_DIR/Brewfile" << 'EOF'
 tap "homebrew/autoupdate"
@@ -386,6 +413,76 @@ describe "--list-profiles in help text"
 it "should document --list-profiles in setup.sh help"
 help_content=$(cat "$_PROJECT_ROOT/setup.sh")
 assert_contains "$help_content" "--list-profiles" "setup.sh should document --list-profiles"
+
+# ============================================================================
+describe "Module parsing"
+# ============================================================================
+
+it "should parse modules from conf"
+resolve_profile "with-modules"
+assert_equals "2" "${#PROFILE_MODULES[@]}" "Should have 2 modules"
+assert_contains "${PROFILE_MODULES[*]}" "android" "Should contain android module"
+assert_contains "${PROFILE_MODULES[*]}" "web" "Should contain web module"
+
+it "should have empty modules when not specified"
+resolve_profile "personal"
+assert_equals "0" "${#PROFILE_MODULES[@]}" "Should have 0 modules"
+
+it "should trim whitespace from module names"
+resolve_profile "whitespace-modules"
+assert_equals "3" "${#PROFILE_MODULES[@]}" "Should have 3 modules"
+assert_equals "android" "${PROFILE_MODULES[0]}" "First module should be trimmed"
+assert_equals "web" "${PROFILE_MODULES[1]}" "Second module should be trimmed"
+assert_equals "ios" "${PROFILE_MODULES[2]}" "Third module should be trimmed"
+
+# ============================================================================
+describe "Module inheritance"
+# ============================================================================
+
+it "should merge modules from parent and child"
+resolve_profile "child-modules"
+assert_equals "2" "${#PROFILE_MODULES[@]}" "Should have 2 modules (parent + child)"
+assert_contains "${PROFILE_MODULES[*]}" "android" "Should contain parent module android"
+assert_contains "${PROFILE_MODULES[*]}" "web" "Should contain child module web"
+
+it "should deduplicate modules across parent and child"
+resolve_profile "child-dup-modules"
+assert_equals "2" "${#PROFILE_MODULES[@]}" "Should have 2 unique modules (android deduped)"
+assert_contains "${PROFILE_MODULES[*]}" "android" "Should contain android"
+assert_contains "${PROFILE_MODULES[*]}" "ios" "Should contain ios"
+
+# ============================================================================
+describe "PROFILE_MODULES_STR export"
+# ============================================================================
+
+it "should set PROFILE_MODULES_STR after resolve"
+resolve_profile "with-modules"
+assert_equals "android,web" "$PROFILE_MODULES_STR" "Should export comma-separated string"
+
+it "should set empty PROFILE_MODULES_STR when no modules"
+resolve_profile "personal"
+assert_equals "" "$PROFILE_MODULES_STR" "Should be empty string"
+
+# ============================================================================
+describe "Module verbose output"
+# ============================================================================
+
+it "should include module count in verbose output"
+VERBOSE=true
+output=$(resolve_profile "with-modules" 2>&1)
+VERBOSE=false
+assert_contains "$output" "2 modules" "Verbose should show module count"
+
+# ============================================================================
+describe "validate_profile accepts modules key"
+# ============================================================================
+
+it "should accept modules as a valid key"
+if validate_profile "with-modules" 2>/dev/null; then
+    pass_test "with-modules profile passes validation"
+else
+    fail_test "with-modules profile should pass validation"
+fi
 
 # ============================================================================
 # Summary
