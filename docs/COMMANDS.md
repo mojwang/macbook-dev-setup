@@ -126,3 +126,10 @@ The `--sync` flag detects and installs new packages added to configuration files
 ./scripts/uninstall.sh          # Clean removal with backups
 ./scripts/rollback.sh           # Restore from previous backups
 ```
+
+### Agent Helper Scripts
+```bash
+./scripts/claude-agents/agent-benchmarks.sh      # Benchmark agent execution patterns
+./scripts/claude-agents/demo-agents.sh            # Demo agent workflow coordination
+./scripts/claude-agents/test-agent-workflows.sh   # Test agent workflow integration
+```

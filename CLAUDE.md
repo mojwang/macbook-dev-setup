@@ -123,7 +123,7 @@ Note: For product discovery and PRD workflows, use "Product Manager" as a sub-ag
 ## Agent Architecture
 - `.claude/agents/`: Native sub-agents (researcher, planner, implementer, reviewer)
 - `.claude-agents.json`: Declarative config (capabilities, triggers, quality gates, workflows)
-- `scripts/claude-agents/`: Helper scripts (which-agent, benchmarks, demo)
+- `scripts/claude-agents/`: Helper scripts (benchmarks, demo, workflow tests)
 - `docs/CLAUDE_AGENTS.md`: Full agent documentation
 
 ## Important
