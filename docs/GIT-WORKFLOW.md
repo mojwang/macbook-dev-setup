@@ -67,6 +67,14 @@ gwcd       # Shows all sibling worktrees with their branches
 3. **Clean Up**: Remove worktrees when done to avoid clutter
 4. **One Task Per Worktree**: Don't mix unrelated work
 
+### Agent Worktree Isolation
+
+Each `implementer` sub-agent runs in its own worktree via `isolation: worktree`:
+- Orchestrator can dispatch multiple implementers in parallel without file conflicts
+- Worktree creation and cleanup is handled automatically by Claude Code
+- Agents never commit to main — they work on feature branches within their worktree
+- See `.claude/agents/implementer.md` for the full agent definition
+
 ## Branch Cleanup
 
 ### Cleaning Up Stale Branches

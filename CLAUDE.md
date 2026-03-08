@@ -39,11 +39,107 @@ Automated macOS dev environment setup for Apple Silicon.
   - `feat(agents): evolve TaskMaster into Product Manager with discovery workflows`
   - `fix(git): enforce feature branch workflow for all commits`
 
+## Agentic Workflow (Default)
+The main Claude session acts as orchestrator. It never implements directly for complex tasks — it dispatches sub-agents from `.claude/agents/` and synthesizes results.
+
+### Task Classification (decide first)
+- **Async/autonomous**: Peripheral features, prototyping, tests, refactors → full agent workflow, let it run
+- **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
+- **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
+
+### Execution Modes
+Two modes available depending on coordination needs:
+
+**Subagents (default)** — focused workers that report back to orchestrator
+- Best for: sequential phases, tasks where only the result matters
+- Lower token cost (results summarized back)
+- Orchestrator manages all coordination
+
+**Agent Teams (experimental)** — independent Claude instances with shared task list
+- Best for: parallel implementation, competing hypotheses, cross-layer changes
+- Teammates message each other directly, self-claim tasks
+- tmux split panes for live visibility (`teammateMode: "tmux"` in `.claude/settings.json`)
+- Enable: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (set in project settings)
+- Require plan approval for risky teammates before they implement
+- 3-5 teammates max, 5-6 tasks per teammate
+
+### Phase 1: Research
+Dispatch `researcher` sub-agent to explore affected code areas.
+- Run multiple researchers in parallel for independent areas
+- Output: `research.md` with findings
+- Skip for trivial tasks or well-understood areas
+
+### Phase 2: Plan
+Dispatch `planner` sub-agent to create `plan.md` from research.
+- Annotation cycle: user adds `NOTE:` or `Q:` inline → re-run planner to address
+- Iterate 1-3 rounds until plan is approved
+- Each task in the plan should be scoped for a single implementer
+- Size tasks appropriately: self-contained units with clear deliverables
+
+### Phase 3: Implement
+Dispatch implementers with the approved plan. Choose mode based on task:
+
+**Subagent implementers** (worktree-isolated):
+- Each works in worktree isolation on its own branch
+- Self-sufficient loops: run tests after every change
+- Checkpoint commits after each completed task (enables rollback)
+- Slot machine rule: if off track, revert and restart fresh
+
+**Agent team implementers** (for complex parallel work):
+- Split independent tasks so each teammate owns different files (avoid conflicts)
+- Require plan approval before implementation for risky changes
+- Monitor via tmux split panes — redirect approaches that aren't working
+- Lead waits for teammates to finish before synthesizing
+
+### Phase 4: Verify
+Dispatch `reviewer` sub-agent to validate implementation.
+- Must pass before creating PR
+- Can run security + quality reviewers in parallel
+- For agent teams: use `TaskCompleted` hooks to enforce quality gates
+
+### Orchestration Rules
+- Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
+- Subagents cannot spawn other subagents — all coordination flows through orchestrator
+- Persistent artifacts (research.md, plan.md) survive context compaction
+- Clean up artifacts after PR merge
+- For agent teams: always clean up via lead, shut down teammates first
+- **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
+
+## Plugins (User Scope)
+Installed via `/plugin install name@claude-plugins-official`:
+- **github** — native GitHub MCP (richer PR/issue context)
+- **slack** — Slack MCP (read/send messages)
+- **playwright** — browser automation (replaces manual MCP config)
+- **pr-review-toolkit** — specialized PR review agents
+- **typescript-lsp** — TypeScript code intelligence (auto-diagnostics, jump-to-def)
+- **swift-lsp** — Swift code intelligence (via sourcekit-lsp)
+- **pyright-lsp** — Python code intelligence (via pyright)
+- **kotlin-lsp** — Kotlin code intelligence (via kotlin-language-server)
+
+## Hooks
+Configured in `.claude/settings.json`:
+- **PostToolUse (Write|Edit)**: Auto-runs `shellcheck` on `.sh` files after every edit
+- Supports self-sufficient loops — implementer agents get immediate lint feedback
+
+## Skills
+Skills in `.claude/skills/` with YAML frontmatter for invocation control:
+
+**Auto-invoked** (Claude loads when relevant, `user-invocable: false`):
+- **security-review** — shell injection, secrets, OWASP checks (activates on code review/PRs)
+- **shell-conventions** — enforces shebang, set -e, timeouts, quoting (activates on .sh edits)
+- **commit-review** — conventional commits, <200 LOC, branch checks (activates on commits/PRs)
+
+**User-invocable** (manual `/command` only):
+- **/init-project [dir]** — bootstrap agentic workflow in any project (`disable-model-invocation: true`)
+- **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
+
 ## Key Directories
 - `/lib`: Core libraries (common.sh, signal-safety.sh)
 - `/scripts`: Component installers and utilities
 - `/dotfiles`: Shell configs and dotfiles
 - `/docs`: Detailed documentation
+- `/.claude/agents`: Native sub-agent definitions
+- `/.claude/skills`: Auto-invoked skills (security-review, shell-conventions, commit-review)
 
 ## Commands Overview
 - **Setup**: preview, minimal, fix, warp, backup, info
@@ -77,35 +173,11 @@ Note: For product discovery and PRD workflows, use "Product Manager" as a sub-ag
 - To enable research: Add `export PERPLEXITY_API_KEY="your-key"` to `~/.config/zsh/51-api-keys.zsh`
 - **Naming Convention**: "taskmaster" for MCP operations, "Product Manager" for agent workflows
 
-## Agent Workflows for This Project
-
-### Complex Project Implementation:
-1. **Product Manager Agent** → Discovery, validate, prioritize
-2. **Development Agent** → Implement features
-3. **Quality Agent** → Test implementation
-4. **Documentation Agent** → Update docs
-
-### Shell Script Development:
-1. **Create/Modify** → Shell Script Agent (validation)
-2. **Security Check** → Security Agent (scan for vulnerabilities)  
-3. **Test** → Quality Agent (run tests)
-4. **Optimize** → Performance Agent (if needed)
-
-### Dependency Updates:
-1. **Scan** → Dependency Agent (check for updates)
-2. **Apply** → Development Agent (update files)
-3. **Validate** → Configuration Agent (check compatibility)
-4. **Test** → Quality Agent (ensure nothing breaks)
-
-### MCP Server Issues:
-1. **Debug** → MCP Integration Agent (diagnose issues)
-2. **Fix** → Development Agent (apply fixes)
-3. **Test** → Quality Agent (verify connections)
-
-### Performance Issues:
-1. **Profile** → Performance Agent (identify bottlenecks)
-2. **Optimize** → Shell Script Agent (improve code)
-3. **Benchmark** → Performance Agent (verify improvements)
+## Agent Architecture
+- `.claude/agents/`: Native sub-agents (researcher, planner, implementer, reviewer)
+- `.claude-agents.json`: Declarative config (capabilities, triggers, quality gates, workflows)
+- `scripts/claude-agents/`: Helper scripts (benchmarks, demo, workflow tests)
+- `docs/CLAUDE_AGENTS.md`: Full agent documentation
 
 ## Important
 - Do only what's asked; nothing more

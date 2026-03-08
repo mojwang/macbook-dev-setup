@@ -21,6 +21,33 @@ These servers are maintained by the official MCP team:
 4. **fetch** - Web content fetching and conversion
 5. **sequentialthinking** - Dynamic problem-solving through thought sequences
 
+## Plugin-Managed Servers
+
+These servers are now managed via Claude Code plugins (installed with `/plugin install`):
+
+1. **github** (`github@claude-plugins-official`)
+   - Native GitHub MCP — richer PR/issue context than `gh` CLI alone
+   - Installed as user-scope plugin
+
+2. **playwright** (`playwright@claude-plugins-official`)
+   - Browser automation and web scraping capabilities
+   - Previously configured as manual MCP; now managed via plugin
+
+3. **slack** (`slack@claude-plugins-official`)
+   - Slack MCP for reading/sending messages from Claude
+
+4. **pr-review-toolkit** (`pr-review-toolkit@claude-plugins-official`)
+   - Specialized PR review agents, complements reviewer sub-agent
+
+### LSP Plugins (Code Intelligence)
+
+These plugins provide auto-diagnostics after every edit + code navigation (jump-to-def, find refs):
+
+- **typescript-lsp** — requires `typescript-language-server` (brew)
+- **swift-lsp** — requires `sourcekit-lsp` (bundled with Xcode)
+- **pyright-lsp** — requires `pyright` (brew)
+- **kotlin-lsp** — requires `kotlin-language-server` (brew)
+
 ## Community Servers
 
 These servers are maintained by the community:
@@ -28,10 +55,6 @@ These servers are maintained by the community:
 1. **context7** (https://github.com/upstash/context7-mcp)
    - Provides up-to-date documentation for any library/framework
    - Helps with accurate, version-specific code examples
-
-2. **playwright** (https://github.com/microsoft/playwright-mcp)
-   - Browser automation and web scraping capabilities
-   - Useful for testing and data extraction
 
 3. **figma** (https://github.com/GLips/Figma-Context-MCP)
    - Access Figma design data for AI coding tools

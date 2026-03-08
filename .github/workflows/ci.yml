@@ -85,59 +85,58 @@ jobs:
     - name: Check for secrets
       run: |
         echo "Checking for potential secrets..."
+        found=0
+
         # Basic secret detection
-        grep -rEn "(password|secret|key|token|api_key).*=.*['\"]" . --include="*.sh" || echo "No hardcoded secrets found"
-        
+        if grep -rEn "(password|secret|key|token|api_key).*=.*['\"]" . --include="*.sh"; then
+          echo "⚠ Potential hardcoded secrets found above"
+          found=1
+        else
+          echo "✓ No hardcoded secrets found"
+        fi
+
         # Check for common secret patterns
-        grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256" || echo "No potential API keys found"
+        if grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256"; then
+          echo "⚠ Potential API keys found above"
+          found=1
+        else
+          echo "✓ No potential API keys found"
+        fi
+
+        exit $found
 
   agent-tests:
-    name: Claude Agent Tests
+    name: Agent Workflow Validation
     runs-on: macos-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
-    - name: Test Quality Agent
+
+    - name: Validate Agent Definitions
       run: |
-        echo "Testing Quality Agent..."
-        if [[ -f tests/agents/test_quality_agent.sh ]]; then
-          bash tests/agents/test_quality_agent.sh || echo "Quality Agent test completed"
-        fi
-    
-    - name: Test Security Agent
-      run: |
-        echo "Testing Security Agent..."
-        if [[ -f tests/agents/test_security_agent.sh ]]; then
-          bash tests/agents/test_security_agent.sh || echo "Security Agent test completed"
-        fi
-    
-    - name: Test Shell Script Agent
-      run: |
-        echo "Testing Shell Script Agent..."
-        if [[ -f tests/agents/test_shell_agent.sh ]]; then
-          bash tests/agents/test_shell_agent.sh || echo "Shell Agent test completed"
-        fi
-    
+        echo "Validating 4-agent definitions..."
+        for agent in researcher planner implementer reviewer; do
+          if [[ -f ".claude/agents/${agent}.md" ]]; then
+            echo "✓ ${agent} agent definition exists"
+          else
+            echo "✗ Missing: .claude/agents/${agent}.md"
+            exit 1
+          fi
+        done
+
     - name: Validate Agent Workflows
       run: |
         echo "Validating agent workflows..."
         if [[ -f scripts/claude-agents/test-agent-workflows.sh ]]; then
-          bash scripts/claude-agents/test-agent-workflows.sh validate || echo "Workflow validation completed"
+          bash scripts/claude-agents/test-agent-workflows.sh all
         fi
-    
+
     - name: Run Agent Benchmarks
       run: |
-        echo "Running agent performance benchmarks..."
+        echo "Running agent benchmarks..."
         if [[ -f scripts/claude-agents/agent-benchmarks.sh ]]; then
-          # Run benchmarks and capture output
-          ITERATIONS=2 OUTPUT_FORMAT=json bash scripts/claude-agents/agent-benchmarks.sh report > benchmark_results.json || echo "Benchmarks completed"
-          
-          # TODO: Future enhancement - compare with baseline
-          # if [[ -f .github/benchmark_baseline.json ]]; then
-          #   python3 scripts/compare_benchmarks.py benchmark_results.json .github/benchmark_baseline.json
-          # fi
+          ITERATIONS=2 OUTPUT_FORMAT=json bash scripts/claude-agents/agent-benchmarks.sh report
         fi
 
   # Summary job that depends on all other jobs

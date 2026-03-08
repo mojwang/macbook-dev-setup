@@ -80,3 +80,10 @@ sleep 2
 kill -INT $PID
 # Verify no artifacts remain
 ```
+
+## Agent Workflow Testing
+
+- Native sub-agent behavior is validated through the **reviewer agent** (Phase 4 verification)
+- End-to-end workflow test: `./scripts/claude-agents/test-agent-workflows.sh`
+- Agent benchmarks: `./scripts/claude-agents/agent-benchmarks.sh`
+- See [Claude Agents](CLAUDE_AGENTS.md) for details on the reviewer's verification scope

@@ -1,530 +1,77 @@
-# Claude Sub-Agents Guide
-
-This document defines the sub-agent architecture for the macbook-dev-setup project, enabling specialized task delegation for improved code quality, security, and maintainability.
-
-## Overview
-
-Claude Code's Task tool enables launching specialized agents for complex, multi-step operations. Each agent runs autonomously and returns results, allowing for parallel execution and domain-specific expertise.
-
-## Core Agents
-
-### 1. Quality & Testing Agent
-**Purpose**: Ensure code quality and test coverage  
-**Triggers**:
-- After implementing new features
-- Before merging PRs
-- When modifying test files
-
-**Responsibilities**:
-- Run test suites (`./tests/run_tests.sh`)
-- Validate idempotency of scripts
-- Check test coverage
-- Verify performance benchmarks
-- Ensure TDD/BDD/SDD compliance
-
-**Example Activation**:
-```
-"Run quality checks and ensure all tests pass for the recent changes"
-```
-
-### 2. Security Analysis Agent
-**Purpose**: Identify and remediate security vulnerabilities  
-**Triggers**:
-- Before commits involving sensitive operations
-- When handling API keys or credentials
-- During shell script creation/modification
-
-**Responsibilities**:
-- Scan for hardcoded secrets
-- Validate secure API key handling
-- Check file permissions
-- Analyze shell script security patterns
-- Verify sudo usage minimization
-
-**Example Activation**:
-```
-"Perform security analysis on the MCP server configuration scripts"
-```
-
-### 3. Development Agent
-**Purpose**: Implement features and refactor code  
-**Triggers**:
-- Feature requests
-- Code refactoring needs
-- Bug fixes
-
-**Responsibilities**:
-- Add new installation scripts
-- Refactor existing components
-- Implement feature enhancements
-- Fix identified bugs
-- Maintain code consistency
-
-**Example Activation**:
-```
-"Implement a new installer for Docker Desktop with proper error handling"
-```
-
-## Product Discovery Agents
-
-### Product Manager Agent
-**Purpose**: Comprehensive product management and discovery  
-**Triggers**:
-- PRD provided
-- Feature requests
-- Product discovery needed
-- Validation required
-
-**Responsibilities**:
-- Product discovery and validation
-- Risk assessment (Value, Usability, Feasibility, Viability)
-- Customer problem identification
-- Opportunity assessment
-- Prioritization (ICE/RICE frameworks)
-- Outcome-based roadmapping
-- PRD parsing and task breakdown
-
-**Techniques**:
-- Jobs-to-be-done framework
-- Design thinking
-- Lean startup methodology
-- Dual-track agile
-- Rapid prototyping
-
-**Example Activation**:
-```
-"Conduct product discovery for the new payment feature"
-```
-
-### Customer Persona Agent
-**Purpose**: Simulate diverse customer perspectives  
-**Triggers**:
-- Customer research needed
-- Interview simulation
-- Feedback collection
-
-**Responsibilities**:
-- Generate realistic user personas
-- Respond to interviews in character
-- Provide product feedback
-- Express pain points and needs
-- Simulate different user types
-
-**Example Activation**:
-```
-"Interview 5 different personas about the checkout experience"
-```
-
-### Market Research Agent
-**Purpose**: Market analysis and competitive intelligence  
-**Triggers**:
-- Market analysis requests
-- Competitive research
-- Market sizing needed
-
-**Responsibilities**:
-- Competitive analysis
-- Market sizing estimates
-- Trend analysis
-- Technology adoption tracking
-- Industry insights
-
-**Example Activation**:
-```
-"Analyze the competitive landscape for developer tools"
-```
-
-### UX Research Agent
-**Purpose**: Usability and user experience evaluation  
-**Triggers**:
-- Usability testing
-- Heuristic evaluation
-- Accessibility checks
-
-**Responsibilities**:
-- Nielsen's heuristic evaluation
-- Cognitive walkthroughs
-- Accessibility assessment (WCAG)
-- Information architecture review
-- Usability testing simulation
-
-**Example Activation**:
-```
-"Perform heuristic evaluation of the onboarding flow"
-```
-
-## Specialized Agents
-
-### 4. Shell Script Specialist Agent
-**Purpose**: Optimize and validate shell scripts  
-**Triggers**:
-- Creating new shell scripts
-- Modifying existing scripts
-- Performance optimization requests
-
-**Responsibilities**:
-- Validate POSIX compliance
-- Ensure signal safety (`set -e`, trap handlers)
-- Optimize parallel execution
-- Check for shellcheck compliance
-- Implement proper error handling
-
-**Example Activation**:
-```
-"Review and optimize the parallel execution in setup.sh"
-```
-
-### 5. Dependency Management Agent
-**Purpose**: Manage and update project dependencies  
-**Triggers**:
-- Weekly dependency checks
-- Security vulnerability alerts
-- Version compatibility issues
-
-**Responsibilities**:
-- Track Homebrew package updates
-- Monitor npm/pnpm dependencies
-- Check Python/uv packages
-- Identify security vulnerabilities
-- Verify version compatibility
-
-**Example Activation**:
-```
-"Check for outdated dependencies and security vulnerabilities in Brewfile"
-```
-
-### 6. Configuration Validator Agent
-**Purpose**: Ensure configuration consistency  
-**Triggers**:
-- Dotfile modifications
-- MCP server configuration changes
-- VS Code settings updates
-
-**Responsibilities**:
-- Validate Zsh module syntax
-- Check dotfile symlinks
-- Verify MCP server configs
-- Test VS Code extensions
-- Ensure configuration idempotency
-
-**Example Activation**:
-```
-"Validate all Zsh configuration modules and check for conflicts"
-```
-
-### 7. Documentation Sync Agent
-**Purpose**: Maintain accurate documentation  
-**Triggers**:
-- After code changes
-- Before releases
-- Command additions/modifications
-
-**Responsibilities**:
-- Update COMMANDS.md
-- Maintain CHANGELOG.md
-- Sync inline documentation
-- Generate API references
-- Update README sections
-
-**Example Activation**:
-```
-"Update documentation to reflect the new MCP server configurations"
-```
-
-### 8. CI/CD & Release Agent
-**Purpose**: Manage continuous integration and releases  
-**Triggers**:
-- Pre-release preparation
-- CI pipeline failures
-- Version bumps
-
-**Responsibilities**:
-- Manage semantic versioning
-- Coordinate GitHub Actions
-- Handle release notes
-- Update VERSION file
-- Ensure CI compliance
-
-**Example Activation**:
-```
-"Prepare for a new release with proper versioning and changelog"
-```
-
-### 9. Performance Optimization Agent
-**Purpose**: Optimize system performance  
-**Triggers**:
-- Slow script execution
-- Shell startup delays
-- Resource usage concerns
-
-**Responsibilities**:
-- Profile script execution
-- Optimize parallel job distribution
-- Reduce shell startup time (<100ms)
-- Benchmark critical paths
-- Implement caching strategies
-
-**Example Activation**:
-```
-"Optimize shell startup time and identify bottlenecks"
-```
-
-### 10. Backup & Recovery Agent
-**Purpose**: Manage backup strategies  
-**Triggers**:
-- Before major changes
-- Backup integrity checks
-- Restore operations
-
-**Responsibilities**:
-- Create system backups
-- Verify backup integrity
-- Test restore procedures
-- Manage backup rotation
-- Document recovery steps
-
-**Example Activation**:
-```
-"Create a backup of current configuration and test restore procedure"
-```
-
-### 11. MCP Integration Agent
-**Purpose**: Manage Model Context Protocol servers  
-**Triggers**:
-- MCP server installation
-- Configuration updates
-- Connection issues
-
-**Responsibilities**:
-- Configure MCP servers
-- Debug connection issues
-- Manage API keys securely
-- Test server integrations
-- Update server versions
-
-**Example Activation**:
-```
-"Debug why the Figma MCP server is failing to connect"
-```
-
-### 12. macOS Environment Agent
-**Purpose**: Handle macOS-specific configurations  
-**Triggers**:
-- macOS version updates
-- Apple Silicon compatibility checks
-- System preference changes
-
-**Responsibilities**:
-- Verify Apple Silicon support
-- Test Warp Terminal features
-- Configure macOS defaults
-- Handle Gatekeeper issues
-- Manage system extensions
-
-**Example Activation**:
-```
-"Verify all scripts work correctly on macOS Sequoia"
-```
-
-## Agent Coordination Patterns
-
-### Sequential Execution
-When tasks have dependencies:
-```
-1. Development Agent → implements feature
-2. Shell Script Agent → optimizes implementation  
-3. Security Agent → validates security
-4. Quality Agent → runs tests
-5. Documentation Agent → updates docs
-```
-
-### Parallel Execution
-For independent tasks:
-```
-Parallel:
-- Quality Agent: Run test suite
-- Security Agent: Scan for vulnerabilities
-- Performance Agent: Benchmark execution
-```
-
-### Triggered Cascades
-Automatic agent activation:
-```
-On PR creation:
-→ Quality Agent (tests)
-→ Security Agent (if shell scripts modified)
-→ Documentation Agent (if commands changed)
-```
-
-## Usage Guidelines
-
-### When to Use Agents
-
-1. **Always use agents for**:
-   - Security-sensitive operations
-   - Performance-critical changes
-   - Complex multi-step tasks
-   - Cross-cutting concerns
-
-2. **Consider agents for**:
-   - Routine maintenance
-   - Dependency updates
-   - Configuration changes
-   - Documentation updates
-
-### Agent Communication
-
-Agents should:
-- Return structured results
-- Include actionable recommendations
-- Flag critical issues immediately
-- Provide clear success/failure status
-
-### Best Practices
-
-1. **Be Specific**: Provide clear, detailed instructions to agents
-2. **Use Parallel**: Launch multiple agents concurrently when possible
-3. **Chain Wisely**: Use sequential agents only when dependencies exist
-4. **Monitor Results**: Always review agent outputs before proceeding
-5. **Document Patterns**: Record successful agent workflows for reuse
-
-## Integration with Project Workflow
-
-### Git Hooks
+# Claude Sub-Agents
+
+Orchestrator pattern with 4 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase 1-4).
+
+## Native Sub-Agents
+
+All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter for metadata.
+
+### Researcher (`.claude/agents/researcher.md`)
+- **Purpose**: Deep codebase exploration before planning
+- **Model**: haiku | **Tools**: Read, Grep, Glob, Bash
+- **When**: Any task touching 3+ files, or unfamiliar code areas
+- **Input**: Task description from orchestrator
+- **Output**: `research.md` — current state, patterns, dependencies, risks, open questions
+- **Key behavior**: Read-only. References `.claude-agents.json` for project capabilities.
+
+### Planner (`.claude/agents/planner.md`)
+- **Purpose**: Create detailed implementation plans from research
+- **Tools**: Read, Grep, Glob
+- **When**: After research phase, or directly for well-understood tasks
+- **Input**: `research.md` (if present), task description
+- **Output**: `plan.md` — summary, files to change, checkbox tasks, testing strategy, rollback plan
+- **Key behavior**: Supports annotation cycles — user adds `NOTE:` or `Q:` inline, planner addresses them on re-run.
+
+### Implementer (`.claude/agents/implementer.md`)
+- **Purpose**: Execute implementation plans step by step
+- **Isolation**: worktree | **Tools**: Read, Write, Edit, Bash, Grep, Glob
+- **When**: After plan is approved
+- **Input**: `plan.md` with assigned tasks
+- **Output**: Code changes with checkpoint commits
+- **Key behavior**: Self-sufficient loop — run tests after each change, shellcheck `.sh` files, commit per task. Never commits to main.
+
+### Reviewer (`.claude/agents/reviewer.md`)
+- **Purpose**: Verify implementation quality, security, and test coverage
+- **Tools**: Read, Grep, Glob, Bash
+- **When**: After implementation, before PR creation
+- **Input**: Branch with implementation commits
+- **Output**: Review summary (PASSED/FAILED) with sections for tests, security, code quality, documentation, performance, and recommendations
+- **Key behavior**: Objective — reports facts, distinguishes blocking issues from suggestions. References specific file paths and line numbers.
+
+## Orchestration Pattern
+
+### Task Classification (decide first)
+- **Trivial** (single-file edits, quick fixes): Skip workflow, implement directly
+- **Async/autonomous** (prototyping, tests, refactors): Full agent workflow
+- **Sync/supervised** (core logic, security-sensitive): Work interactively
+
+### Phase Flow
+1. **Research** → Dispatch researcher(s). Run in parallel for independent areas.
+2. **Plan** → Dispatch planner. Iterate 1-3 annotation cycles until approved.
+3. **Implement** → Dispatch implementer(s) in worktree isolation. Parallel for independent tasks.
+4. **Verify** → Dispatch reviewer. Must pass before PR creation.
+
+### Key Rules
+- Orchestrator never implements complex tasks itself
+- Subagents cannot spawn other subagents — all coordination through orchestrator
+- Slot machine rule: if an implementer goes off track, revert and restart fresh
+- Every implementer runs in its own worktree (no exceptions)
+
+## Artifacts
+
+- **`research.md`** and **`plan.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
+- Survive context compaction — persistent reference for orchestrator and agents.
+- Annotation cycles: user adds `NOTE:`/`Q:` to `plan.md`, re-runs planner to address.
+
+## Supplementary Config
+
+**`.claude-agents.json`** contains structured metadata about agent capabilities (roles, triggers, quality gates, workflows). Referenced by the researcher agent for project context — not a runtime config that drives agent selection.
+
+## Helper Scripts
+
 ```bash
-# .git/hooks/pre-commit
-# Trigger: Security Agent for shell scripts
-# Trigger: Quality Agent for test files
-
-# .git/hooks/pre-push  
-# Trigger: Full Quality Agent suite
-# Trigger: Documentation sync check
+scripts/claude-agents/
+├── agent-benchmarks.sh       # Benchmark agent execution patterns
+├── demo-agents.sh            # Demo agent workflow coordination
+└── test-agent-workflows.sh   # Validate agent definitions, orchestration flow, and config
 ```
-
-### CI/CD Pipeline
-```yaml
-# .github/workflows/ci.yml
-steps:
-  - name: Security Analysis
-    # Runs Security Agent
-  
-  - name: Quality Checks
-    # Runs Quality Agent
-    
-  - name: Performance Tests
-    # Runs Performance Agent
-```
-
-### Manual Triggers
-```bash
-# Agent selection helper
-./scripts/which-agent.sh          # Interactive decision tree
-agents                            # Quick reference alias
-
-# Direct test execution
-./tests/run_tests.sh              # Run test suite
-./scripts/claude-agents/agent-benchmarks.sh  # Benchmark agents
-
-# Ask Claude directly for specialized agent tasks:
-# "Perform security analysis on my shell scripts"  → Security Agent
-# "Run quality checks on my recent changes"        → Quality Agent
-# "Optimize shell startup time"                    → Performance Agent
-```
-
-## Configuration
-
-Agents respect project configuration in:
-- `CLAUDE.md` - Project-specific instructions
-- `.claude-agents.json` - Agent configuration
-- `.github/workflows/` - CI/CD integration
-- `tests/agents/` - Agent test suites
-
-## Monitoring & Metrics
-
-Track agent effectiveness:
-- Task completion time
-- Issues caught/prevented
-- Code quality improvements
-- Performance gains
-- Security vulnerabilities found
-
-## Future Enhancements
-
-Planned agent capabilities:
-- Cross-platform testing agent (Linux support)
-- Containerization agent (Docker configs)
-- Accessibility testing agent
-- Localization support agent
-- Plugin development agent
-
-## Troubleshooting
-
-Common issues and solutions:
-
-### Agent Not Activating
-- Check trigger conditions
-- Verify agent configuration
-- Review CLAUDE.md instructions
-
-### Agent Timeout
-- Break task into smaller chunks
-- Increase timeout limits
-- Use parallel execution
-
-### Conflicting Agents
-- Define clear boundaries
-- Use coordination patterns
-- Implement mutex locks
-
-## Examples
-
-### Example 1: Product Discovery Sprint
-```
-User: "I want to build a CLI tool for managing git worktrees"
-
-Agents activated:
-1. Product Manager - Define opportunity and risks
-2. Customer Persona - Interview developer personas
-3. Market Research - Analyze existing solutions
-4. UX Research - Evaluate usability patterns
-5. Product Manager - Synthesize and prioritize
-```
-
-### Example 2: Full System Update
-```
-User: "Update all dependencies and ensure everything still works"
-
-Agents activated:
-1. Dependency Management Agent - identifies updates
-2. Development Agent - applies updates  
-3. Security Agent - scans new versions
-4. Quality Agent - runs full test suite
-5. Documentation Agent - updates version info
-```
-
-### Example 2: New Feature Implementation
-```
-User: "Add support for installing Rust development tools"
-
-Agents activated:
-1. Development Agent - creates installer script
-2. Shell Script Agent - optimizes script
-3. Configuration Agent - updates Brewfile
-4. Quality Agent - adds tests
-5. Documentation Agent - updates COMMANDS.md
-```
-
-### Example 3: Performance Issue
-```
-User: "Shell startup is too slow, fix it"
-
-Agents activated:
-1. Performance Agent - profiles startup
-2. Shell Script Agent - optimizes configs
-3. Quality Agent - ensures functionality
-4. Documentation Agent - records changes
-```
-
-## Conclusion
-
-The sub-agent architecture enables specialized, efficient handling of complex tasks while maintaining code quality, security, and performance standards. By leveraging these agents appropriately, the macbook-dev-setup project can scale effectively while reducing manual overhead and potential errors.

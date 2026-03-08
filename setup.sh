@@ -430,7 +430,19 @@ main_setup() {
         else
             print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
         fi
-        
+
+        if [[ "${PROFILE_SKIP_AGENTIC:-false}" != "true" ]]; then
+            print_step "Setting up Claude agentic workflow..."
+            if command -v claude &>/dev/null; then
+                [[ ! -x "./scripts/setup-claude-agentic.sh" ]] && chmod +x "./scripts/setup-claude-agentic.sh"
+                ./scripts/setup-claude-agentic.sh
+            else
+                print_info "Claude Code CLI not found - skipping agentic setup"
+            fi
+        else
+            print_info "Skipping agentic setup (profile: $SETUP_PROFILE)"
+        fi
+
         ui_spinner "Configuring applications" ./scripts/setup-applications.sh
 
         ui_spinner "Configuring terminal fonts" ./scripts/setup-terminal-fonts.sh
@@ -514,6 +526,18 @@ main_setup() {
             fi
         else
             print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
+        fi
+
+        if [[ "${PROFILE_SKIP_AGENTIC:-false}" != "true" ]]; then
+            print_step "Setting up Claude agentic workflow..."
+            if command -v claude &>/dev/null; then
+                [[ ! -x "./scripts/setup-claude-agentic.sh" ]] && chmod +x "./scripts/setup-claude-agentic.sh"
+                ./scripts/setup-claude-agentic.sh
+            else
+                print_info "Claude Code CLI not found - skipping agentic setup"
+            fi
+        else
+            print_info "Skipping agentic setup (profile: $SETUP_PROFILE)"
         fi
     fi
     
