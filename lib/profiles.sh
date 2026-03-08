@@ -24,6 +24,7 @@ PROFILES_DIR="${PROFILES_DIR:-$(cd "$PROFILES_LIB_DIR/../homebrew/profiles" && p
 PROFILE_EXCLUDES=()
 PROFILE_ADDS=()
 PROFILE_SKIP_MCP="false"
+PROFILE_SKIP_AGENTIC="false"
 PROFILE_MODULES=()
 
 # Parse a key=value from a profile conf file
@@ -77,6 +78,7 @@ resolve_profile() {
     PROFILE_EXCLUDES=()
     PROFILE_ADDS=()
     PROFILE_SKIP_MCP="false"
+    PROFILE_SKIP_AGENTIC="false"
     PROFILE_MODULES=()
     PROFILE_MODULES_STR=""
 
@@ -152,6 +154,13 @@ _load_profile_values() {
     skip_mcp=$(parse_profile_value "$file" "skip_mcp_setup")
     if [[ -n "$skip_mcp" ]]; then
         PROFILE_SKIP_MCP="$skip_mcp"
+    fi
+
+    # Parse skip_agentic_setup (child overrides parent)
+    local skip_agentic
+    skip_agentic=$(parse_profile_value "$file" "skip_agentic_setup")
+    if [[ -n "$skip_agentic" ]]; then
+        PROFILE_SKIP_AGENTIC="$skip_agentic"
     fi
 
     # Parse modules (comma-separated, child merges with parent)
@@ -280,7 +289,7 @@ validate_profile() {
     fi
 
     # Check for unknown keys
-    local valid_keys="inherit exclude add skip_mcp_setup modules"
+    local valid_keys="inherit exclude add skip_mcp_setup skip_agentic_setup modules"
     local line_num=0
     while IFS= read -r line || [[ -n "$line" ]]; do
         ((line_num++))
@@ -358,6 +367,10 @@ print_profile_summary() {
 
     if [[ "$PROFILE_SKIP_MCP" == "true" ]]; then
         print_info "MCP setup: skipped"
+    fi
+
+    if [[ "$PROFILE_SKIP_AGENTIC" == "true" ]]; then
+        print_info "Agentic setup: skipped"
     fi
     echo ""
 }
