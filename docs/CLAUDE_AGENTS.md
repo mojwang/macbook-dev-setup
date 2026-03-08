@@ -76,4 +76,4 @@ scripts/claude-agents/
 └── test-agent-workflows.sh   # Test agent workflow integration (simulated — tech debt)
 ```
 
-> **Note**: `test-agent-workflows.sh` currently uses simulated execution and references the old 12-agent model. Needs rewrite to match the 4-agent architecture.
+> **Note**: `test-agent-workflows.sh` exercises the 4-agent workflow architecture with simulated execution (validates definitions, orchestration flow, worktree isolation, artifacts, and config).

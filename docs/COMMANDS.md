@@ -127,6 +127,15 @@ The `--sync` flag detects and installs new packages added to configuration files
 ./scripts/rollback.sh           # Restore from previous backups
 ```
 
+### Agentic Workflow Setup
+```bash
+./scripts/setup-claude-agentic.sh               # System setup: plugins, LSP deps, templates
+./scripts/setup-claude-agentic.sh --init [DIR]   # Bootstrap agents/skills in a project
+./scripts/setup-claude-agentic.sh --check        # Check if templates are up-to-date
+./scripts/setup-claude-agentic.sh --update       # Update templates + re-deploy to project
+claude-init-agentic [DIR]                        # CLI alias (symlinked to ~/.local/bin/)
+```
+
 ### Agent Helper Scripts
 ```bash
 ./scripts/claude-agents/agent-benchmarks.sh      # Benchmark agent execution patterns

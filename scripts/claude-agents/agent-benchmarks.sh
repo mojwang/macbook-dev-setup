@@ -18,18 +18,29 @@ print_banner() {
     echo ""
 }
 
-# Time measurement utility
+# Portable millisecond timer (macOS date lacks %N; use gdate or python fallback)
+_now_ms() {
+    if command -v gdate &>/dev/null; then
+        echo $(( $(gdate +%s%N) / 1000000 ))
+    elif command -v python3 &>/dev/null; then
+        python3 -c 'import time; print(int(time.time()*1000))'
+    else
+        echo $(( $(date +%s) * 1000 ))
+    fi
+}
+
+# Time measurement utility — always returns 0 so callers under set -e don't abort
 measure_time() {
     local command="$1"
-    local start=$(date +%s%N)
+    local start
+    start=$(_now_ms)
 
-    if ! eval "$command" >/dev/null 2>&1; then
-        echo "0"
-        return 1
-    fi
+    eval "$command" >/dev/null 2>&1 || true
 
-    local end=$(date +%s%N)
-    echo $(( (end - start) / 1000000 ))
+    local end
+    end=$(_now_ms)
+    echo $(( end - start ))
+    return 0
 }
 
 # Benchmark researcher-like operations (read-only codebase exploration)
@@ -105,7 +116,8 @@ benchmark_parallel_agents() {
     print_info "Benchmarking Parallel Agent Execution"
     print_info "Simulating 2 implementers + 1 reviewer in parallel..."
 
-    local start=$(date +%s%N)
+    local start
+    start=$(_now_ms)
 
     (
         sleep 0.5  # Simulate Implementer A
@@ -127,8 +139,9 @@ benchmark_parallel_agents() {
 
     wait $pid1 $pid2 $pid3
 
-    local end=$(date +%s%N)
-    local parallel_time=$(( (end - start) / 1000000 ))
+    local end
+    end=$(_now_ms)
+    local parallel_time=$(( end - start ))
 
     echo ""
     print_info "Parallel execution time: ${parallel_time}ms"

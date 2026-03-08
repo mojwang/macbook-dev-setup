@@ -121,11 +121,17 @@ Configured in `.claude/settings.json`:
 - **PostToolUse (Write|Edit)**: Auto-runs `shellcheck` on `.sh` files after every edit
 - Supports self-sufficient loops — implementer agents get immediate lint feedback
 
-## Skills (Auto-Invoked)
-Skills in `.claude/skills/` activate automatically based on context:
+## Skills
+Skills in `.claude/skills/` with YAML frontmatter for invocation control:
+
+**Auto-invoked** (Claude loads when relevant, `user-invocable: false`):
 - **security-review** — shell injection, secrets, OWASP checks (activates on code review/PRs)
 - **shell-conventions** — enforces shebang, set -e, timeouts, quoting (activates on .sh edits)
 - **commit-review** — conventional commits, <200 LOC, branch checks (activates on commits/PRs)
+
+**User-invocable** (manual `/command` only):
+- **/init-project [dir]** — bootstrap agentic workflow in any project (`disable-model-invocation: true`)
+- **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
 
 ## Key Directories
 - `/lib`: Core libraries (common.sh, signal-safety.sh)

@@ -1,11 +1,11 @@
+---
+name: security-review
+description: Security review checks for shell injection, secrets, file access vulnerabilities, and OWASP top 10. Use when reviewing code changes, PRs, diffs, commits, or editing code that handles user input, auth, or file access.
+user-invocable: false
+allowed-tools: Read, Grep, Glob, Bash
+---
+
 # Security Review Skill
-
-Auto-invoked when reviewing code, creating PRs, or auditing security.
-
-## When to Activate
-- Reviewing code changes (PRs, diffs, commits)
-- Writing or editing code that handles user input, auth, or file access
-- Security-focused sub-agent tasks
 
 ## Checks
 

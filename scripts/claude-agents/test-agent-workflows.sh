@@ -7,7 +7,6 @@ set -e
 source "$(dirname "$0")/../../lib/common.sh"
 
 TEST_MODE="${1:-all}"
-VERBOSE="${VERBOSE:-false}"
 
 print_banner() {
     echo ""
@@ -152,9 +151,9 @@ run_comprehensive_test() {
     for test_func in "${test_functions[@]}"; do
         echo ""
         if $test_func; then
-            ((passed++))
+            ((passed++)) || true
         else
-            ((failed++))
+            ((failed++)) || true
         fi
     done
 
@@ -184,8 +183,6 @@ show_usage() {
     echo "  artifacts  - Test artifact gitignore"
     echo "  validate   - Validate configuration"
     echo ""
-    echo "Environment variables:"
-    echo "  VERBOSE=true - Enable verbose output"
 }
 
 main() {

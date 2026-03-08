@@ -1,11 +1,11 @@
+---
+name: shell-conventions
+description: Shell script conventions for bash and zsh. Enforces shebang, set -e, timeouts, signal-safe cleanup, and variable quoting. Use when creating, editing, or reviewing .sh, .bash, or .zsh files.
+user-invocable: false
+allowed-tools: Read, Grep, Glob
+---
+
 # Shell Conventions Skill
-
-Auto-invoked when writing or editing shell scripts (`.sh`, `.bash`, `.zsh` files).
-
-## When to Activate
-- Creating new shell scripts
-- Editing existing shell scripts
-- Reviewing shell script changes
 
 ## Required Conventions
 

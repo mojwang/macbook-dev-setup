@@ -115,14 +115,14 @@ jobs:
       run: |
         echo "Validating agent workflows..."
         if [[ -f scripts/claude-agents/test-agent-workflows.sh ]]; then
-          bash scripts/claude-agents/test-agent-workflows.sh all || echo "Workflow validation completed"
+          bash scripts/claude-agents/test-agent-workflows.sh all
         fi
 
     - name: Run Agent Benchmarks
       run: |
         echo "Running agent benchmarks..."
         if [[ -f scripts/claude-agents/agent-benchmarks.sh ]]; then
-          ITERATIONS=2 OUTPUT_FORMAT=json bash scripts/claude-agents/agent-benchmarks.sh report || echo "Benchmarks completed"
+          ITERATIONS=2 OUTPUT_FORMAT=json bash scripts/claude-agents/agent-benchmarks.sh report
         fi
 
   # Summary job that depends on all other jobs

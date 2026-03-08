@@ -1,11 +1,11 @@
+---
+name: commit-review
+description: Commit and PR review checks for conventional commit format, diff size limits, branch verification, and secret detection. Use before creating git commits, pull requests, or when reviewing staged changes.
+user-invocable: false
+allowed-tools: Read, Grep, Glob, Bash
+---
+
 # Commit Review Skill
-
-Auto-invoked when preparing commits, creating PRs, or reviewing diffs.
-
-## When to Activate
-- Before creating a git commit
-- Before creating a pull request
-- When reviewing staged changes
 
 ## Checks
 

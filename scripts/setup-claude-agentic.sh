@@ -81,12 +81,12 @@ install_plugins() {
     for plugin in "${PLUGINS[@]}"; do
         local plugin_name="${plugin%%@*}"
         if echo "$installed_plugins" | grep -q "^${plugin_name}$" 2>/dev/null; then
-            ((skipped++))
+            ((skipped++)) || true
             continue
         fi
         print_info "Installing plugin: $plugin"
         if claude plugin install "$plugin" 2>/dev/null; then
-            ((installed++))
+            ((installed++)) || true
         else
             print_warning "Failed to install plugin: $plugin (continuing)"
         fi
@@ -114,7 +114,7 @@ install_lsp_deps() {
         fi
         print_info "Installing $lsp..."
         if brew install "$lsp" 2>/dev/null; then
-            ((installed++))
+            ((installed++)) || true
         else
             print_warning "Failed to install $lsp (continuing)"
         fi
@@ -249,13 +249,13 @@ init_project() {
                 if [[ -t 0 ]]; then
                     if ui_confirm "Update $(basename "$agent_file")?" "n"; then
                         cp "$agent_file" "$dest"
-                        ((agents_updated++))
+                        ((agents_updated++)) || true
                     fi
                 fi
             fi
         else
             cp "$agent_file" "$dest"
-            ((agents_updated++))
+            ((agents_updated++)) || true
         fi
     done
 
@@ -288,9 +288,9 @@ init_project() {
     local settings_dest="$claude_dir/settings.json"
     if [[ -f "$settings_template" ]]; then
         if [[ -f "$settings_dest" ]]; then
-            # Additive merge: existing keys win, new keys added
+            # Additive merge: template provides defaults, existing keys win
             local merged
-            merged=$(jq -s '.[0] * .[1]' "$settings_dest" "$settings_template" 2>/dev/null || true)
+            merged=$(jq -s '.[0] * .[1]' "$settings_template" "$settings_dest" 2>/dev/null || true)
             if [[ -n "$merged" ]]; then
                 # Check if merge changed anything
                 if ! echo "$merged" | diff -q "$settings_dest" - >/dev/null 2>&1; then
@@ -318,6 +318,9 @@ init_project() {
         print_success "Created .claude-agents.json"
     fi
 
+    if [[ $agents_updated -gt 0 ]]; then
+        print_success "Updated $agents_updated agent(s)"
+    fi
     print_success "Agentic workflow initialized in $target_dir"
 }
 
