@@ -25,6 +25,9 @@
 - Prefer editing over creating files
 - Never create docs unless requested
 - Ask for clarification when blocked
+- For complex tasks (3+ files), use Research→Plan→Implement sub-agent pattern
+- Write findings and plans to persistent markdown before implementing
+- Git revert is the safety net; move fast and break nothing
 
 ## Environment
 - macOS Apple Silicon, zsh with modular config in `~/.config/zsh/`
