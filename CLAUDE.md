@@ -47,6 +47,22 @@ The main Claude session acts as orchestrator. It never implements directly for c
 - **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
 - **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
 
+### Execution Modes
+Two modes available depending on coordination needs:
+
+**Subagents (default)** — focused workers that report back to orchestrator
+- Best for: sequential phases, tasks where only the result matters
+- Lower token cost (results summarized back)
+- Orchestrator manages all coordination
+
+**Agent Teams (experimental)** — independent Claude instances with shared task list
+- Best for: parallel implementation, competing hypotheses, cross-layer changes
+- Teammates message each other directly, self-claim tasks
+- tmux split panes for live visibility (`teammateMode: "tmux"` in `.claude/settings.json`)
+- Enable: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (set in project settings)
+- Require plan approval for risky teammates before they implement
+- 3-5 teammates max, 5-6 tasks per teammate
+
 ### Phase 1: Research
 Dispatch `researcher` sub-agent to explore affected code areas.
 - Run multiple researchers in parallel for independent areas
@@ -58,27 +74,35 @@ Dispatch `planner` sub-agent to create `plan.md` from research.
 - Annotation cycle: user adds `NOTE:` or `Q:` inline → re-run planner to address
 - Iterate 1-3 rounds until plan is approved
 - Each task in the plan should be scoped for a single implementer
+- Size tasks appropriately: self-contained units with clear deliverables
 
-### Phase 3: Implement (Agent Teams)
-Dispatch `implementer` sub-agents with the approved plan.
-- **Parallel execution**: Split independent tasks across multiple implementers
-  - Example: one implements feature code, another writes tests
-  - Each works in worktree isolation on its own branch
-- **Self-sufficient loops**: Each implementer runs tests after every change
-- **Checkpoint commits**: Commit after each completed task (enables rollback)
-- **Slot machine rule**: If an implementer goes off track, revert and restart fresh rather than fixing
-- **Always worktree-isolated**: Every implementer runs in its own worktree, no exceptions
+### Phase 3: Implement
+Dispatch implementers with the approved plan. Choose mode based on task:
+
+**Subagent implementers** (worktree-isolated):
+- Each works in worktree isolation on its own branch
+- Self-sufficient loops: run tests after every change
+- Checkpoint commits after each completed task (enables rollback)
+- Slot machine rule: if off track, revert and restart fresh
+
+**Agent team implementers** (for complex parallel work):
+- Split independent tasks so each teammate owns different files (avoid conflicts)
+- Require plan approval before implementation for risky changes
+- Monitor via tmux split panes — redirect approaches that aren't working
+- Lead waits for teammates to finish before synthesizing
 
 ### Phase 4: Verify
 Dispatch `reviewer` sub-agent to validate implementation.
 - Must pass before creating PR
 - Can run security + quality reviewers in parallel
+- For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
 ### Orchestration Rules
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
 - Persistent artifacts (research.md, plan.md) survive context compaction
 - Clean up artifacts after PR merge
+- For agent teams: always clean up via lead, shut down teammates first
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 
 ## Key Directories
