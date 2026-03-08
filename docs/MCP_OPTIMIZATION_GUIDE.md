@@ -156,7 +156,7 @@ crontab -e
 ### Phase 1 (Complete)
 1. ✅ Process cleanup
 2. ✅ File exclusions (`.assistantignore`)
-3. ✅ Agent decision tree CLI (`which-agent`)
+3. ✅ Agent workflow scripts (`scripts/claude-agents/`)
 4. ✅ Agent quick reference alias (`agents`)
 5. ⏳ **Manual**: Scope MCP filesystem server (see above)
 

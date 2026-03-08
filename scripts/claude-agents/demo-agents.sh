@@ -2,186 +2,169 @@
 set -e
 
 # Claude Agents Demo Script
-# Demonstrates the capabilities of various Claude sub-agents
+# Demonstrates the 4-agent orchestration pattern
 
 source "$(dirname "$0")/../../lib/common.sh"
 
-# Demo configuration
-DEMO_MODE="${1:-interactive}"  # interactive, quality, security, shell, all
+DEMO_MODE="${1:-interactive}"
 
 print_banner() {
     echo ""
     echo "╔══════════════════════════════════════════════╗"
-    echo "║        Claude Sub-Agents Demo Suite         ║"
+    echo "║     Claude Sub-Agents Demo (4-Agent)        ║"
     echo "╚══════════════════════════════════════════════╝"
     echo ""
 }
 
-demo_quality_agent() {
-    print_info "Quality Agent Demo"
-    
-    print_info "The Quality Agent ensures code quality and test coverage."
+demo_researcher() {
+    print_info "Researcher Agent Demo"
+
+    print_info "The Researcher explores the codebase before planning."
     print_info "Capabilities:"
-    echo "  • Run comprehensive test suites"
-    echo "  • Check test coverage metrics"
-    echo "  • Validate idempotency"
-    echo "  • Verify performance benchmarks"
+    echo "  • Trace code paths and map dependencies"
+    echo "  • Find patterns and conventions"
+    echo "  • Identify risks and conflicts"
     echo ""
-    
-    print_info "Example prompt to activate:"
-    echo '  "Run quality checks and ensure all tests pass"'
+
+    print_info "Simulating Researcher execution..."
+    echo "  → Scanning affected files... 12 files found"
+    echo "  → Mapping dependencies... 3 dependency chains"
+    echo "  → Identifying patterns... modular zsh config pattern"
+    echo "  → Checking risks... none found"
+    echo "  → Writing research.md"
     echo ""
-    
-    print_info "Simulating Quality Agent execution..."
-    echo "  → Running unit tests... ✓ 15/15 passed"
-    echo "  → Running integration tests... ✓ 8/8 passed"
-    echo "  → Test coverage: 85% (threshold: 80%)"
-    echo "  → Performance: Shell startup 95ms (threshold: 100ms)"
-    echo ""
-    print_success "Quality Agent: All checks passed"
+    print_success "Researcher: Findings written to research.md"
 }
 
-demo_security_agent() {
-    print_info "Security Agent Demo"
-    
-    print_info "The Security Agent identifies and prevents vulnerabilities."
+demo_planner() {
+    print_info "Planner Agent Demo"
+
+    print_info "The Planner creates implementation plans from research."
     print_info "Capabilities:"
-    echo "  • Scan for hardcoded secrets"
-    echo "  • Validate API key handling"
-    echo "  • Check file permissions"
-    echo "  • Detect vulnerable patterns"
+    echo "  • Read research.md for context"
+    echo "  • Produce plan.md with tasks"
+    echo "  • Support annotation cycles (NOTE:/Q:)"
     echo ""
-    
-    print_info "Example prompt to activate:"
-    echo '  "Perform security analysis on the shell scripts"'
+
+    print_info "Simulating Planner execution..."
+    echo "  → Reading research.md..."
+    echo "  → Creating task breakdown... 4 tasks"
+    echo "  → Defining testing strategy..."
+    echo "  → Writing plan.md"
     echo ""
-    
-    print_info "Simulating Security Agent scan..."
-    echo "  → Scanning for secrets... ✓ No hardcoded secrets"
-    echo "  → Checking permissions... ✓ All secure"
-    echo "  → Validating sudo usage... ✓ Minimal usage"
-    echo "  → Scanning dependencies... ⚠ 1 update available"
-    echo ""
-    print_warning "Security Agent: 1 warning (non-critical)"
+    print_success "Planner: Plan written to plan.md"
 }
 
-demo_shell_agent() {
-    print_info "Shell Script Agent Demo"
-    
-    print_info "The Shell Script Agent optimizes and validates shell scripts."
+demo_implementer() {
+    print_info "Implementer Agent Demo"
+
+    print_info "The Implementer executes plans in worktree isolation."
     print_info "Capabilities:"
-    echo "  • Validate syntax and POSIX compliance"
-    echo "  • Ensure error handling (set -e)"
-    echo "  • Implement signal safety"
-    echo "  • Optimize parallel execution"
+    echo "  • Execute assigned tasks from plan.md"
+    echo "  • Self-sufficient loop (test → fix → commit)"
+    echo "  • Checkpoint commits per task"
     echo ""
-    
-    print_info "Example prompt to activate:"
-    echo '  "Optimize the setup.sh script for better performance"'
+
+    print_info "Simulating Implementer execution..."
+    echo "  → Creating worktree..."
+    echo "  → Task 1: Implementing feature... done"
+    echo "  → Running tests... 15/15 passed"
+    echo "  → Committing: feat(scope): add feature"
+    echo "  → Task 2: Adding tests... done"
+    echo "  → Running tests... 18/18 passed"
+    echo "  → Committing: test(scope): add coverage"
     echo ""
-    
-    print_info "Simulating Shell Agent optimization..."
-    echo "  → Syntax validation... ✓ Valid"
-    echo "  → Error handling... ✓ set -e present"
-    echo "  → Signal handlers... ✓ Trap handlers found"
-    echo "  → Parallel optimization... ✓ Using $(nproc) cores"
-    echo ""
-    print_success "Shell Agent: Script optimized"
+    print_success "Implementer: 2 tasks completed, 2 commits"
 }
 
-demo_development_agent() {
-    print_info "Development Agent Demo"
-    
-    print_info "The Development Agent implements features and fixes."
+demo_reviewer() {
+    print_info "Reviewer Agent Demo"
+
+    print_info "The Reviewer verifies implementation quality."
     print_info "Capabilities:"
-    echo "  • Add new features"
-    echo "  • Refactor existing code"
-    echo "  • Fix bugs"
-    echo "  • Maintain consistency"
+    echo "  • Run test suite"
+    echo "  • Shellcheck validation"
+    echo "  • Security scanning"
+    echo "  • Doc consistency checks"
+    echo "  • Performance anti-pattern detection"
     echo ""
-    
-    print_info "Example prompt to activate:"
-    echo '  "Add support for installing Docker Desktop"'
+
+    print_info "Simulating Reviewer execution..."
+    echo "  → Running tests... all passed"
+    echo "  → Running shellcheck... no issues"
+    echo "  → Checking secrets... none found"
+    echo "  → Checking doc consistency... up to date"
+    echo "  → Checking performance... no anti-patterns"
     echo ""
-    
-    print_info "Simulating Development Agent..."
-    echo "  → Creating installer script..."
-    echo "  → Adding to Brewfile..."
-    echo "  → Implementing error handling..."
-    echo "  → Adding tests..."
-    echo ""
-    print_success "Development Agent: Feature implemented"
+    print_success "Reviewer: Status PASSED"
 }
 
 demo_workflow() {
-    print_info "Agent Workflow Demo"
-    
-    print_info "Demonstrating coordinated agent workflow:"
+    print_info "Full Workflow Demo"
+    print_info "Orchestrator dispatching agents through Phase 1-4:"
     echo ""
-    echo "Scenario: Adding a new feature with security validation"
+
+    echo "Phase 1: Research"
+    sleep 0.5
+    echo "  → Researcher: Exploring codebase..."
+    echo "  ✓ research.md written"
     echo ""
-    
-    echo "1. Development Agent → Creates feature"
-    sleep 1
-    echo "   ✓ Feature implemented"
+
+    echo "Phase 2: Plan"
+    sleep 0.5
+    echo "  → Planner: Creating plan from research..."
+    echo "  ✓ plan.md written (3 tasks)"
     echo ""
-    
-    echo "2. Shell Script Agent → Optimizes code"
-    sleep 1
-    echo "   ✓ Code optimized"
+
+    echo "Phase 3: Implement"
+    sleep 0.5
+    echo "  → Implementer A (worktree): Tasks 1-2"
+    echo "  → Implementer B (worktree): Task 3"
+    echo "  ✓ All tasks completed (parallel)"
     echo ""
-    
-    echo "3. Security Agent → Scans for vulnerabilities"
-    sleep 1
-    echo "   ✓ No vulnerabilities found"
+
+    echo "Phase 4: Verify"
+    sleep 0.5
+    echo "  → Reviewer: Validating implementation..."
+    echo "  ✓ Status: PASSED"
     echo ""
-    
-    echo "4. Quality Agent → Runs tests"
-    sleep 1
-    echo "   ✓ All tests passed"
-    echo ""
-    
-    echo "5. Documentation Agent → Updates docs"
-    sleep 1
-    echo "   ✓ Documentation updated"
-    echo ""
-    
-    print_success "Workflow completed successfully!"
+
+    print_success "Workflow completed — ready for PR creation!"
 }
 
 interactive_menu() {
     while true; do
         echo ""
-        print_info "Select an agent demo:"
-        echo "  1) Quality Agent"
-        echo "  2) Security Agent"
-        echo "  3) Shell Script Agent"
-        echo "  4) Development Agent"
-        echo "  5) Workflow Demo"
+        print_info "Select a demo:"
+        echo "  1) Researcher Agent"
+        echo "  2) Planner Agent"
+        echo "  3) Implementer Agent"
+        echo "  4) Reviewer Agent"
+        echo "  5) Full Workflow"
         echo "  6) Run All Demos"
         echo "  q) Quit"
         echo ""
         read -p "Choice: " choice
-        
+
         case $choice in
-            1) demo_quality_agent ;;
-            2) demo_security_agent ;;
-            3) demo_shell_agent ;;
-            4) demo_development_agent ;;
+            1) demo_researcher ;;
+            2) demo_planner ;;
+            3) demo_implementer ;;
+            4) demo_reviewer ;;
             5) demo_workflow ;;
-            6) 
-                demo_quality_agent
-                demo_security_agent
-                demo_shell_agent
-                demo_development_agent
+            6)
+                demo_researcher
+                demo_planner
+                demo_implementer
+                demo_reviewer
                 demo_workflow
                 ;;
-            q|Q) 
+            q|Q)
                 print_info "Exiting demo suite."
                 exit 0
                 ;;
             *)
-                print_error "Invalid choice. Please try again."
+                print_error "Invalid choice."
                 ;;
         esac
     done
@@ -192,64 +175,43 @@ show_usage() {
     echo ""
     echo "Modes:"
     echo "  interactive  - Interactive menu (default)"
-    echo "  quality      - Demo Quality Agent"
-    echo "  security     - Demo Security Agent"
-    echo "  shell        - Demo Shell Script Agent"
-    echo "  development  - Demo Development Agent"
-    echo "  workflow     - Demo agent workflow"
+    echo "  researcher   - Demo Researcher Agent"
+    echo "  planner      - Demo Planner Agent"
+    echo "  implementer  - Demo Implementer Agent"
+    echo "  reviewer     - Demo Reviewer Agent"
+    echo "  workflow     - Demo full workflow"
     echo "  all          - Run all demos"
-    echo ""
-    echo "Examples:"
-    echo "  $0                    # Interactive mode"
-    echo "  $0 security           # Demo Security Agent"
-    echo "  $0 all               # Run all demos"
 }
 
-# Main execution
 main() {
     print_banner
-    
+
     case "$DEMO_MODE" in
-        interactive)
-            interactive_menu
-            ;;
-        quality)
-            demo_quality_agent
-            ;;
-        security)
-            demo_security_agent
-            ;;
-        shell)
-            demo_shell_agent
-            ;;
-        development)
-            demo_development_agent
-            ;;
-        workflow)
-            demo_workflow
-            ;;
+        interactive)  interactive_menu ;;
+        researcher)   demo_researcher ;;
+        planner)      demo_planner ;;
+        implementer)  demo_implementer ;;
+        reviewer)     demo_reviewer ;;
+        workflow)     demo_workflow ;;
         all)
-            demo_quality_agent
-            demo_security_agent
-            demo_shell_agent
-            demo_development_agent
+            demo_researcher
+            demo_planner
+            demo_implementer
+            demo_reviewer
             demo_workflow
             ;;
-        help|--help|-h)
-            show_usage
-            ;;
+        help|--help|-h) show_usage ;;
         *)
             print_error "Unknown mode: $DEMO_MODE"
             show_usage
             exit 1
             ;;
     esac
-    
+
     echo ""
     print_info "For more information, see: docs/CLAUDE_AGENTS.md"
 }
 
-# Run if executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
