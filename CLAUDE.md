@@ -105,12 +105,35 @@ Dispatch `reviewer` sub-agent to validate implementation.
 - For agent teams: always clean up via lead, shut down teammates first
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 
+## Plugins (User Scope)
+Installed via `/plugin install name@claude-plugins-official`:
+- **github** — native GitHub MCP (richer PR/issue context)
+- **slack** — Slack MCP (read/send messages)
+- **playwright** — browser automation (replaces manual MCP config)
+- **pr-review-toolkit** — specialized PR review agents
+- **typescript-lsp** — TypeScript code intelligence (auto-diagnostics, jump-to-def)
+- **swift-lsp** — Swift code intelligence (via sourcekit-lsp)
+- **pyright-lsp** — Python code intelligence (via pyright)
+- **kotlin-lsp** — Kotlin code intelligence (via kotlin-language-server)
+
+## Hooks
+Configured in `.claude/settings.json`:
+- **PostToolUse (Write|Edit)**: Auto-runs `shellcheck` on `.sh` files after every edit
+- Supports self-sufficient loops — implementer agents get immediate lint feedback
+
+## Skills (Auto-Invoked)
+Skills in `.claude/skills/` activate automatically based on context:
+- **security-review** — shell injection, secrets, OWASP checks (activates on code review/PRs)
+- **shell-conventions** — enforces shebang, set -e, timeouts, quoting (activates on .sh edits)
+- **commit-review** — conventional commits, <200 LOC, branch checks (activates on commits/PRs)
+
 ## Key Directories
 - `/lib`: Core libraries (common.sh, signal-safety.sh)
 - `/scripts`: Component installers and utilities
 - `/dotfiles`: Shell configs and dotfiles
 - `/docs`: Detailed documentation
 - `/.claude/agents`: Native sub-agent definitions
+- `/.claude/skills`: Auto-invoked skills (security-review, shell-conventions, commit-review)
 
 ## Commands Overview
 - **Setup**: preview, minimal, fix, warp, backup, info
