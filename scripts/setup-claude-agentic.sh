@@ -186,6 +186,13 @@ deploy_templates() {
         print_success "Deployed agent metadata template"
     fi
 
+    # Copy project CLAUDE.md template
+    local claude_md_template="$REPO_DIR/config/project-claude.md.template"
+    if [[ -f "$claude_md_template" ]]; then
+        cp "$claude_md_template" "$TEMPLATE_DIR/project-claude.md.template"
+        print_success "Deployed project CLAUDE.md template"
+    fi
+
     # Write version stamp
     echo "$TEMPLATE_VERSION" > "$VERSION_FILE"
     print_success "Templates deployed to $TEMPLATE_DIR (v$TEMPLATE_VERSION)"
@@ -233,6 +240,41 @@ init_project() {
     fi
 
     print_info "Initializing agentic workflow in: $target_dir"
+
+    # Initialize git repo if not already one
+    if [[ ! -d "$target_dir/.git" ]]; then
+        git -C "$target_dir" init
+        print_success "Initialized git repository"
+    fi
+
+    # Generate CLAUDE.md from template if not present
+    local claude_md="$target_dir/CLAUDE.md"
+    if [[ ! -f "$claude_md" ]]; then
+        local claude_md_template="$TEMPLATE_DIR/project-claude.md.template"
+        if [[ -f "$claude_md_template" ]]; then
+            cp "$claude_md_template" "$claude_md"
+            print_success "Created CLAUDE.md template — customize for your project"
+        fi
+    fi
+
+    # Generate minimal README.md if not present
+    local readme="$target_dir/README.md"
+    if [[ ! -f "$readme" ]]; then
+        local project_name
+        project_name=$(basename "$target_dir")
+        cat > "$readme" << EOF
+# $project_name
+
+## Getting Started
+
+TODO: Add setup instructions.
+
+## Development
+
+This project uses the Claude agentic workflow. See \`CLAUDE.md\` for details.
+EOF
+        print_success "Created README.md — customize for your project"
+    fi
 
     local claude_dir="$target_dir/.claude"
 
@@ -372,6 +414,9 @@ System setup installs:
     CLI:      Symlinks as ~/.local/bin/claude-init-agentic
 
 Project init creates:
+    git repo            (initialized if not present)
+    CLAUDE.md           project template (customize for your stack)
+    README.md           minimal skeleton (if not present)
     .claude/agents/     researcher, planner, implementer, reviewer
     .claude/skills/     security-review, shell-conventions, commit-review
     .claude/settings.json  (merged with existing)

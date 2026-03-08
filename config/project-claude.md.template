@@ -1,0 +1,36 @@
+# {{PROJECT_NAME}}
+
+{{DESCRIPTION}}
+
+## Project Rules
+1. {{LANGUAGE_CONVENTIONS}}
+2. Test new features with TDD
+3. Use modular architecture
+
+## Git Workflow
+- Feature branches required
+- Conventional commit format: `type(scope): description`
+- PR creation: manual after feature complete
+
+## Tech Stack
+- {{STACK_DESCRIPTION}}
+
+## Agentic Workflow (Default)
+Main session = orchestrator. Dispatches sub-agents, never implements complex tasks directly.
+
+### Task Classification
+- **Trivial**: Single-file edits → implement directly
+- **Standard**: Multi-file changes → Research → Plan → Implement → Review
+- **Parallel**: Independent tasks → multiple implementers in worktree isolation
+
+## Key Directories
+- {{DIRECTORY_MAP}}
+
+## Testing
+```bash
+{{TEST_COMMAND}}
+```
+
+## Important
+- Do only what's asked
+- Check CI before merging
