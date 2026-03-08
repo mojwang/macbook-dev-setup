@@ -35,7 +35,9 @@ measure_time() {
     local start
     start=$(_now_ms)
 
-    eval "$command" >/dev/null 2>&1 || true
+    if ! eval "$command" >/dev/null 2>&1; then
+        print_warning "Command failed: ${command%% *}..." >&2
+    fi
 
     local end
     end=$(_now_ms)

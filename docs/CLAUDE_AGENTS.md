@@ -73,7 +73,5 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 scripts/claude-agents/
 ├── agent-benchmarks.sh       # Benchmark agent execution patterns
 ├── demo-agents.sh            # Demo agent workflow coordination
-└── test-agent-workflows.sh   # Test agent workflow integration (simulated — tech debt)
+└── test-agent-workflows.sh   # Validate agent definitions, orchestration flow, and config
 ```
-
-> **Note**: `test-agent-workflows.sh` exercises the 4-agent workflow architecture with simulated execution (validates definitions, orchestration flow, worktree isolation, artifacts, and config).

@@ -85,11 +85,25 @@ jobs:
     - name: Check for secrets
       run: |
         echo "Checking for potential secrets..."
+        found=0
+
         # Basic secret detection
-        grep -rEn "(password|secret|key|token|api_key).*=.*['\"]" . --include="*.sh" || echo "No hardcoded secrets found"
-        
+        if grep -rEn "(password|secret|key|token|api_key).*=.*['\"]" . --include="*.sh"; then
+          echo "⚠ Potential hardcoded secrets found above"
+          found=1
+        else
+          echo "✓ No hardcoded secrets found"
+        fi
+
         # Check for common secret patterns
-        grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256" || echo "No potential API keys found"
+        if grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256"; then
+          echo "⚠ Potential API keys found above"
+          found=1
+        else
+          echo "✓ No potential API keys found"
+        fi
+
+        exit $found
 
   agent-tests:
     name: Agent Workflow Validation
