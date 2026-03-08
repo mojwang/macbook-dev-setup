@@ -24,6 +24,7 @@ PROFILES_DIR="${PROFILES_DIR:-$(cd "$PROFILES_LIB_DIR/../homebrew/profiles" && p
 PROFILE_EXCLUDES=()
 PROFILE_ADDS=()
 PROFILE_SKIP_MCP="false"
+PROFILE_MODULES=()
 
 # Parse a key=value from a profile conf file
 # Usage: parse_profile_value <file> <key>
@@ -76,6 +77,8 @@ resolve_profile() {
     PROFILE_EXCLUDES=()
     PROFILE_ADDS=()
     PROFILE_SKIP_MCP="false"
+    PROFILE_MODULES=()
+    PROFILE_MODULES_STR=""
 
     # Check for inheritance
     local parent
@@ -104,8 +107,12 @@ resolve_profile() {
     # Load child values (merges excludes/adds, overrides options)
     _load_profile_values "$conf_file" "child"
 
-    [[ "${VERBOSE:-false}" == true ]] && print_info "Resolved ${#PROFILE_EXCLUDES[@]} excludes, ${#PROFILE_ADDS[@]} adds"
+    [[ "${VERBOSE:-false}" == true ]] && print_info "Resolved ${#PROFILE_EXCLUDES[@]} excludes, ${#PROFILE_ADDS[@]} adds, ${#PROFILE_MODULES[@]} modules"
 
+    export PROFILE_MODULES
+    # Bash arrays can't cross process boundaries; export as delimited string for subprocesses
+    PROFILE_MODULES_STR=$(IFS=','; echo "${PROFILE_MODULES[*]}")
+    export PROFILE_MODULES_STR
     return 0
 }
 
@@ -145,6 +152,24 @@ _load_profile_values() {
     skip_mcp=$(parse_profile_value "$file" "skip_mcp_setup")
     if [[ -n "$skip_mcp" ]]; then
         PROFILE_SKIP_MCP="$skip_mcp"
+    fi
+
+    # Parse modules (comma-separated, child merges with parent)
+    local modules_str
+    modules_str=$(parse_profile_value "$file" "modules")
+    if [[ -n "$modules_str" ]]; then
+        IFS=',' read -ra new_modules <<< "$modules_str"
+        for item in "${new_modules[@]}"; do
+            item="${item#"${item%%[![:space:]]*}"}"
+            item="${item%"${item##*[![:space:]]}"}"
+            if [[ -n "$item" ]]; then
+                local duplicate=false
+                for existing in ${PROFILE_MODULES[@]+"${PROFILE_MODULES[@]}"}; do
+                    [[ "$existing" == "$item" ]] && duplicate=true && break
+                done
+                [[ "$duplicate" == false ]] && PROFILE_MODULES+=("$item")
+            fi
+        done
     fi
 }
 
@@ -255,7 +280,7 @@ validate_profile() {
     fi
 
     # Check for unknown keys
-    local valid_keys="inherit exclude add skip_mcp_setup"
+    local valid_keys="inherit exclude add skip_mcp_setup modules"
     local line_num=0
     while IFS= read -r line || [[ -n "$line" ]]; do
         ((line_num++))
@@ -325,6 +350,10 @@ print_profile_summary() {
 
     if [[ ${#PROFILE_ADDS[@]} -gt 0 ]]; then
         print_info "Adding: ${PROFILE_ADDS[*]}"
+    fi
+
+    if [[ ${#PROFILE_MODULES[@]} -gt 0 ]]; then
+        print_info "Modules: ${PROFILE_MODULES[*]}"
     fi
 
     if [[ "$PROFILE_SKIP_MCP" == "true" ]]; then

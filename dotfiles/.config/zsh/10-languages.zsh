@@ -93,3 +93,10 @@ if [ -d "$HOMEBREW_PREFIX/opt/openjdk" ]; then
     export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk"
     export CPPFLAGS="-I$HOMEBREW_PREFIX/opt/openjdk/include"
 fi
+
+# SDKMAN - JVM version manager (auto-switches JDK per-directory via .sdkmanrc)
+# Loads after Homebrew OpenJDK so SDKMAN takes precedence when active
+export SDKMAN_DIR="$HOME/.sdkman"
+if [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
+    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+fi
