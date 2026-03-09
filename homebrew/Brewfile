@@ -137,7 +137,7 @@ cask "rapidapi"             # API testing
 cask "orbstack"             # Docker Desktop alternative
 
 # Cloud SDKs and tools
-cask "google-cloud-sdk"     # Google Cloud SDK
+cask "gcloud-cli"           # Google Cloud SDK (renamed from google-cloud-sdk)
 cask "ngrok"                # Expose local servers
 
 # Fonts

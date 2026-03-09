@@ -455,7 +455,7 @@ main_setup() {
         if command -v brew &>/dev/null; then
             ui_spinner "Updating Homebrew" brew update
             if [[ "$is_minimal" == "true" ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
-                ui_spinner "Syncing packages (minimal)" brew bundle --file="homebrew/Brewfile.minimal"
+                ui_spinner "Syncing packages (minimal)" brew bundle --file="homebrew/Brewfile.minimal" || print_warning "Some packages failed to install (see above)"
             elif [[ -n "$SETUP_PROFILE" ]]; then
                 if ! resolve_profile "$SETUP_PROFILE"; then
                     exit 1
@@ -463,9 +463,9 @@ main_setup() {
                 print_profile_summary "$SETUP_PROFILE"
                 local filtered_brewfile
                 filtered_brewfile=$(filter_brewfile "homebrew/Brewfile")
-                ui_spinner "Syncing packages (profile: $SETUP_PROFILE)" brew bundle --file="$filtered_brewfile"
+                ui_spinner "Syncing packages (profile: $SETUP_PROFILE)" brew bundle --file="$filtered_brewfile" || print_warning "Some packages failed to install (see above)"
             else
-                ui_spinner "Syncing packages" brew bundle --file="homebrew/Brewfile"
+                ui_spinner "Syncing packages" brew bundle --file="homebrew/Brewfile" || print_warning "Some packages failed to install (see above)"
             fi
             # Install machine-specific packages if present
             if [[ -f "homebrew/Brewfile.local" ]]; then
