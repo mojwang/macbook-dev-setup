@@ -10,6 +10,9 @@ if [[ -z "$HOMEBREW_PREFIX" ]]; then
     fi
 fi
 
+# User local binaries (e.g., claude-init-agentic)
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+
 # Initialize Homebrew if available
 if [[ -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
     eval "$($HOMEBREW_PREFIX/bin/brew shellenv)"
