@@ -516,7 +516,7 @@ main_setup() {
             ui_section_header "MCP Server Sync"
             if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
                 [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
-                ui_spinner "Updating Claude MCP servers" ./scripts/setup-claude-mcp.sh --update
+                ui_spinner "Updating Claude MCP servers" ./scripts/setup-claude-mcp.sh --update || [[ $? -eq 2 ]]
             fi
 
             # Update Claude Code MCP servers if VS Code and Claude CLI are installed
