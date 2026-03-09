@@ -36,15 +36,38 @@ setup_cleanup "cleanup_claude_global"
 # Configuration
 CLAUDE_DIR="$HOME/.claude"
 CLAUDE_GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
-TEMPLATE_FILE="$(dirname "$0")/../config/global-claude.md"
+CONFIG_DIR="$(dirname "$0")/../config"
+TEMPLATE_FILE="$CONFIG_DIR/global-claude.md"
 
 # Version information
-TEMPLATE_VERSION="2.0.0"
+TEMPLATE_VERSION="2.1.0"
 VERSION_MARKER="# Claude Global Config Version:"
+
+# Resolve the effective template by concatenating base + profile overlay
+# Usage: resolve_template
+# Writes to a temp file and sets TEMPLATE_FILE to that path
+resolve_template() {
+    local profile="${SETUP_PROFILE:-}"
+    local overlay_file="$CONFIG_DIR/global-claude-${profile}.md"
+
+    if [[ -z "$profile" ]] || [[ ! -f "$overlay_file" ]]; then
+        # No profile or no overlay — use base only
+        return 0
+    fi
+
+    local assembled
+    assembled=$(safe_mktemp "claude-global-assembled.XXXXXX")
+    cat "$TEMPLATE_FILE" "$overlay_file" > "$assembled"
+    TEMPLATE_FILE="$assembled"
+    print_info "Using profile overlay: global-claude-${profile}.md"
+}
 
 setup_global_claude() {
     print_info "Setting up global Claude Code configuration..."
-    
+
+    # Assemble base + profile overlay
+    resolve_template
+
     # Validate template file exists
     if [[ ! -f "$TEMPLATE_FILE" ]]; then
         print_error "Template file not found: $TEMPLATE_FILE"
@@ -142,7 +165,7 @@ install_template_with_metadata() {
     {
         echo "$VERSION_MARKER $TEMPLATE_VERSION"
         echo "# Last Updated: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "# Source: macbook-dev-setup/config/global-claude.md"
+        echo "# Source: macbook-dev-setup/config/global-claude.md${SETUP_PROFILE:+ + global-claude-${SETUP_PROFILE}.md}"
         echo ""
         cat "$TEMPLATE_FILE"
     } > "$temp_file"
@@ -165,6 +188,9 @@ strip_metadata_header() {
 # Main execution
 case "${1:-}" in
     --check)
+        # Assemble base + profile overlay for comparison
+        resolve_template
+
         # Validate template exists first
         if [[ ! -f "$TEMPLATE_FILE" ]]; then
             print_error "Template file not found: $TEMPLATE_FILE"

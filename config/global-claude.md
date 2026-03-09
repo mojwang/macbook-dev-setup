@@ -31,13 +31,11 @@
 
 ## Environment
 - macOS Apple Silicon, zsh with modular config in `~/.config/zsh/`
-- Projects live in `~/repos/netflix/` (work) and `~/repos/personal/` (personal)
 - Dev setup managed by `~/repos/personal/macbook-dev-setup/`
 - Language managers: nvm (Node.js, lazy-loaded), pyenv (Python), rbenv (Ruby), sdkman (Java/JVM)
 - Java: OpenJDK via Homebrew (`$JAVA_HOME = $HOMEBREW_PREFIX/opt/openjdk`)
 - Modern CLI tools: eza (ls), bat (cat), fd (find), fzf (fuzzy finder), zoxide (cd), delta (diff), starship (prompt), ripgrep (grep), tokei (loc), hyperfine (bench), ast-grep
 - Editor: nvim (default `$EDITOR`), VS Code available
-- Netflix tooling: Metatron (auth/certs), Newt (build tool), gh CLI with corporate wrapper (`ghrepo`)
 
 ## Important
 When global CLAUDE.md updates, sync to macbook-dev-setup project.
