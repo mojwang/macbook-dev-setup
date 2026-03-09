@@ -130,7 +130,7 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - **commit-review** — conventional commits, <200 LOC, branch checks (activates on commits/PRs)
 
 **User-invocable** (manual `/command` only):
-- **/init-project [dir]** — bootstrap agentic workflow in any project (`disable-model-invocation: true`)
+- **/init-project [dir] [--type shell|web]** — bootstrap agentic workflow with type-specific skills (`disable-model-invocation: true`)
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
 
 ## Key Directories
