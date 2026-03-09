@@ -577,6 +577,9 @@ main_setup() {
         else
             echo "• Install Claude Code extension in VS Code to enable MCP servers"
         fi
+    elif [[ "${AUTOFIX_NEEDS_RELOAD:-false}" == "true" ]]; then
+        echo ""
+        print_info "Auto-fixes were applied. Restart your terminal or run 'source ~/.zshrc' for changes to take effect."
     fi
 }
 
