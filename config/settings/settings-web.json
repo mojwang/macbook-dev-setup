@@ -1,0 +1,19 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "tmux",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | xargs -I{} bash -c 'case \"{}\" in *.ts|*.tsx) npx tsc --noEmit --pretty 2>&1 | head -20 || true;; esac'"
+          }
+        ]
+      }
+    ]
+  }
+}
