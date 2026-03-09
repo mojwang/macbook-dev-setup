@@ -45,10 +45,21 @@ VERSION_MARKER="# Claude Global Config Version:"
 # Writes to a temp file and sets TEMPLATE_FILE to that path
 resolve_template() {
     local profile="${SETUP_PROFILE:-}"
-    local overlay_file="$CONFIG_DIR/global-claude-${profile}.md"
 
-    if [[ -z "$profile" ]] || [[ ! -f "$overlay_file" ]]; then
-        # No profile or no overlay — use base only
+    # No profile requested — use base only
+    if [[ -z "$profile" ]]; then
+        return 0
+    fi
+
+    # Validate base template exists before any file operations
+    if [[ ! -f "$TEMPLATE_FILE" ]]; then
+        print_error "Base template not found: $TEMPLATE_FILE"
+        return 1
+    fi
+
+    local overlay_file="$CONFIG_DIR/global-claude-${profile}.md"
+    if [[ ! -f "$overlay_file" ]]; then
+        print_warning "Profile overlay not found: $overlay_file — using base only"
         return 0
     fi
 
