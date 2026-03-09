@@ -23,10 +23,7 @@ cleanup_claude_global() {
     # Clean up incomplete installations
     [[ -n "${CLAUDE_GLOBAL_MD:-}" ]] && [[ -f "${CLAUDE_GLOBAL_MD}.tmp" ]] && rm -f "${CLAUDE_GLOBAL_MD}.tmp" 2>/dev/null || true
 
-    # Clean up stripped metadata temp file
-    [[ -n "${stripped_tmp:-}" ]] && [[ -f "${stripped_tmp:-}" ]] && rm -f "${stripped_tmp}" 2>/dev/null || true
-    
-    # Call default cleanup
+    # Call default cleanup (also cleans safe_mktemp files)
     default_cleanup
 }
 
@@ -110,7 +107,7 @@ setup_global_claude() {
             echo ""
             ui_diff_style_select
             local stripped_tmp
-            stripped_tmp=$(mktemp)
+            stripped_tmp=$(safe_mktemp "claude-global-stripped.XXXXXX")
             strip_metadata_header "$CLAUDE_GLOBAL_MD" > "$stripped_tmp"
             ui_diff "$stripped_tmp" "$TEMPLATE_FILE"
             rm -f "$stripped_tmp"

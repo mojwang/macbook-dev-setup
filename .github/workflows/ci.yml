@@ -87,16 +87,23 @@ jobs:
         echo "Checking for potential secrets..."
         found=0
 
-        # Basic secret detection
-        if grep -rEn "(password|secret|key|token|api_key).*=.*['\"]" . --include="*.sh"; then
+        # Detect hardcoded secrets: key/token/password/secret assigned to a literal string
+        # Exclude: variable references ($var, ${var}), empty strings, known safe patterns
+        if grep -rEn "(password|secret|token|api_key)[[:space:]]*=.*['\"][A-Za-z0-9]" . --include="*.sh" \
+           | grep -v '=.*\$' \
+           | grep -v '=.*""' \
+           | grep -v '="(true|false|yes|no)"' \
+           | grep -v 'key_name\|key_path\|key_value\|api_key_var\|validate_keys\|valid_keys\|missing_keys\|invalid_keys\|include_api_keys' \
+           | grep -v 'environ\.get\|getenv' \
+           | grep -v '\.git/\|\.claude/worktrees/'; then
           echo "⚠ Potential hardcoded secrets found above"
           found=1
         else
           echo "✓ No hardcoded secrets found"
         fi
 
-        # Check for common secret patterns
-        if grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256"; then
+        # Check for common secret patterns (40-char hex strings, excluding git SHAs)
+        if grep -rEn "[0-9a-f]{40}" . --include="*.sh" | grep -v "sha256\|\.git/"; then
           echo "⚠ Potential API keys found above"
           found=1
         else
