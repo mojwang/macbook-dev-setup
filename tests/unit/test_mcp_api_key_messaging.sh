@@ -137,38 +137,7 @@ it "handles TaskMaster as special case with optional API keys" '
     assert_equals "$mock_output" "" "TaskMaster should not show API key messages"
 '
 
-# Test with Figma API key
-it "shows positive message for Figma when API key is configured" '
-    # Setup
-    export FIGMA_API_KEY="test-figma-key"
-    mock_output=""
-    
-    # Mock the required associative arrays
-    declare -A MCP_SERVER_API_KEYS
-    MCP_SERVER_API_KEYS["figma"]="FIGMA_API_KEY"
-    
-    # Mock function to test just the API key checking logic
-    check_api_key_message() {
-        local server_name="$1"
-        local api_key_var="${MCP_SERVER_API_KEYS[$server_name]:-}"
-        
-        if [[ -n "$api_key_var" ]] && [[ "$server_name" != "taskmaster" ]]; then
-            if [[ -z "${!api_key_var}" ]]; then
-                print_warning "Skipping $server_name ($api_key_var not set)"
-                return 1
-            else
-                print_info "$server_name API key is configured ($api_key_var)"
-            fi
-        fi
-        return 0
-    }
-    
-    # Execute
-    check_api_key_message "figma"
-    
-    # Verify
-    assert_contains "$mock_output" "figma API key is configured (FIGMA_API_KEY)" "Should show positive Figma API key message"
-'
+# NOTE: Figma API key test removed — figma is now a plugin using hosted OAuth
 
 # Test behavior in fix-mcp-servers.sh context
 it "shows positive message in fix-mcp-servers context" '
@@ -204,7 +173,6 @@ it "shows positive message in fix-mcp-servers context" '
 
 # Cleanup
 unset EXA_API_KEY
-unset FIGMA_API_KEY
 unset ANTHROPIC_API_KEY
 
 # Tests are run automatically by the test framework
