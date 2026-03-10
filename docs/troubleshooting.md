@@ -289,19 +289,17 @@ git config --global core.editor "nvim"  # or "vim"
 
 ### API keys not working for MCP servers
 
-**Problem**: Figma or Exa servers fail with auth errors.
+**Problem**: Exa server fails with auth errors (Figma is now a plugin using hosted OAuth — no API key needed).
 
 **Solutions**:
-1. Ensure API keys are set:
+1. Ensure API key is set:
    ```bash
-   # Check if keys are exported
-   echo $FIGMA_API_KEY
+   # Check if key is exported
    echo $EXA_API_KEY
    ```
 
 2. Add to shell config:
    ```bash
-   echo 'export FIGMA_API_KEY="your-key-here"' >> ~/.config/zsh/51-api-keys.zsh
    echo 'export EXA_API_KEY="your-key-here"' >> ~/.config/zsh/51-api-keys.zsh
    source ~/.zshrc
    ```

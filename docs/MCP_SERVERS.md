@@ -48,19 +48,19 @@ These plugins provide auto-diagnostics after every edit + code navigation (jump-
 - **pyright-lsp** — requires `pyright` (brew)
 - **kotlin-lsp** — requires `kotlin-language-server` (brew)
 
+## Plugin-Managed Servers (Migrated)
+
+These were previously community MCP servers, now managed via plugins:
+
+- **context7** (`context7@claude-plugins-official`) — library docs lookup via `npx @upstash/context7-mcp`
+- **playwright** (`playwright@claude-plugins-official`) — browser automation (previously listed above)
+- **figma** (`figma@claude-plugins-official`) — Figma design data via hosted OAuth (no API key needed)
+
 ## Community Servers
 
-These servers are maintained by the community:
+These servers are still installed from source:
 
-1. **context7** (https://github.com/upstash/context7-mcp)
-   - Provides up-to-date documentation for any library/framework
-   - Helps with accurate, version-specific code examples
-
-3. **figma** (https://github.com/GLips/Figma-Context-MCP)
-   - Access Figma design data for AI coding tools
-   - Helps with accurate design-to-code implementation
-
-4. **semgrep** (https://github.com/semgrep/mcp)
+1. **semgrep** (https://github.com/semgrep/mcp)
    - Security scanning and code analysis
    - Helps identify vulnerabilities and code patterns
 
@@ -100,7 +100,7 @@ Pieces MCP requires special configuration:
 2. **API key not working**
    - Ensure API keys are exported in `~/.config/zsh/51-api-keys.zsh`
    - Reload shell: `source ~/.zshrc`
-   - Verify key is set: `echo $FIGMA_API_KEY` or `echo $EXA_API_KEY`
+   - Verify key is set: `echo $EXA_API_KEY`
 
 3. **Claude Desktop not recognizing servers**
    - Restart Claude Desktop after configuration
@@ -164,7 +164,7 @@ Pieces MCP requires special configuration:
 ./scripts/setup-claude-code-mcp.sh --no-api-keys
 
 # Add specific servers only
-./scripts/setup-claude-code-mcp.sh --servers context7,playwright
+./scripts/setup-claude-code-mcp.sh --servers semgrep,exa
 ```
 
 ## Debugging
@@ -188,7 +188,6 @@ Run the setup script to install all servers:
 
 During installation, you'll be prompted for API keys for servers that require them:
 - **Exa**: Get your API key from https://dashboard.exa.ai/api-keys
-- **Figma**: Get your API key from https://www.figma.com/developers/api#access-tokens
 - **Taskmaster** (optional): 
   - Requires ANTHROPIC_API_KEY and OPENAI_API_KEY (usually already configured)
   - Optionally uses PERPLEXITY_API_KEY for research features (https://www.perplexity.ai/settings/api)
@@ -213,7 +212,7 @@ Once installed, the servers are automatically available in Claude Code. You can:
 - Claude Code CLI
 - For specific servers:
   - Exa: Requires API key (will be prompted during setup)
-  - Figma: Requires API key (will be prompted during setup)
+  - Figma: Now a plugin (no API key needed — uses hosted OAuth)
   - Semgrep: May require Semgrep CLI installation
   - Pieces: Requires PiecesOS running locally
 
@@ -224,19 +223,18 @@ Once installed, the servers are automatically available in Claude Code. You can:
 To debug MCP connection failures:
 1. Run `claude mcp list` to see connection status
 2. Use `./scripts/debug-mcp-servers.sh` to test individual servers
-3. Check API keys are set: `echo $EXA_API_KEY` and `echo $FIGMA_API_KEY`
+3. Check API keys are set: `echo $EXA_API_KEY`
 4. Restart Claude after configuration changes: `osascript -e 'quit app "Claude"' && open -a "Claude"`
 
 ### Common Issues
 
-**Figma/Exa servers fail to connect:**
-- Ensure API keys are set in your shell environment
-- Check `~/.config/zsh/51-api-keys.zsh` contains the keys
+**Exa server fails to connect:**
+- Ensure EXA_API_KEY is set in your shell environment
+- Check `~/.config/zsh/51-api-keys.zsh` contains the key
 - Reload your shell or run `source ~/.zshrc`
 
-**Playwright server fails:**
-- The server may use `index.js` instead of `dist/index.js`
-- Check actual file location and update config accordingly
+> **Note:** Figma and Playwright are now managed as plugins, not MCP servers.
+> Use `/plugin install figma@claude-plugins-official` and `/plugin install playwright@claude-plugins-official`.
 
 **Semgrep server fails:**
 - Requires Python and uv package manager

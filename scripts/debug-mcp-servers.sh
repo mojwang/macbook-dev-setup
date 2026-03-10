@@ -107,8 +107,8 @@ for server in "filesystem" "memory" "sequentialthinking" "git" "fetch"; do
 done
 
 echo ""
-echo "Community servers:"
-for server in "context7" "playwright" "figma" "semgrep" "exa"; do
+echo "Community servers (context7, playwright, figma now managed as plugins):"
+for server in "semgrep" "exa"; do
     echo -n "  $server: "
     # Skip API key servers if key not set
     if [[ -n "${MCP_SERVER_API_KEYS[$server]}" ]]; then

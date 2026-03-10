@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Available servers:"
             echo "  Official: filesystem, memory, git, fetch, sequentialthinking"
-            echo "  Community: context7, playwright, figma, semgrep, exa"
+            echo "  Community: semgrep, exa (context7, playwright, figma now managed as plugins)"
             echo ""
             echo "Examples:"
             echo "  $0                                    # Fix all servers"
@@ -83,13 +83,13 @@ else
     servers=(
         # Official servers
         "filesystem" "memory" "git" "fetch" "sequentialthinking"
-        # Community servers
-        "context7" "playwright" "semgrep"
+        # Community servers (context7, playwright, figma now managed as plugins)
+        "semgrep"
     )
-    
+
     # Add servers with API keys if including them
     if [[ "$INCLUDE_API_KEYS" == "true" ]]; then
-        servers+=("figma" "exa")
+        servers+=("exa")
     fi
 fi
 
