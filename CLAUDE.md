@@ -105,6 +105,14 @@ Dispatch `reviewer` sub-agent to validate implementation.
 - For agent teams: always clean up via lead, shut down teammates first
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 
+## Remote Control
+Continue sessions from phone/tablet via [claude.ai/code](https://claude.ai/code) or the Claude mobile app.
+- **Enable for this session**: `/remote-control <name>` (or `/rc`)
+- **New detached session**: `claude remote-control "<name>"`
+- **Always on**: `/config` → "Enable Remote Control for all sessions" → `true`
+- Terminal must stay open; reconnects automatically after sleep/network drops
+- QR code: press spacebar in `claude remote-control` mode, or scan from `/rc` output
+
 ## Plugins (User Scope)
 Installed via `/plugin install name@claude-plugins-official`:
 - **github** — native GitHub MCP (richer PR/issue context)
@@ -130,7 +138,7 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - **commit-review** — conventional commits, <200 LOC, branch checks (activates on commits/PRs)
 
 **User-invocable** (manual `/command` only):
-- **/init-project [dir]** — bootstrap agentic workflow in any project (`disable-model-invocation: true`)
+- **/init-project [dir] [--type shell|web]** — bootstrap agentic workflow with type-specific skills (`disable-model-invocation: true`)
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
 
 ## Key Directories
