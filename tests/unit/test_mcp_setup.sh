@@ -10,8 +10,7 @@ describe "MCP Setup Tests"
 # Test: API keys are not prompted when already set
 it "should skip prompting for API keys when they exist"
 
-# Set up test environment
-export FIGMA_API_KEY="test-figma-key"
+# Set up test environment (figma moved to plugin — no API key needed)
 export EXA_API_KEY="test-exa-key"
 export API_KEYS_FILE="$HOME/.config/zsh/51-api-keys.zsh"
 
@@ -22,11 +21,10 @@ check_api_key() {
 }
 
 # Test check_api_key function
-assert_true "check_api_key 'FIGMA_API_KEY'" "check_api_key should detect existing FIGMA_API_KEY"
 assert_true "check_api_key 'EXA_API_KEY'" "check_api_key should detect existing EXA_API_KEY"
 
 # Clean up
-unset FIGMA_API_KEY EXA_API_KEY
+unset EXA_API_KEY
 
 # Test: MCP server paths are found correctly
 it "should find MCP server paths correctly"

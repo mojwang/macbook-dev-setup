@@ -43,7 +43,7 @@ echo "Killing MCP processes..."
 # Kill NPX-based servers
 echo "  • Stopping NPX servers..."
 pkill -f "npx.*exa-mcp" 2>/dev/null || true
-pkill -f "npx.*figma" 2>/dev/null || true
+# NOTE: figma is now a plugin (managed by Claude Code, not a standalone process)
 pkill -f "npm exec.*mcp" 2>/dev/null || true
 
 # Kill UV-based servers (Python)

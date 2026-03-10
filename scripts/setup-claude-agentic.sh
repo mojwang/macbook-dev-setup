@@ -38,14 +38,32 @@ SYMLINK_NAME="claude-init-agentic"
 
 # Plugins to install (name@registry format)
 PLUGINS=(
+    # Core integrations
     "github@claude-plugins-official"
     "slack@claude-plugins-official"
     "playwright@claude-plugins-official"
+    "context7@claude-plugins-official"
+    # Code review & quality
     "pr-review-toolkit@claude-plugins-official"
+    "security-guidance@claude-plugins-official"
+    "commit-commands@claude-plugins-official"
+    # Development workflows
+    "feature-dev@claude-plugins-official"
+    "frontend-design@claude-plugins-official"
+    "figma@claude-plugins-official"
+    # LSP plugins
     "typescript-lsp@claude-plugins-official"
     "swift-lsp@claude-plugins-official"
     "pyright-lsp@claude-plugins-official"
     "kotlin-lsp@claude-plugins-official"
+    # Meta / authoring
+    "claude-code-setup@claude-plugins-official"
+    "claude-md-management@claude-plugins-official"
+    "plugin-dev@claude-plugins-official"
+    "skill-creator@claude-plugins-official"
+    "hookify@claude-plugins-official"
+    # Style
+    "explanatory-output-style@claude-plugins-official"
 )
 
 # LSP binaries to check/install via brew
@@ -414,7 +432,7 @@ Modes:
     --help              Show this help message
 
 System setup installs:
-    Plugins:  github, slack, playwright, pr-review-toolkit, *-lsp (8 total)
+    Plugins:  20 total (integrations, review, workflows, LSPs, meta, style)
     LSP deps: typescript-language-server, pyright, kotlin-language-server, sourcekit-lsp
     Templates: agents, skills, settings, agent metadata → ~/.claude/templates/agentic/
     CLI:      Symlinks as ~/.local/bin/claude-init-agentic
