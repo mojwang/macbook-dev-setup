@@ -7,10 +7,15 @@
 2. Test new features with TDD
 3. Use modular architecture
 
-## Git Workflow
-- Feature branches required
-- Conventional commit format: `type(scope): description`
-- PR creation: manual after feature complete
+## Git Workflow (ENFORCED)
+- **Feature branches required**: ALL changes, no exceptions
+- **NEVER commit to main**: Always check branch first with `git branch --show-current`
+- **Branch naming**: feat/, fix/, docs/, chore/, refactor/, test/
+- **Conventional commit format**: `type(scope): description`
+- **Small commits**: <200 LOC diffs
+- **PR creation**: Manual after feature complete
+- **CI must pass**: All checks green before merging
+- **No force pushes to main**
 
 ## Tech Stack
 - {{STACK_DESCRIPTION}}
@@ -25,6 +30,9 @@ Main session = orchestrator. Dispatches sub-agents, never implements complex tas
 
 ## Key Directories
 - {{DIRECTORY_MAP}}
+
+## CI Pipeline
+{{CI_DESCRIPTION}}
 
 ## Testing
 ```bash

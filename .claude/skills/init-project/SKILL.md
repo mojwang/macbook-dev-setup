@@ -26,19 +26,24 @@ claude-init-agentic --init $ARGUMENTS
 
 2. Report what was created or updated:
    - Git repository (initialized if new)
-   - `CLAUDE.md` (from template if not present)
+   - `CLAUDE.md` (from template — enforced git workflow, CI section)
    - `README.md` (skeleton if not present)
    - `.claude/agents/` (researcher, planner, implementer, reviewer)
    - `.claude/skills/` (base + type-specific skills)
    - `.claude/settings.json` (type-specific hooks, merged with existing)
    - `.claude-agents.json` (only if not present)
+   - `.github/workflows/ci.yml` (type-specific CI pipeline)
+   - `.github/pull_request_template.md` (standardized PR format)
+   - `.gitignore` (type-specific ignore patterns)
+   - `.editorconfig` (consistent formatting)
+   - `.nvmrc` (Node.js version, web only)
 
-3. Remind the user to customize `CLAUDE.md` for their project.
+3. Remind the user to customize `CLAUDE.md` for their project (fill in `{{PLACEHOLDER}}` values).
 
 ## Project Types
 
-| Type | Skills | Hook |
-|---|---|---|
-| (none) | security-review, commit-review, deep-research | base settings |
-| `--type shell` | + shell-conventions | shellcheck on .sh edits |
-| `--type web` | + typescript-conventions, web-review | tsc --noEmit on .ts/.tsx edits |
+| Type | Skills | Hook | CI Jobs |
+|---|---|---|---|
+| (none) | security-review, commit-review, deep-research | base settings | — |
+| `--type shell` | + shell-conventions | shellcheck on .sh edits | test, shellcheck, security-scan |
+| `--type web` | + typescript-conventions, web-review | tsc --noEmit on .ts/.tsx edits | test, lint, typecheck, build |

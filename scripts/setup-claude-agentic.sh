@@ -38,14 +38,32 @@ SYMLINK_NAME="claude-init-agentic"
 
 # Plugins to install (name@registry format)
 PLUGINS=(
+    # Core integrations
     "github@claude-plugins-official"
     "slack@claude-plugins-official"
     "playwright@claude-plugins-official"
+    "context7@claude-plugins-official"
+    # Code review & quality
     "pr-review-toolkit@claude-plugins-official"
+    "security-guidance@claude-plugins-official"
+    "commit-commands@claude-plugins-official"
+    # Development workflows
+    "feature-dev@claude-plugins-official"
+    "frontend-design@claude-plugins-official"
+    "figma@claude-plugins-official"
+    # LSP plugins
     "typescript-lsp@claude-plugins-official"
     "swift-lsp@claude-plugins-official"
     "pyright-lsp@claude-plugins-official"
     "kotlin-lsp@claude-plugins-official"
+    # Meta / authoring
+    "claude-code-setup@claude-plugins-official"
+    "claude-md-management@claude-plugins-official"
+    "plugin-dev@claude-plugins-official"
+    "skill-creator@claude-plugins-official"
+    "hookify@claude-plugins-official"
+    # Style
+    "explanatory-output-style@claude-plugins-official"
 )
 
 # LSP binaries to check/install via brew
@@ -219,6 +237,38 @@ deploy_templates() {
         cp "$claude_md_template" "$TEMPLATE_DIR/project-claude.md.template"
         print_success "Deployed project CLAUDE.md template"
     fi
+
+    # Copy CI workflow templates
+    mkdir -p "$TEMPLATE_DIR/ci"
+    for ci_file in "$REPO_DIR/config/ci"/*.yml; do
+        [[ -f "$ci_file" ]] || continue
+        cp "$ci_file" "$TEMPLATE_DIR/ci/"
+    done
+    print_success "Deployed CI workflow templates"
+
+    # Copy .gitignore templates
+    mkdir -p "$TEMPLATE_DIR/gitignore"
+    for gi_file in "$REPO_DIR/config/gitignore"/gitignore-*; do
+        [[ -f "$gi_file" ]] || continue
+        cp "$gi_file" "$TEMPLATE_DIR/gitignore/"
+    done
+    print_success "Deployed .gitignore templates"
+
+    # Copy GitHub templates (PR template)
+    mkdir -p "$TEMPLATE_DIR/github"
+    for gh_file in "$REPO_DIR/config/github"/*; do
+        [[ -f "$gh_file" ]] || continue
+        cp "$gh_file" "$TEMPLATE_DIR/github/"
+    done
+    print_success "Deployed GitHub templates"
+
+    # Copy editor config templates
+    mkdir -p "$TEMPLATE_DIR/editor"
+    for ed_file in "$REPO_DIR/config/editor"/*; do
+        [[ -f "$ed_file" ]] || continue
+        cp "$ed_file" "$TEMPLATE_DIR/editor/"
+    done
+    print_success "Deployed editor config templates"
 
     # Write version stamp
     echo "$TEMPLATE_VERSION" > "$VERSION_FILE"
@@ -416,6 +466,60 @@ EOF
         print_success "Created .claude-agents.json"
     fi
 
+    # Deploy CI workflow (type-specific, only if not present)
+    local ci_dest="$target_dir/.github/workflows/ci.yml"
+    if [[ ! -f "$ci_dest" ]]; then
+        local ci_template=""
+        if [[ -n "$project_type" ]] && [[ -f "$TEMPLATE_DIR/ci/ci-${project_type}.yml" ]]; then
+            ci_template="$TEMPLATE_DIR/ci/ci-${project_type}.yml"
+        fi
+        if [[ -n "$ci_template" ]]; then
+            mkdir -p "$target_dir/.github/workflows"
+            cp "$ci_template" "$ci_dest"
+            print_success "Created .github/workflows/ci.yml (type: $type_label)"
+        fi
+    fi
+
+    # Deploy .gitignore (type-specific, only if not present)
+    local gitignore_dest="$target_dir/.gitignore"
+    if [[ ! -f "$gitignore_dest" ]]; then
+        local gi_template=""
+        if [[ -n "$project_type" ]] && [[ -f "$TEMPLATE_DIR/gitignore/gitignore-${project_type}" ]]; then
+            gi_template="$TEMPLATE_DIR/gitignore/gitignore-${project_type}"
+        elif [[ -f "$TEMPLATE_DIR/gitignore/gitignore-shell" ]]; then
+            # Shell gitignore works as a minimal default
+            gi_template="$TEMPLATE_DIR/gitignore/gitignore-shell"
+        fi
+        if [[ -n "$gi_template" ]]; then
+            cp "$gi_template" "$gitignore_dest"
+            print_success "Created .gitignore (type: $type_label)"
+        fi
+    fi
+
+    # Deploy PR template (only if not present)
+    local pr_template_dest="$target_dir/.github/pull_request_template.md"
+    if [[ ! -f "$pr_template_dest" ]] && [[ -f "$TEMPLATE_DIR/github/pull_request_template.md" ]]; then
+        mkdir -p "$target_dir/.github"
+        cp "$TEMPLATE_DIR/github/pull_request_template.md" "$pr_template_dest"
+        print_success "Created .github/pull_request_template.md"
+    fi
+
+    # Deploy .editorconfig (only if not present)
+    local editorconfig_dest="$target_dir/.editorconfig"
+    if [[ ! -f "$editorconfig_dest" ]] && [[ -f "$TEMPLATE_DIR/editor/editorconfig" ]]; then
+        cp "$TEMPLATE_DIR/editor/editorconfig" "$editorconfig_dest"
+        print_success "Created .editorconfig"
+    fi
+
+    # Deploy .nvmrc for web projects (only if not present)
+    if [[ "$project_type" == "web" ]]; then
+        local nvmrc_dest="$target_dir/.nvmrc"
+        if [[ ! -f "$nvmrc_dest" ]] && [[ -f "$TEMPLATE_DIR/editor/nvmrc" ]]; then
+            cp "$TEMPLATE_DIR/editor/nvmrc" "$nvmrc_dest"
+            print_success "Created .nvmrc"
+        fi
+    fi
+
     if [[ $agents_updated -gt 0 ]]; then
         print_success "Updated $agents_updated agent(s)"
     fi
@@ -469,19 +573,24 @@ Project types (--type):
     (omitted)   Base only — universal skills (security-review, commit-review, deep-research)
 
 System setup installs:
-    Plugins:  github, slack, playwright, pr-review-toolkit, *-lsp (8 total)
+    Plugins:  20 total (core, review, dev workflows, LSP, meta, style)
     LSP deps: typescript-language-server, pyright, kotlin-language-server, sourcekit-lsp
     Templates: agents, skills (base + shell + web), settings → ~/.claude/templates/agentic/
     CLI:      Symlinks as ~/.local/bin/claude-init-agentic
 
 Project init creates:
-    git repo            (initialized if not present)
-    CLAUDE.md           project template (customize for your stack)
-    README.md           minimal skeleton (if not present)
-    .claude/agents/     researcher, planner, implementer, reviewer
-    .claude/skills/     base skills + type-specific skills
-    .claude/settings.json  type-specific hooks (merged with existing)
-    .claude-agents.json    (only if not present)
+    git repo                            (initialized if not present)
+    CLAUDE.md                           project template (customize for your stack)
+    README.md                           minimal skeleton (if not present)
+    .claude/agents/                     researcher, planner, implementer, reviewer
+    .claude/skills/                     base skills + type-specific skills
+    .claude/settings.json               type-specific hooks (merged with existing)
+    .claude-agents.json                 (only if not present)
+    .github/workflows/ci.yml           type-specific CI pipeline
+    .github/pull_request_template.md   standardized PR format
+    .gitignore                          type-specific ignore patterns
+    .editorconfig                       consistent formatting
+    .nvmrc                              Node.js version (web only)
 
 Examples:
     claude-init-agentic --init .                  # Base skills only
