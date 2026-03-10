@@ -68,10 +68,8 @@ OFFICIAL_SERVERS=(
 
 # List of community servers to install with optional checksums
 # Format: "name:url[:sha256_checksum]"
+# NOTE: context7, playwright, and figma moved to plugins (setup-claude-agentic.sh)
 COMMUNITY_SERVERS=(
-    "context7:https://github.com/upstash/context7-mcp.git"
-    "playwright:https://github.com/microsoft/playwright-mcp.git"
-    "figma:https://github.com/GLips/Figma-Context-MCP.git"
     "semgrep:https://github.com/semgrep/mcp.git"
     "exa:https://github.com/exa-labs/exa-mcp-server.git"
 )
@@ -119,9 +117,6 @@ NODE_SERVERS=(
     "filesystem"
     "memory"
     "sequentialthinking"
-    "context7"
-    "playwright"
-    "figma"
     "exa"
 )
 
@@ -134,8 +129,9 @@ PYTHON_SERVERS=(
 
 # Servers that require API keys
 # Using regular arrays for compatibility
-SERVER_NAMES_WITH_KEYS=("exa" "figma")
-SERVER_KEY_NAMES=("EXA_API_KEY" "FIGMA_API_KEY")
+# NOTE: figma moved to plugin (uses hosted OAuth, no API key needed)
+SERVER_NAMES_WITH_KEYS=("exa")
+SERVER_KEY_NAMES=("EXA_API_KEY")
 
 # API key file location
 API_KEYS_FILE="$HOME/.config/zsh/51-api-keys.zsh"
@@ -403,21 +399,7 @@ validate_api_key() {
                 validation_result=2  # Network error or other issue - assume key is still valid
             fi
             ;;
-        "figma")
-            # Test Figma API key with a simple user request
-            local response=$(curl -s -o /dev/null -w "%{http_code}" \
-                "https://api.figma.com/v1/me" \
-                -H "X-Figma-Token: $key_value" \
-                --connect-timeout 5 --max-time 10 2>/dev/null || echo "000")
-            
-            if [[ "$response" == "200" ]]; then
-                validation_result=0  # Valid key
-            elif [[ "$response" == "403" ]]; then
-                validation_result=1  # Invalid/revoked key
-            else
-                validation_result=2  # Network error or other issue - assume key is still valid
-            fi
-            ;;
+        # figma: moved to plugin (uses hosted OAuth, no API key needed)
         *)
             # Unknown server type, skip validation
             validation_result=2
@@ -473,9 +455,6 @@ prompt_for_api_key() {
     case "$server_name" in
         "exa")
             echo "  Get your API key from: https://dashboard.exa.ai/api-keys"
-            ;;
-        "figma")
-            echo "  Get your API key from: https://www.figma.com/developers/api#access-tokens"
             ;;
     esac
     
