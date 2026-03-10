@@ -1,9 +1,10 @@
-# {{PROJECT_NAME}}
+# Project Name
+<!-- TODO: Replace with your project name and delete this comment -->
 
-{{DESCRIPTION}}
+Short description of what this project does.
 
 ## Project Rules
-1. {{LANGUAGE_CONVENTIONS}}
+1. <!-- TODO: Add language-specific conventions (e.g., "TypeScript strict mode, no `any` types") -->
 2. Test new features with TDD
 3. Use modular architecture
 
@@ -18,7 +19,12 @@
 - **No force pushes to main**
 
 ## Tech Stack
-- {{STACK_DESCRIPTION}}
+<!-- TODO: List your tech stack, e.g.:
+- **Framework**: Next.js 15 (App Router) + TypeScript
+- **Styling**: Tailwind CSS v4
+- **Testing**: Vitest (unit) + Playwright (e2e)
+- **Deployment**: Netlify
+-->
 
 ## Agentic Workflow (Default)
 Main session = orchestrator. Dispatches sub-agents, never implements complex tasks directly.
@@ -29,14 +35,20 @@ Main session = orchestrator. Dispatches sub-agents, never implements complex tas
 - **Parallel**: Independent tasks → multiple implementers in worktree isolation
 
 ## Key Directories
-- {{DIRECTORY_MAP}}
+<!-- TODO: Map your project structure, e.g.:
+- `/src/app/` — Pages and layouts
+- `/src/components/` — Reusable components
+- `/src/lib/` — Utility functions
+- `/tests/` — Test files
+-->
 
 ## CI Pipeline
-{{CI_DESCRIPTION}}
+GitHub Actions runs on every PR to `main`. See `.github/workflows/ci.yml`.
 
 ## Testing
 ```bash
-{{TEST_COMMAND}}
+# TODO: Replace with your test commands
+npm test
 ```
 
 ## Important

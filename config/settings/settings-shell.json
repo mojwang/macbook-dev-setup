@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path' | xargs -I{} bash -c '[[ \"{}\" == *.sh ]] && shellcheck \"{}\" || true'"
+            "command": "jq -r '.tool_input.file_path' | while read -r f; do [[ \"$f\" == *.sh ]] && shellcheck \"$f\" || true; done"
           }
         ]
       }
