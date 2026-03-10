@@ -7,8 +7,14 @@
 
 set -e
 
+# Resolve symlinks so the script works when invoked via ~/.local/bin symlink
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_PATH=$(readlink "$SCRIPT_PATH")
+done
+
 # Load common library
-source "$(dirname "$0")/../lib/common.sh"
+source "$(dirname "$SCRIPT_PATH")/../lib/common.sh"
 
 # Load signal safety library
 source "$ROOT_DIR/lib/signal-safety.sh"

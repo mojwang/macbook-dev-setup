@@ -177,46 +177,127 @@ ui_spinner() {
     local message="$1"
     shift
 
-    if _ui_is_interactive && _ui_has gum; then
-        gum spin --spinner dot --title "$message" -- "$@"
-        local rc=$?
-        if [[ $rc -eq 0 ]]; then
-            echo -e "${GREEN:-\033[0;32m}✓ ${message}${NC:-\033[0m}"
-        else
-            echo -e "${RED:-\033[0;31m}✗ ${message}${NC:-\033[0m}"
-        fi
-        return $rc
-    fi
+    local output_file
+    output_file=$(mktemp 2>/dev/null || echo "/tmp/ui-spinner-$$")
 
-    # Fallback: use show_progress from common.sh if available, else just run
-    if declare -f show_progress &>/dev/null; then
-        "$@" &
+    if _ui_is_interactive && _ui_has gum; then
+        gum spin --spinner dot --title "$message" -- bash -c '"$@" > '"$output_file"' 2>&1' _ "$@"
+        local rc=$?
+    elif declare -f show_progress &>/dev/null; then
+        bash -c '"$@" > '"$output_file"' 2>&1' _ "$@" &
         local pid=$!
         show_progress "$pid" "$message"
         wait "$pid"
         local rc=$?
         printf "\r\033[K"
-        if [[ $rc -eq 0 ]]; then
-            echo -e "${GREEN:-\033[0;32m}✓ ${message}${NC:-\033[0m}"
-        else
-            echo -e "${RED:-\033[0;31m}✗ ${message}${NC:-\033[0m}"
-        fi
-        return $rc
+    else
+        echo -e "${BLUE:-\033[0;34m}→ ${message}...${NC:-\033[0m}"
+        "$@" > "$output_file" 2>&1
+        local rc=$?
     fi
 
-    # Bare fallback
-    echo -e "${BLUE:-\033[0;34m}→ ${message}...${NC:-\033[0m}"
-    "$@"
-    local rc=$?
     if [[ $rc -eq 0 ]]; then
         echo -e "${GREEN:-\033[0;32m}✓ ${message}${NC:-\033[0m}"
     else
         echo -e "${RED:-\033[0;31m}✗ ${message}${NC:-\033[0m}"
     fi
+
+    # Store captured output for callers to retrieve
+    LAST_SPINNER_OUTPUT="$output_file"
+    LAST_SPINNER_RC=$rc
     return $rc
 }
 
 export -f ui_spinner
+
+# ui_spinner_tolerant "message" command [args...]
+# Like ui_spinner but shows ⚠ on failure instead of ✗ and logs errors.
+# Always returns 0 so set -e doesn't abort.
+# =============================================================================
+
+ui_spinner_tolerant() {
+    local message="$1"
+    shift
+
+    local output_file
+    output_file=$(mktemp 2>/dev/null || echo "/tmp/ui-spinner-$$")
+
+    if _ui_is_interactive && _ui_has gum; then
+        gum spin --spinner dot --title "$message" -- bash -c '"$@" > '"$output_file"' 2>&1' _ "$@"
+        local rc=$?
+    elif declare -f show_progress &>/dev/null; then
+        bash -c '"$@" > '"$output_file"' 2>&1' _ "$@" &
+        local pid=$!
+        show_progress "$pid" "$message"
+        wait "$pid"
+        local rc=$?
+        printf "\r\033[K"
+    else
+        echo -e "${BLUE:-\033[0;34m}→ ${message}...${NC:-\033[0m}"
+        "$@" > "$output_file" 2>&1
+        local rc=$?
+    fi
+
+    if [[ $rc -eq 0 ]]; then
+        echo -e "${GREEN:-\033[0;32m}✓ ${message}${NC:-\033[0m}"
+    else
+        echo -e "${YELLOW:-\033[1;33m}⚠ ${message} (completed with errors)${NC:-\033[0m}"
+        setup_errors_log "$message" "$output_file"
+    fi
+
+    rm -f "$output_file" 2>/dev/null
+    return 0
+}
+
+export -f ui_spinner_tolerant
+
+# =============================================================================
+# Setup error collection — deferred error reporting
+# =============================================================================
+
+# Initialize the error log file
+setup_errors_init() {
+    export SETUP_ERRORS_FILE
+    SETUP_ERRORS_FILE=$(mktemp 2>/dev/null || echo "/tmp/setup-errors-$$")
+    > "$SETUP_ERRORS_FILE"
+}
+
+# Log an error for end-of-setup reporting
+# Usage: setup_errors_log "step name" [output_file]
+setup_errors_log() {
+    local step="$1"
+    local output_file="${2:-}"
+    local errors_file="${SETUP_ERRORS_FILE:-/tmp/setup-errors-$$}"
+
+    {
+        echo "--- $step ---"
+        if [[ -n "$output_file" ]] && [[ -f "$output_file" ]]; then
+            # Show last 10 lines of output (most relevant)
+            tail -10 "$output_file"
+        fi
+        echo ""
+    } >> "$errors_file"
+}
+
+# Display collected errors (call at end of setup)
+setup_errors_show() {
+    local errors_file="${SETUP_ERRORS_FILE:-/tmp/setup-errors-$$}"
+
+    if [[ -f "$errors_file" ]] && [[ -s "$errors_file" ]]; then
+        echo ""
+        echo -e "${YELLOW:-\033[1;33m}⚠ Some steps completed with errors:${NC:-\033[0m}"
+        echo -e "${YELLOW:-\033[1;33m}$(printf '%.0s─' {1..50})${NC:-\033[0m}"
+        command cat "$errors_file"
+        echo -e "${YELLOW:-\033[1;33m}$(printf '%.0s─' {1..50})${NC:-\033[0m}"
+        rm -f "$errors_file" 2>/dev/null
+        return 1
+    fi
+
+    rm -f "$errors_file" 2>/dev/null
+    return 0
+}
+
+export -f setup_errors_init setup_errors_log setup_errors_show
 
 # =============================================================================
 # ui_diff_style_select

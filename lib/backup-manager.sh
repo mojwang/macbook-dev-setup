@@ -157,7 +157,6 @@ clean_old_backups() {
         # Remove oldest backups
         ls -1t "$category_dir" | tail -n "$to_remove" | while read -r old_backup; do
             rm -rf "$category_dir/$old_backup"
-            print_info "Removed old backup: $old_backup" >&2
         done
     fi
 }

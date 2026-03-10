@@ -196,6 +196,116 @@ else
 fi
 rm -f "$template_file" "$installed_file"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Profile overlay tests (resolve_template)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Mock resolve_template (extracted from setup-claude-global.sh)
+# Uses CONFIG_DIR and TEMPLATE_FILE from test environment
+safe_mktemp() { mktemp "/tmp/$1"; }
+print_error() { echo "[ERROR] $1"; }
+
+resolve_template() {
+    local profile="${SETUP_PROFILE:-}"
+
+    if [[ -z "$profile" ]]; then
+        return 0
+    fi
+
+    if [[ ! -f "$TEMPLATE_FILE" ]]; then
+        print_error "Base template not found: $TEMPLATE_FILE"
+        return 1
+    fi
+
+    local overlay_file="$CONFIG_DIR/global-claude-${profile}.md"
+    if [[ ! -f "$overlay_file" ]]; then
+        print_warning "Profile overlay not found: $overlay_file — using base only"
+        return 0
+    fi
+
+    local assembled
+    assembled=$(safe_mktemp "claude-global-assembled.XXXXXX")
+    cat "$TEMPLATE_FILE" "$overlay_file" > "$assembled"
+    TEMPLATE_FILE="$assembled"
+    print_info "Using profile overlay: global-claude-${profile}.md"
+}
+
+# Set up a temp config dir with base + overlay templates
+TEST_CONFIG_DIR=$(mktemp -d)
+CONFIG_DIR="$TEST_CONFIG_DIR"
+
+TEST_BASE="$TEST_CONFIG_DIR/global-claude.md"
+echo "# Base Config" > "$TEST_BASE"
+echo "base-rule: do stuff" >> "$TEST_BASE"
+
+TEST_OVERLAY_PERSONAL="$TEST_CONFIG_DIR/global-claude-personal.md"
+echo "" >> "$TEST_OVERLAY_PERSONAL"
+echo "## Environment (Personal)" >> "$TEST_OVERLAY_PERSONAL"
+echo "personal-setting: true" >> "$TEST_OVERLAY_PERSONAL"
+
+# Test 13: No profile uses base only
+test_case "resolve_template with no profile uses base only"
+TEMPLATE_FILE="$TEST_BASE"
+unset SETUP_PROFILE
+resolve_template
+assert_equals "$TEST_BASE" "$TEMPLATE_FILE" "TEMPLATE_FILE should remain as base"
+
+# Test 14: Valid profile concatenates base + overlay
+test_case "resolve_template with valid profile concatenates base + overlay"
+TEMPLATE_FILE="$TEST_BASE"
+SETUP_PROFILE="personal"
+resolve_template
+assert_false "test '$TEST_BASE' = '$TEMPLATE_FILE'" "TEMPLATE_FILE should be a new assembled file"
+assert_true "grep -q 'base-rule' '$TEMPLATE_FILE'" "Assembled file should contain base content"
+assert_true "grep -q 'personal-setting' '$TEMPLATE_FILE'" "Assembled file should contain overlay content"
+rm -f "$TEMPLATE_FILE"
+
+# Test 15: Missing overlay falls back to base only
+test_case "resolve_template with missing overlay falls back to base"
+TEMPLATE_FILE="$TEST_BASE"
+SETUP_PROFILE="nonexistent"
+output=$(resolve_template 2>&1)
+assert_equals "$TEST_BASE" "$TEMPLATE_FILE" "TEMPLATE_FILE should remain as base"
+assert_contains "$output" "not found" "Should warn about missing overlay"
+
+# Test 16: Missing base template returns error
+test_case "resolve_template with missing base template returns error"
+TEMPLATE_FILE="/tmp/does-not-exist.md"
+SETUP_PROFILE="personal"
+if resolve_template 2>/dev/null; then
+    fail_test "Should return error when base template is missing"
+else
+    pass_test "Returns error when base template is missing"
+fi
+
+unset SETUP_PROFILE
+rm -rf "$TEST_CONFIG_DIR"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Script integration tests (--check, --list-profiles, --help)
+# ─────────────────────────────────────────────────────────────────────────────
+
+SCRIPT="$(dirname "$0")/../../scripts/setup-claude-global.sh"
+
+# Test 17: --help shows profile documentation
+test_case "Help text documents SETUP_PROFILE"
+if [[ -f "$SCRIPT" ]]; then
+    help_output=$(bash "$SCRIPT" --help 2>&1)
+    assert_contains "$help_output" "SETUP_PROFILE" "Help should document SETUP_PROFILE"
+    assert_contains "$help_output" "list-profiles" "Help should mention --list-profiles"
+else
+    pass_test "Script not found (skipping)"
+fi
+
+# Test 18: --list-profiles shows available profiles
+test_case "List profiles shows available overlays"
+if [[ -f "$SCRIPT" ]]; then
+    profiles_output=$(bash "$SCRIPT" --list-profiles 2>&1)
+    assert_contains "$profiles_output" "personal" "Should list personal profile"
+else
+    pass_test "Script not found (skipping)"
+fi
+
 # Summary
 echo ""
 print_test_summary

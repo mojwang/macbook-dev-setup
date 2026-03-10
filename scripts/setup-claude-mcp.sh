@@ -721,17 +721,35 @@ build_node_server() {
     # Initialize npm non-interactively
     init_npm_noninteractive "$server_path"
     
+    # Detect package manager
+    local pkg_mgr="npm"
+    local install_cmd="npm install --no-audit --no-fund"
+    local build_cmd="npm run build"
+    if [[ -f "$server_path/pnpm-lock.yaml" ]] || [[ -f "$server_path/pnpm-workspace.yaml" ]]; then
+        if command -v pnpm &>/dev/null; then
+            pkg_mgr="pnpm"
+            install_cmd="pnpm install --frozen-lockfile"
+            build_cmd="pnpm run build"
+        else
+            print_warning "$server_name uses pnpm but pnpm is not installed, trying npm"
+        fi
+    elif [[ -f "$server_path/yarn.lock" ]]; then
+        if command -v yarn &>/dev/null; then
+            pkg_mgr="yarn"
+            install_cmd="yarn install --frozen-lockfile"
+            build_cmd="yarn build"
+        fi
+    fi
+
     # Install dependencies with timeout
-    # Use standardized timeout function
-    if ! run_with_timeout 120 npm install --no-audit --no-fund >/dev/null 2>&1; then
-        print_error "npm install failed or timed out for $server_name"
+    if ! run_with_timeout 120 $install_cmd >/dev/null 2>&1; then
+        print_error "$pkg_mgr install failed or timed out for $server_name"
         return 1
     fi
-    
+
     # Build if build script exists (with timeout)
     if grep -q '"build"' package.json 2>/dev/null; then
-        # Use standardized timeout function
-        run_with_timeout 60 npm run build >/dev/null 2>&1 || {
+        run_with_timeout 60 $build_cmd >/dev/null 2>&1 || {
             print_warning "Build failed or timed out for $server_name, continuing anyway..."
         }
     fi

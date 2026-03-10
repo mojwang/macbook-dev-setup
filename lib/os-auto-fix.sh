@@ -312,7 +312,8 @@ run_auto_fixes() {
         return 2
     elif $any_fixes; then
         print_success "Auto-fix complete! Issues were found and resolved."
-        print_info "You may need to restart your terminal or run 'source ~/.zshrc' for some fixes to take effect."
+        # Set flag for caller to show reload hint at end of setup
+        export AUTOFIX_NEEDS_RELOAD=true
         return 0
     else
         print_success "No issues detected - system is healthy!"

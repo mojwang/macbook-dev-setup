@@ -119,7 +119,7 @@ it "should integrate old functionality into new commands"
 setup_content=$(cat setup.sh)
 
 # --sync functionality is now automatic in update mode
-assert_contains "$setup_content" "Syncing new packages" "Sync functionality integrated"
+assert_contains "$setup_content" "Syncing packages" "Sync functionality integrated"
 
 # update/sync commands are handled in the command case statement
 assert_true "grep -q 'sync\|update' setup.sh" "Update functionality integrated"

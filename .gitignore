@@ -78,3 +78,6 @@ dotfiles/.config/zsh/migrated
 # Agentic workflow artifacts (ephemeral)
 research.md
 plan.md
+
+# Claude Code worktree metadata
+.claude/worktrees/

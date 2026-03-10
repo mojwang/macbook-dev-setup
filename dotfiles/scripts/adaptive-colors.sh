@@ -5,13 +5,10 @@
 
 # Function to detect if we're in dark mode
 detect_dark_mode() {
-    if command -v osascript &> /dev/null; then
-        local appearance=$(osascript -e 'tell application "System Events" to tell appearance preferences to get dark mode')
-        [[ "$appearance" == "true" ]] && return 0 || return 1
-    else
-        # Default to dark mode if we can't detect
-        return 0
-    fi
+    # Use defaults read instead of osascript to avoid Apple Events authorization errors
+    local style
+    style=$(defaults read -g AppleInterfaceStyle 2>/dev/null) || true
+    [[ "$style" == "Dark" ]] && return 0 || return 1
 }
 
 # Function to detect terminal type and capabilities

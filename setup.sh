@@ -324,6 +324,9 @@ main_setup() {
         echo "Setup started at $(date)" > "$LOG_FILE"
         print_info "Logging to: $LOG_FILE"
     fi
+
+    # Initialize deferred error reporting
+    setup_errors_init
     
     # Show what we're doing
     if [[ "$setup_state" == "fresh" ]]; then
@@ -411,26 +414,6 @@ main_setup() {
         print_step "Setting up global Claude configuration..."
         ./scripts/setup-claude-global.sh
         
-        if [[ "${PROFILE_SKIP_MCP:-false}" != "true" ]]; then
-            print_step "Setting up Claude MCP servers..."
-            [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
-            ./scripts/setup-claude-mcp.sh
-
-
-            # Setup Claude Code MCP servers if VS Code is installed
-            if command -v code &>/dev/null || [[ -d "/Applications/Visual Studio Code.app" ]]; then
-                print_step "Setting up Claude Code MCP servers..."
-                if command -v claude &>/dev/null; then
-                    [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
-                    ./scripts/setup-claude-code-mcp.sh
-                else
-                    print_info "Claude Code CLI not found - install Claude Code extension in VS Code"
-                fi
-            fi
-        else
-            print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
-        fi
-
         if [[ "${PROFILE_SKIP_AGENTIC:-false}" != "true" ]]; then
             print_step "Setting up Claude agentic workflow..."
             if command -v claude &>/dev/null; then
@@ -455,7 +438,7 @@ main_setup() {
         if command -v brew &>/dev/null; then
             ui_spinner "Updating Homebrew" brew update
             if [[ "$is_minimal" == "true" ]] && [[ -f "homebrew/Brewfile.minimal" ]]; then
-                ui_spinner "Syncing packages (minimal)" brew bundle --file="homebrew/Brewfile.minimal"
+                ui_spinner_tolerant "Syncing packages (minimal)" brew bundle --file="homebrew/Brewfile.minimal"
             elif [[ -n "$SETUP_PROFILE" ]]; then
                 if ! resolve_profile "$SETUP_PROFILE"; then
                     exit 1
@@ -463,13 +446,13 @@ main_setup() {
                 print_profile_summary "$SETUP_PROFILE"
                 local filtered_brewfile
                 filtered_brewfile=$(filter_brewfile "homebrew/Brewfile")
-                ui_spinner "Syncing packages (profile: $SETUP_PROFILE)" brew bundle --file="$filtered_brewfile"
+                ui_spinner_tolerant "Syncing packages (profile: $SETUP_PROFILE)" brew bundle --file="$filtered_brewfile"
             else
-                ui_spinner "Syncing packages" brew bundle --file="homebrew/Brewfile"
+                ui_spinner_tolerant "Syncing packages" brew bundle --file="homebrew/Brewfile"
             fi
             # Install machine-specific packages if present
             if [[ -f "homebrew/Brewfile.local" ]]; then
-                ui_spinner "Syncing local packages" brew bundle --file="homebrew/Brewfile.local"
+                ui_spinner_tolerant "Syncing local packages" brew bundle --file="homebrew/Brewfile.local"
             fi
         fi
 
@@ -512,22 +495,6 @@ main_setup() {
             ./scripts/setup-claude-global.sh
         fi
 
-        if [[ "${PROFILE_SKIP_MCP:-false}" != "true" ]]; then
-            ui_section_header "MCP Server Sync"
-            if [[ -f "./scripts/setup-claude-mcp.sh" ]]; then
-                [[ ! -x "./scripts/setup-claude-mcp.sh" ]] && chmod +x "./scripts/setup-claude-mcp.sh"
-                ui_spinner "Updating Claude MCP servers" ./scripts/setup-claude-mcp.sh --update
-            fi
-
-            # Update Claude Code MCP servers if VS Code and Claude CLI are installed
-            if command -v code &>/dev/null && command -v claude &>/dev/null; then
-                [[ ! -x "./scripts/setup-claude-code-mcp.sh" ]] && chmod +x "./scripts/setup-claude-code-mcp.sh"
-                ui_spinner "Updating Claude Code MCP servers" ./scripts/setup-claude-code-mcp.sh --servers filesystem,memory,git,fetch,sequentialthinking,context7,playwright,figma,semgrep,exa,taskmaster
-            fi
-        else
-            print_info "Skipping MCP setup (profile: $SETUP_PROFILE)"
-        fi
-
         if [[ "${PROFILE_SKIP_AGENTIC:-false}" != "true" ]]; then
             print_step "Setting up Claude agentic workflow..."
             if command -v claude &>/dev/null; then
@@ -562,6 +529,9 @@ main_setup() {
         summary_lines+=("MCP Servers: ${mcp_status} connected")
     fi
 
+    # Show any deferred errors before the summary
+    setup_errors_show
+
     ui_summary_box "Setup Complete!" "${summary_lines[@]}"
 
     if [[ "$setup_state" == "fresh" ]]; then
@@ -570,13 +540,10 @@ main_setup() {
         echo ""
         echo "Next steps:"
         echo "• Open a new terminal window"
-        echo "• Run 'claude setup-token' to configure Claude CLI"
-        echo "• MCP servers are configured for Claude Desktop"
-        if command -v claude &>/dev/null; then
-            echo "• MCP servers are configured for Claude Code - run 'claude mcp list' to verify"
-        else
-            echo "• Install Claude Code extension in VS Code to enable MCP servers"
-        fi
+        echo "• Run 'claude mcp list' to verify MCP servers are connected"
+    elif [[ "${AUTOFIX_NEEDS_RELOAD:-false}" == "true" ]]; then
+        echo ""
+        print_info "Auto-fixes were applied. Restart your terminal or run 'source ~/.zshrc' for changes to take effect."
     fi
 }
 
