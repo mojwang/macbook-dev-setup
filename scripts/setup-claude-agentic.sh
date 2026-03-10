@@ -62,8 +62,6 @@ PLUGINS=(
     "plugin-dev@claude-plugins-official"
     "skill-creator@claude-plugins-official"
     "hookify@claude-plugins-official"
-    # Style
-    "explanatory-output-style@claude-plugins-official"
 )
 
 # LSP binaries to check/install via brew
