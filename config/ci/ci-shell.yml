@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: |
+          if [[ -f ./tests/run_tests.sh ]]; then
+            ./tests/run_tests.sh
+          else
+            echo "No test runner found — add ./tests/run_tests.sh"
+            exit 1
+          fi
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+      - name: Run shellcheck
+        run: |
+          find . -name "*.sh" -type f -not -path './.git/*' | while read -r script; do
+            echo "Checking: $script"
+            shellcheck "$script"
+          done
+
+  security-scan:
+    name: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for secrets
+        run: |
+          found=0
+          if grep -rEn "(password|secret|token|api_key)[[:space:]]*=.*['\"][A-Za-z0-9]" . --include="*.sh" \
+             | grep -v '=.*\$' \
+             | grep -v '=.*""' \
+             | grep -v 'key_name\|key_path\|key_value\|api_key_var'; then
+            echo "Potential hardcoded secrets found"
+            found=1
+          fi
+          exit $found

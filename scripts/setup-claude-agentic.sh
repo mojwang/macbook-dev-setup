@@ -29,7 +29,7 @@ cleanup_agentic() {
 setup_cleanup "cleanup_agentic"
 
 # Configuration
-TEMPLATE_VERSION="1.0.0"
+TEMPLATE_VERSION="2.0.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
@@ -62,8 +62,6 @@ PLUGINS=(
     "plugin-dev@claude-plugins-official"
     "skill-creator@claude-plugins-official"
     "hookify@claude-plugins-official"
-    # Style
-    "explanatory-output-style@claude-plugins-official"
 )
 
 # LSP binaries to check/install via brew
@@ -163,9 +161,10 @@ deploy_templates() {
 
     # Create template directory structure
     mkdir -p "$TEMPLATE_DIR/agents"
-    mkdir -p "$TEMPLATE_DIR/skills/security-review"
-    mkdir -p "$TEMPLATE_DIR/skills/shell-conventions"
-    mkdir -p "$TEMPLATE_DIR/skills/commit-review"
+    mkdir -p "$TEMPLATE_DIR/skills/base"
+    mkdir -p "$TEMPLATE_DIR/skills/shell"
+    mkdir -p "$TEMPLATE_DIR/skills/web"
+    mkdir -p "$TEMPLATE_DIR/settings"
 
     # Copy agents
     local agent_src="$REPO_DIR/.claude/agents"
@@ -179,29 +178,49 @@ deploy_templates() {
         print_warning "No agent definitions found at $agent_src"
     fi
 
-    # Copy skills
+    # Copy base skills (universal — deployed to every project)
     local skill_src="$REPO_DIR/.claude/skills"
-    if [[ -d "$skill_src" ]]; then
-        for skill_dir in "$skill_src"/*/; do
-            [[ -d "$skill_dir" ]] || continue
-            local skill_name
-            skill_name=$(basename "$skill_dir")
-            if [[ -f "$skill_dir/SKILL.md" ]]; then
-                mkdir -p "$TEMPLATE_DIR/skills/$skill_name"
-                cp "$skill_dir/SKILL.md" "$TEMPLATE_DIR/skills/$skill_name/"
-            fi
-        done
-        print_success "Deployed skill templates"
-    else
-        print_warning "No skill definitions found at $skill_src"
-    fi
+    local base_skills=("security-review" "commit-review" "deep-research")
+    for skill_name in "${base_skills[@]}"; do
+        if [[ -f "$skill_src/$skill_name/SKILL.md" ]]; then
+            mkdir -p "$TEMPLATE_DIR/skills/base/$skill_name"
+            cp "$skill_src/$skill_name/SKILL.md" "$TEMPLATE_DIR/skills/base/$skill_name/"
+        fi
+    done
 
-    # Copy project settings template
+    # Copy shell-specific skills
+    local shell_skills=("shell-conventions")
+    for skill_name in "${shell_skills[@]}"; do
+        if [[ -f "$skill_src/$skill_name/SKILL.md" ]]; then
+            mkdir -p "$TEMPLATE_DIR/skills/shell/$skill_name"
+            cp "$skill_src/$skill_name/SKILL.md" "$TEMPLATE_DIR/skills/shell/$skill_name/"
+        fi
+    done
+
+    # Copy web-specific skills from config/skills/
+    local web_skill_src="$REPO_DIR/config/skills"
+    local web_skills=("typescript-conventions" "web-review")
+    for skill_name in "${web_skills[@]}"; do
+        if [[ -f "$web_skill_src/$skill_name/SKILL.md" ]]; then
+            mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name"
+            cp "$web_skill_src/$skill_name/SKILL.md" "$TEMPLATE_DIR/skills/web/$skill_name/"
+        fi
+    done
+
+    print_success "Deployed skill templates (base + shell + web)"
+
+    # Copy type-specific settings templates
+    local settings_dir="$REPO_DIR/config/settings"
+    for settings_file in "$settings_dir"/settings-*.json; do
+        [[ -f "$settings_file" ]] || continue
+        cp "$settings_file" "$TEMPLATE_DIR/settings/"
+    done
+    # Also copy existing settings as the base/default
     local settings_src="$REPO_DIR/.claude/settings.json"
     if [[ -f "$settings_src" ]]; then
-        cp "$settings_src" "$TEMPLATE_DIR/settings.json.template"
-        print_success "Deployed settings template"
+        cp "$settings_src" "$TEMPLATE_DIR/settings/settings-base.json"
     fi
+    print_success "Deployed settings templates"
 
     # Copy agent metadata template
     local agents_json_src="$REPO_DIR/.claude-agents.json"
@@ -216,6 +235,38 @@ deploy_templates() {
         cp "$claude_md_template" "$TEMPLATE_DIR/project-claude.md.template"
         print_success "Deployed project CLAUDE.md template"
     fi
+
+    # Copy CI workflow templates
+    mkdir -p "$TEMPLATE_DIR/ci"
+    for ci_file in "$REPO_DIR/config/ci"/*.yml; do
+        [[ -f "$ci_file" ]] || continue
+        cp "$ci_file" "$TEMPLATE_DIR/ci/"
+    done
+    print_success "Deployed CI workflow templates"
+
+    # Copy .gitignore templates
+    mkdir -p "$TEMPLATE_DIR/gitignore"
+    for gi_file in "$REPO_DIR/config/gitignore"/gitignore-*; do
+        [[ -f "$gi_file" ]] || continue
+        cp "$gi_file" "$TEMPLATE_DIR/gitignore/"
+    done
+    print_success "Deployed .gitignore templates"
+
+    # Copy GitHub templates (PR template)
+    mkdir -p "$TEMPLATE_DIR/github"
+    for gh_file in "$REPO_DIR/config/github"/*; do
+        [[ -f "$gh_file" ]] || continue
+        cp "$gh_file" "$TEMPLATE_DIR/github/"
+    done
+    print_success "Deployed GitHub templates"
+
+    # Copy editor config templates
+    mkdir -p "$TEMPLATE_DIR/editor"
+    for ed_file in "$REPO_DIR/config/editor"/*; do
+        [[ -f "$ed_file" ]] || continue
+        cp "$ed_file" "$TEMPLATE_DIR/editor/"
+    done
+    print_success "Deployed editor config templates"
 
     # Write version stamp
     echo "$TEMPLATE_VERSION" > "$VERSION_FILE"
@@ -255,6 +306,7 @@ create_symlink() {
 
 init_project() {
     local target_dir="${1:-.}"
+    local project_type="${2:-}"
     target_dir=$(cd "$target_dir" && pwd)
 
     if [[ ! -d "$TEMPLATE_DIR" ]]; then
@@ -263,7 +315,22 @@ init_project() {
         exit 1
     fi
 
-    print_info "Initializing agentic workflow in: $target_dir"
+    # Validate project type if specified
+    local valid_types=("shell" "web")
+    if [[ -n "$project_type" ]]; then
+        local type_valid=false
+        for t in "${valid_types[@]}"; do
+            [[ "$project_type" == "$t" ]] && type_valid=true
+        done
+        if [[ "$type_valid" == "false" ]]; then
+            print_error "Unknown project type: $project_type"
+            print_info "Valid types: ${valid_types[*]}"
+            exit 1
+        fi
+    fi
+
+    local type_label="${project_type:-base}"
+    print_info "Initializing agentic workflow in: $target_dir (type: $type_label)"
 
     # Initialize git repo if not already one
     if [[ ! -d "$target_dir/.git" ]]; then
@@ -325,40 +392,53 @@ EOF
         fi
     done
 
-    # Deploy skills
-    for skill_dir in "$TEMPLATE_DIR/skills"/*/; do
-        [[ -d "$skill_dir" ]] || continue
-        local skill_name
-        skill_name=$(basename "$skill_dir")
-        mkdir -p "$claude_dir/skills/$skill_name"
-        local dest="$claude_dir/skills/$skill_name/SKILL.md"
-        local src="$skill_dir/SKILL.md"
-        [[ -f "$src" ]] || continue
-        if [[ -f "$dest" ]]; then
-            if ! diff -q "$src" "$dest" >/dev/null 2>&1; then
-                print_warning "Skill differs: $skill_name/SKILL.md"
-                diff -u "$dest" "$src" || true
-                if [[ -t 0 ]]; then
-                    if ui_confirm "Update $skill_name/SKILL.md?" "n"; then
-                        cp "$src" "$dest"
+    # Deploy skills: base + type-specific
+    # Build list of skill source directories to deploy
+    local skill_sources=("$TEMPLATE_DIR/skills/base")
+    if [[ -n "$project_type" ]] && [[ -d "$TEMPLATE_DIR/skills/$project_type" ]]; then
+        skill_sources+=("$TEMPLATE_DIR/skills/$project_type")
+    fi
+
+    for skill_source in "${skill_sources[@]}"; do
+        for skill_dir in "$skill_source"/*/; do
+            [[ -d "$skill_dir" ]] || continue
+            local skill_name
+            skill_name=$(basename "$skill_dir")
+            mkdir -p "$claude_dir/skills/$skill_name"
+            local dest="$claude_dir/skills/$skill_name/SKILL.md"
+            local src="$skill_dir/SKILL.md"
+            [[ -f "$src" ]] || continue
+            if [[ -f "$dest" ]]; then
+                if ! diff -q "$src" "$dest" >/dev/null 2>&1; then
+                    print_warning "Skill differs: $skill_name/SKILL.md"
+                    diff -u "$dest" "$src" || true
+                    if [[ -t 0 ]]; then
+                        if ui_confirm "Update $skill_name/SKILL.md?" "n"; then
+                            cp "$src" "$dest"
+                        fi
                     fi
                 fi
+            else
+                cp "$src" "$dest"
             fi
-        else
-            cp "$src" "$dest"
-        fi
+        done
     done
 
-    # Merge project settings.json (additive — never clobbers existing keys)
-    local settings_template="$TEMPLATE_DIR/settings.json.template"
+    # Deploy settings: type-specific if available, else base
     local settings_dest="$claude_dir/settings.json"
-    if [[ -f "$settings_template" ]]; then
+    local settings_template=""
+    if [[ -n "$project_type" ]] && [[ -f "$TEMPLATE_DIR/settings/settings-${project_type}.json" ]]; then
+        settings_template="$TEMPLATE_DIR/settings/settings-${project_type}.json"
+    elif [[ -f "$TEMPLATE_DIR/settings/settings-base.json" ]]; then
+        settings_template="$TEMPLATE_DIR/settings/settings-base.json"
+    fi
+
+    if [[ -n "$settings_template" ]]; then
         if [[ -f "$settings_dest" ]]; then
             # Additive merge: template provides defaults, existing keys win
             local merged
             merged=$(jq -s '.[0] * .[1]' "$settings_template" "$settings_dest" 2>/dev/null || true)
             if [[ -n "$merged" ]]; then
-                # Check if merge changed anything
                 if ! echo "$merged" | diff -q "$settings_dest" - >/dev/null 2>&1; then
                     print_warning "Settings merge adds new keys"
                     echo "$merged" | diff -u "$settings_dest" - || true
@@ -372,7 +452,7 @@ EOF
             fi
         else
             cp "$settings_template" "$settings_dest"
-            print_success "Created settings.json"
+            print_success "Created settings.json (type: $type_label)"
         fi
     fi
 
@@ -384,10 +464,64 @@ EOF
         print_success "Created .claude-agents.json"
     fi
 
+    # Deploy CI workflow (type-specific, only if not present)
+    local ci_dest="$target_dir/.github/workflows/ci.yml"
+    if [[ ! -f "$ci_dest" ]]; then
+        local ci_template=""
+        if [[ -n "$project_type" ]] && [[ -f "$TEMPLATE_DIR/ci/ci-${project_type}.yml" ]]; then
+            ci_template="$TEMPLATE_DIR/ci/ci-${project_type}.yml"
+        fi
+        if [[ -n "$ci_template" ]]; then
+            mkdir -p "$target_dir/.github/workflows"
+            cp "$ci_template" "$ci_dest"
+            print_success "Created .github/workflows/ci.yml (type: $type_label)"
+        fi
+    fi
+
+    # Deploy .gitignore (type-specific, only if not present)
+    local gitignore_dest="$target_dir/.gitignore"
+    if [[ ! -f "$gitignore_dest" ]]; then
+        local gi_template=""
+        if [[ -n "$project_type" ]] && [[ -f "$TEMPLATE_DIR/gitignore/gitignore-${project_type}" ]]; then
+            gi_template="$TEMPLATE_DIR/gitignore/gitignore-${project_type}"
+        elif [[ -f "$TEMPLATE_DIR/gitignore/gitignore-shell" ]]; then
+            # Shell gitignore works as a minimal default
+            gi_template="$TEMPLATE_DIR/gitignore/gitignore-shell"
+        fi
+        if [[ -n "$gi_template" ]]; then
+            cp "$gi_template" "$gitignore_dest"
+            print_success "Created .gitignore (type: $type_label)"
+        fi
+    fi
+
+    # Deploy PR template (only if not present)
+    local pr_template_dest="$target_dir/.github/pull_request_template.md"
+    if [[ ! -f "$pr_template_dest" ]] && [[ -f "$TEMPLATE_DIR/github/pull_request_template.md" ]]; then
+        mkdir -p "$target_dir/.github"
+        cp "$TEMPLATE_DIR/github/pull_request_template.md" "$pr_template_dest"
+        print_success "Created .github/pull_request_template.md"
+    fi
+
+    # Deploy .editorconfig (only if not present)
+    local editorconfig_dest="$target_dir/.editorconfig"
+    if [[ ! -f "$editorconfig_dest" ]] && [[ -f "$TEMPLATE_DIR/editor/editorconfig" ]]; then
+        cp "$TEMPLATE_DIR/editor/editorconfig" "$editorconfig_dest"
+        print_success "Created .editorconfig"
+    fi
+
+    # Deploy .nvmrc for web projects (only if not present)
+    if [[ "$project_type" == "web" ]]; then
+        local nvmrc_dest="$target_dir/.nvmrc"
+        if [[ ! -f "$nvmrc_dest" ]] && [[ -f "$TEMPLATE_DIR/editor/nvmrc" ]]; then
+            cp "$TEMPLATE_DIR/editor/nvmrc" "$nvmrc_dest"
+            print_success "Created .nvmrc"
+        fi
+    fi
+
     if [[ $agents_updated -gt 0 ]]; then
         print_success "Updated $agents_updated agent(s)"
     fi
-    print_success "Agentic workflow initialized in $target_dir"
+    print_success "Agentic workflow initialized in $target_dir (type: $type_label)"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -425,26 +559,42 @@ Usage: setup-claude-agentic.sh [OPTIONS]
 Setup Claude agentic workflow: plugins, LSP deps, templates, and project init.
 
 Modes:
-    (none)              System setup: install plugins, LSP deps, deploy templates
-    --init [DIR]        Initialize agentic workflow in a project (default: current dir)
-    --check             Exit 0 if templates up-to-date, exit 1 if stale
-    --update            Update templates and re-deploy to current project
-    --help              Show this help message
+    (none)                      System setup: install plugins, LSP deps, deploy templates
+    --init [DIR] [--type TYPE]  Initialize agentic workflow in a project (default: current dir)
+    --check                     Exit 0 if templates up-to-date, exit 1 if stale
+    --update                    Update templates and re-deploy to current project
+    --help                      Show this help message
+
+Project types (--type):
+    shell       Shell/bash projects — shellcheck hook, shell-conventions skill
+    web         Web/TypeScript projects — tsc hook, typescript-conventions + web-review skills
+    (omitted)   Base only — universal skills (security-review, commit-review, deep-research)
 
 System setup installs:
-    Plugins:  20 total (integrations, review, workflows, LSPs, meta, style)
+    Plugins:  19 total (integrations, review, workflows, LSPs, meta)
     LSP deps: typescript-language-server, pyright, kotlin-language-server, sourcekit-lsp
-    Templates: agents, skills, settings, agent metadata → ~/.claude/templates/agentic/
+    Templates: agents, skills (base + shell + web), settings → ~/.claude/templates/agentic/
     CLI:      Symlinks as ~/.local/bin/claude-init-agentic
 
 Project init creates:
-    git repo            (initialized if not present)
-    CLAUDE.md           project template (customize for your stack)
-    README.md           minimal skeleton (if not present)
-    .claude/agents/     researcher, planner, implementer, reviewer
-    .claude/skills/     security-review, shell-conventions, commit-review
-    .claude/settings.json  (merged with existing)
-    .claude-agents.json    (only if not present)
+    git repo                            (initialized if not present)
+    CLAUDE.md                           project template (customize for your stack)
+    README.md                           minimal skeleton (if not present)
+    .claude/agents/                     researcher, planner, implementer, reviewer
+    .claude/skills/                     base skills + type-specific skills
+    .claude/settings.json               type-specific hooks (merged with existing)
+    .claude-agents.json                 (only if not present)
+    .github/workflows/ci.yml           type-specific CI pipeline
+    .github/pull_request_template.md   standardized PR format
+    .gitignore                          type-specific ignore patterns
+    .editorconfig                       consistent formatting
+    .nvmrc                              Node.js version (web only)
+
+Examples:
+    claude-init-agentic --init .                  # Base skills only
+    claude-init-agentic --init . --type shell     # + shellcheck, shell-conventions
+    claude-init-agentic --init . --type web       # + tsc, typescript-conventions, web-review
+    claude-init-agentic --init ~/new-project --type web
 EOF
 }
 
@@ -452,10 +602,24 @@ EOF
 # Main execution
 # ─────────────────────────────────────────────────────────────────────────────
 
+parse_init_args() {
+    # Parse: --init [DIR] [--type TYPE]
+    INIT_DIR="."
+    INIT_TYPE=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --type) INIT_TYPE="${2:-}"; shift 2 ;;
+            *) INIT_DIR="$1"; shift ;;
+        esac
+    done
+}
+
 case "${1:-}" in
     --init)
         check_prerequisites
-        init_project "${2:-.}"
+        shift  # consume --init
+        parse_init_args "$@"
+        init_project "$INIT_DIR" "$INIT_TYPE"
         ;;
     --check)
         check_templates
