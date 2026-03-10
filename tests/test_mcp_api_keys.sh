@@ -28,7 +28,8 @@ test_api_key_configuration() {
         
         # Check if common API keys are defined
         local keys_found=()
-        for key in EXA_API_KEY FIGMA_API_KEY; do
+        # NOTE: FIGMA_API_KEY removed — figma is now a plugin using hosted OAuth
+        for key in EXA_API_KEY; do
             if grep -q "export $key=" "$api_keys_file"; then
                 keys_found+=("$key")
             fi
@@ -49,9 +50,9 @@ test_mcp_server_detection() {
     print_test "Testing MCP server API key requirements"
     
     # List servers that require API keys
+    # NOTE: figma moved to plugin (uses hosted OAuth, no API key needed)
     print_success "Servers requiring API keys:"
     echo "  - exa: EXA_API_KEY"
-    echo "  - figma: FIGMA_API_KEY"
 }
 
 # Test environment variable loading

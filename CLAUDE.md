@@ -118,11 +118,22 @@ Installed via `/plugin install name@claude-plugins-official`:
 - **github** — native GitHub MCP (richer PR/issue context)
 - **slack** — Slack MCP (read/send messages)
 - **playwright** — browser automation (replaces manual MCP config)
-- **pr-review-toolkit** — specialized PR review agents
+- **pr-review-toolkit** — specialized PR review agents (code-reviewer, comment-analyzer, etc.)
 - **typescript-lsp** — TypeScript code intelligence (auto-diagnostics, jump-to-def)
 - **swift-lsp** — Swift code intelligence (via sourcekit-lsp)
 - **pyright-lsp** — Python code intelligence (via pyright)
 - **kotlin-lsp** — Kotlin code intelligence (via kotlin-language-server)
+- **frontend-design** — `/frontend-design` generates production-grade UI from descriptions
+- **figma** — Figma-to-code: `implement-design`, `code-connect-components`, `create-design-system-rules`
+- **feature-dev** — full feature dev workflow with exploration, architecture, and quality agents
+- **commit-commands** — streamlined git commands for committing, pushing, PRs
+- **security-guidance** — automatic security warnings on file edits (injection, XSS, secrets)
+- **hookify** — create hooks from conversation patterns
+- **skill-creator** — create, improve, and measure skills
+- **claude-code-setup** — `claude-automation-recommender` analyzes codebase, suggests automations
+- **claude-md-management** — `claude-md-improver` audits CLAUDE.md, `revise-claude-md` captures learnings
+- **plugin-dev** — full plugin development toolkit (create-plugin, agents, hooks, skills, MCP, commands)
+- **context7** — library docs lookup (replaces standalone MCP server config)
 
 ## Hooks
 Configured in `.claude/settings.json`:
@@ -168,7 +179,7 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - [Claude Agents](docs/CLAUDE_AGENTS.md) - Sub-agent architecture
 
 ## MCP Server Priority
-1. **Context7**: Library docs, code examples, API references (check first)
+1. **Context7** (plugin): Library docs, code examples, API references (check first)
 2. **Taskmaster**: Direct task management commands via MCP
 3. **Exa**: General web research (fallback for non-code queries)
 

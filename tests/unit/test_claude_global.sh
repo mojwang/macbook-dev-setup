@@ -281,6 +281,31 @@ fi
 unset SETUP_PROFILE
 rm -rf "$TEST_CONFIG_DIR"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Script integration tests (--check, --list-profiles, --help)
+# ─────────────────────────────────────────────────────────────────────────────
+
+SCRIPT="$(dirname "$0")/../../scripts/setup-claude-global.sh"
+
+# Test 17: --help shows profile documentation
+test_case "Help text documents SETUP_PROFILE"
+if [[ -f "$SCRIPT" ]]; then
+    help_output=$(bash "$SCRIPT" --help 2>&1)
+    assert_contains "$help_output" "SETUP_PROFILE" "Help should document SETUP_PROFILE"
+    assert_contains "$help_output" "list-profiles" "Help should mention --list-profiles"
+else
+    pass_test "Script not found (skipping)"
+fi
+
+# Test 18: --list-profiles shows available profiles
+test_case "List profiles shows available overlays"
+if [[ -f "$SCRIPT" ]]; then
+    profiles_output=$(bash "$SCRIPT" --list-profiles 2>&1)
+    assert_contains "$profiles_output" "personal" "Should list personal profile"
+else
+    pass_test "Script not found (skipping)"
+fi
+
 # Summary
 echo ""
 print_test_summary

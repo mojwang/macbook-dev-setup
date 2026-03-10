@@ -78,15 +78,8 @@ add_claude_code_server() {
             ;;
         "npx")
             local npx_package="${MCP_SERVER_NPX_PACKAGES[$server_name]}"
-            if [[ "$server_name" == "figma" ]]; then
-                if [[ -n "$api_key_var" ]]; then
-                    cmd_output=$(claude mcp add "$server_name" -s "$scope" --env "${api_key_var}=${!api_key_var}" -- npx -y "$npx_package" --stdio 2>&1)
-                    cmd_exit_code=$?
-                else
-                    cmd_output=$(claude mcp add "$server_name" -s "$scope" -- npx -y "$npx_package" --stdio 2>&1)
-                    cmd_exit_code=$?
-                fi
-            elif [[ "$server_name" == "taskmaster" ]]; then
+            # NOTE: figma is now a plugin (no longer configured as MCP server)
+            if [[ "$server_name" == "taskmaster" ]]; then
                 # TaskMaster needs multiple API keys
                 local env_args=""
                 if [[ -n "$ANTHROPIC_API_KEY" ]]; then
@@ -178,7 +171,7 @@ print_usage() {
     echo ""
     echo "Available servers:"
     echo "  Official: filesystem, memory, git, fetch, sequentialthinking"
-    echo "  Community: context7, playwright, figma, semgrep, exa"
+    echo "  Community: semgrep, exa (context7, playwright, figma now managed as plugins)"
     echo ""
     echo "Examples:"
     echo "  $0                                    # Smart reconnect (only if updated)"
@@ -296,13 +289,13 @@ main() {
         servers=(
             # Official servers
             "filesystem" "memory" "git" "fetch" "sequentialthinking"
-            # Community servers without API keys
-            "context7" "playwright" "semgrep"
+            # Community servers (context7, playwright, figma now managed as plugins)
+            "semgrep"
         )
-        
+
         # Add servers with API keys if including them
         if [[ "$INCLUDE_API_KEYS" == "true" ]]; then
-            servers+=("figma" "exa" "taskmaster")
+            servers+=("exa" "taskmaster")
         fi
     fi
     

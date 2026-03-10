@@ -571,7 +571,7 @@ Project types (--type):
     (omitted)   Base only — universal skills (security-review, commit-review, deep-research)
 
 System setup installs:
-    Plugins:  20 total (core, review, dev workflows, LSP, meta, style)
+    Plugins:  19 total (integrations, review, workflows, LSPs, meta)
     LSP deps: typescript-language-server, pyright, kotlin-language-server, sourcekit-lsp
     Templates: agents, skills (base + shell + web), settings → ~/.claude/templates/agentic/
     CLI:      Symlinks as ~/.local/bin/claude-init-agentic

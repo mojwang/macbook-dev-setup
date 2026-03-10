@@ -590,14 +590,12 @@ get_mcp_server_base_path() {
 # This eliminates redundancy and handles path variations automatically
 
 # MCP server executable patterns - used to find the actual executable
+# NOTE: context7, playwright, figma moved to plugins (setup-claude-agentic.sh)
 declare -A MCP_SERVER_EXECUTABLES=(
     # Node servers - common patterns
     ["filesystem"]="dist/index.js"
     ["memory"]="dist/index.js"
     ["sequentialthinking"]="dist/index.js"
-    ["context7"]="dist/index.js"
-    ["playwright"]="cli.js build/index.js dist/index.js"
-    ["figma"]="dist/index.js"
     ["exa"]="build/index.js .smithery/index.cjs dist/index.js"
     # Python servers use directory
     ["git"]=""
@@ -612,9 +610,6 @@ declare -A MCP_SERVER_TYPES=(
     ["sequentialthinking"]="node"
     ["git"]="python-uv"
     ["fetch"]="python-uv"
-    ["context7"]="node"
-    ["playwright"]="node"
-    ["figma"]="npx"
     ["exa"]="npx"
     ["semgrep"]="python-uvx"
     ["taskmaster"]="npx"
@@ -622,7 +617,6 @@ declare -A MCP_SERVER_TYPES=(
 
 # NPX-based servers and their package names
 declare -A MCP_SERVER_NPX_PACKAGES=(
-    ["figma"]="figma-developer-mcp"
     ["exa"]="exa-mcp-server"
     ["taskmaster"]="task-master-ai"
 )
@@ -635,10 +629,10 @@ get_mcp_server_type() {
 
 # MCP servers that require API keys
 declare -A MCP_SERVER_API_KEYS=(
-    ["figma"]="FIGMA_API_KEY"
     ["exa"]="EXA_API_KEY"
     # Taskmaster (MCP server) can work without API keys but has enhanced features with them
     # When used as "Product Manager" agent, it leverages these keys for discovery workflows
+    # NOTE: figma moved to plugin (uses hosted OAuth, no API key needed)
 )
 
 # Find the actual executable path for an MCP server
