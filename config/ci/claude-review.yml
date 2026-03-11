@@ -1,0 +1,51 @@
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths-ignore:
+      - ".github/workflows/**"
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 20
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          use_commit_signing: true
+          settings: '{}'
+          prompt: |
+            Review this PR for:
+            - Code quality and best practices
+            - Potential bugs or regressions
+            - Security issues
+            - Consistency with existing patterns
+
+            If you find issues that can be fixed automatically, push fix commits.
+            If the PR looks good, comment "LGTM — ready to merge".
+
+  auto-merge:
+    needs: [review]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

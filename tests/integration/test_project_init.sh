@@ -48,6 +48,8 @@ assert_file_exists "$WEB_DIR/.claude/settings.json" "Settings created"
 
 # New template files
 assert_file_exists "$WEB_DIR/.github/workflows/ci.yml" "CI workflow created"
+assert_file_exists "$WEB_DIR/.github/workflows/claude-review.yml" "Claude review workflow created"
+assert_file_exists "$WEB_DIR/.github/workflows/request-reviewers.yml" "Reviewer request workflow created"
 assert_file_exists "$WEB_DIR/.github/pull_request_template.md" "PR template created"
 assert_file_exists "$WEB_DIR/.gitignore" ".gitignore created"
 assert_file_exists "$WEB_DIR/.editorconfig" ".editorconfig created"
@@ -58,6 +60,9 @@ assert_contains "$(cat "$WEB_DIR/.github/workflows/ci.yml")" "npm test" "Web CI 
 assert_contains "$(cat "$WEB_DIR/.github/workflows/ci.yml")" "tsc --noEmit" "Web CI runs typecheck"
 assert_contains "$(cat "$WEB_DIR/.gitignore")" "node_modules" "Web gitignore excludes node_modules"
 assert_contains "$(cat "$WEB_DIR/CLAUDE.md")" "NEVER commit to main" "CLAUDE.md has git rules"
+assert_contains "$(cat "$WEB_DIR/.github/workflows/claude-review.yml")" "anthropics/claude-code-action" "Claude review uses action"
+assert_contains "$(cat "$WEB_DIR/.github/workflows/claude-review.yml")" "auto-merge" "Claude review has auto-merge"
+assert_contains "$(cat "$WEB_DIR/.github/workflows/request-reviewers.yml")" "copilot" "Reviewer workflow requests Copilot"
 
 rm -rf "$WEB_DIR"
 
@@ -73,6 +78,8 @@ bash "$SCRIPT" --init "$SHELL_DIR" --type shell &>/dev/null
 # Core files
 assert_file_exists "$SHELL_DIR/CLAUDE.md" "CLAUDE.md created"
 assert_file_exists "$SHELL_DIR/.github/workflows/ci.yml" "CI workflow created"
+assert_file_exists "$SHELL_DIR/.github/workflows/claude-review.yml" "Claude review workflow created"
+assert_file_exists "$SHELL_DIR/.github/workflows/request-reviewers.yml" "Reviewer request workflow created"
 assert_file_exists "$SHELL_DIR/.gitignore" ".gitignore created"
 assert_file_exists "$SHELL_DIR/.editorconfig" ".editorconfig created"
 
@@ -122,7 +129,11 @@ bash "$SCRIPT" --init "$BASE_DIR" &>/dev/null
 assert_file_exists "$BASE_DIR/CLAUDE.md" "CLAUDE.md created"
 assert_file_exists "$BASE_DIR/.claude/skills/security-review/SKILL.md" "Base skill: security-review"
 
-# No type-specific files
+# Claude review + reviewers deployed even for base type
+assert_file_exists "$BASE_DIR/.github/workflows/claude-review.yml" "Claude review for base type"
+assert_file_exists "$BASE_DIR/.github/workflows/request-reviewers.yml" "Reviewer request for base type"
+
+# No type-specific CI
 assert_true "[[ ! -f '$BASE_DIR/.github/workflows/ci.yml' ]]" "No CI for base type"
 assert_true "[[ ! -f '$BASE_DIR/.nvmrc' ]]" "No .nvmrc for base type"
 

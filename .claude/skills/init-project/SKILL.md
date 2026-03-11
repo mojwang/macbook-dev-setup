@@ -33,6 +33,8 @@ claude-init-agentic --init $ARGUMENTS
    - `.claude/settings.json` (type-specific hooks, merged with existing)
    - `.claude-agents.json` (only if not present)
    - `.github/workflows/ci.yml` (type-specific CI pipeline)
+   - `.github/workflows/claude-review.yml` (Claude auto-review + auto-merge)
+   - `.github/workflows/request-reviewers.yml` (auto-request Copilot reviewer)
    - `.github/pull_request_template.md` (standardized PR format)
    - `.gitignore` (type-specific ignore patterns)
    - `.editorconfig` (consistent formatting)
