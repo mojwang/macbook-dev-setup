@@ -23,6 +23,9 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 20
 
+      - name: Clear project settings for CI
+        run: echo '{}' > .claude/settings.json 2>/dev/null || true
+
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
