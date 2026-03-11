@@ -3,9 +3,45 @@
 ## Overview
 
 This project uses an enhanced Git workflow with:
+- **Auto-merge pipeline** — CI + Claude review → squash-merge (no manual approval)
+- **Squash-only merges** — clean linear history on main
 - **Git Worktrees** for parallel development
 - **Graphite CLI** for stacked pull requests
 - **Conventional Commits** for clear history
+
+## PR Lifecycle
+
+```
+feature branch → push → CI checks → Claude review → auto-merge (squash)
+```
+
+### How It Works
+
+1. **Push** to a feature branch and create a PR
+2. **CI pipeline** runs tests, linting, security scan, agent validation
+3. **Claude Code Action** reviews the PR for code quality, security, and best practices
+   - Pushes fix commits automatically if issues can be resolved
+   - Comments "LGTM — ready to merge" when clean
+4. **Auto-merge** squash-merges the PR after all checks pass
+5. **Branch cleanup** — GitHub auto-deletes the feature branch
+
+No manual approval needed. This is optimized for solo developer + AI agent velocity.
+
+### Merge Strategy
+
+All PRs use **squash merge**. This is enforced at the GitHub repo level (merge commits and rebase merges are disabled).
+
+- Feature branch commits (WIP, fixups, agent checkpoint commits) collapse into one clean commit
+- The PR title becomes the squash commit message
+- The PR body becomes the extended commit description
+- Main branch stays linear and readable
+
+### Rebasing
+
+- **Before merge**: Not strictly necessary since squash collapses everything, but keeps PR diffs clean
+- **Conflict resolution**: Rebase feature branch onto main, resolve, force-push the feature branch
+- **Stacked PRs**: Graphite manages rebasing automatically
+- **Never force-push main** — use revert commits instead
 
 ## Git Worktrees
 

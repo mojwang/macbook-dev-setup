@@ -7,9 +7,11 @@
 - Match existing project patterns
 
 ## Git Workflow
-- Feature branches only
+- Feature branches only (never commit to main)
 - Small commits (<200 LOC diffs)
 - Conventional commit format: `<type>(<scope>): <subject>` (types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert)
+- Squash-only merges for clean linear history
+- Auto-merge: PRs auto-merge when CI + Claude review pass
 - Create PR unless told otherwise
 - Git pager is `delta` with side-by-side diff enabled
 
