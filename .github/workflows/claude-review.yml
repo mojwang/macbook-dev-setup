@@ -25,6 +25,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           use_commit_signing: true
+          settings: '{}'
           prompt: |
             Review this PR for:
             - Shell script quality (shellcheck, set -e, proper quoting)
