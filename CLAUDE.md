@@ -21,6 +21,7 @@ Automated macOS dev environment setup for Apple Silicon.
 - **Worktrees mandatory**: Complex features (3+ files or multi-step)
 - **Auto-commit allowed**: Only on feature branches
 - **PR creation**: Manual after feature complete
+- **Auto-merge**: PRs auto-merge when CI + Claude review pass (no manual approval needed)
 - **Branch protection**: Main branch is read-only for Claude
 - **Quick switch**: `gw main`, `gw review`, `gw hotfix`, or `gwcd` for interactive
 - **Stacked PRs**: `gt` (Graphite CLI) for dependent changes

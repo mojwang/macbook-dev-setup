@@ -1,0 +1,52 @@
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 20
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          use_commit_signing: true
+          track_progress: true
+          prompt: |
+            Review this PR for:
+            - Shell script quality (shellcheck, set -e, proper quoting)
+            - Security issues (command injection, secrets, file access)
+            - Idempotency and signal-safe cleanup
+            - Consistency with existing patterns
+
+            If you find issues that can be fixed automatically, push fix commits.
+            If the PR looks good, comment "LGTM — ready to merge".
+
+          claude_args: |
+            --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(shellcheck:*),Bash(./tests/*),mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+
+  auto-merge:
+    needs: [review]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
