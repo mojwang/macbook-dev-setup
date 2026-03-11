@@ -465,6 +465,7 @@ EOF
     fi
 
     # Deploy CI workflow (type-specific, only if not present)
+    mkdir -p "$target_dir/.github/workflows"
     local ci_dest="$target_dir/.github/workflows/ci.yml"
     if [[ ! -f "$ci_dest" ]]; then
         local ci_template=""
@@ -472,10 +473,24 @@ EOF
             ci_template="$TEMPLATE_DIR/ci/ci-${project_type}.yml"
         fi
         if [[ -n "$ci_template" ]]; then
-            mkdir -p "$target_dir/.github/workflows"
             cp "$ci_template" "$ci_dest"
             print_success "Created .github/workflows/ci.yml (type: $type_label)"
         fi
+    fi
+
+    # Deploy Claude review workflow (only if not present)
+    local review_dest="$target_dir/.github/workflows/claude-review.yml"
+    if [[ ! -f "$review_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/claude-review.yml" ]]; then
+        cp "$TEMPLATE_DIR/ci/claude-review.yml" "$review_dest"
+        print_success "Created .github/workflows/claude-review.yml"
+        print_info "Requires ANTHROPIC_API_KEY secret in GitHub repo settings"
+    fi
+
+    # Deploy reviewer request workflow (only if not present)
+    local reviewers_dest="$target_dir/.github/workflows/request-reviewers.yml"
+    if [[ ! -f "$reviewers_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/request-reviewers.yml" ]]; then
+        cp "$TEMPLATE_DIR/ci/request-reviewers.yml" "$reviewers_dest"
+        print_success "Created .github/workflows/request-reviewers.yml"
     fi
 
     # Deploy .gitignore (type-specific, only if not present)
@@ -584,8 +599,10 @@ Project init creates:
     .claude/skills/                     base skills + type-specific skills
     .claude/settings.json               type-specific hooks (merged with existing)
     .claude-agents.json                 (only if not present)
-    .github/workflows/ci.yml           type-specific CI pipeline
-    .github/pull_request_template.md   standardized PR format
+    .github/workflows/ci.yml              type-specific CI pipeline
+    .github/workflows/claude-review.yml   Claude auto-review + auto-merge
+    .github/workflows/request-reviewers.yml  auto-request Copilot reviewer
+    .github/pull_request_template.md      standardized PR format
     .gitignore                          type-specific ignore patterns
     .editorconfig                       consistent formatting
     .nvmrc                              Node.js version (web only)

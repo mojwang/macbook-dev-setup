@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 20
 
       - name: Clear project settings for CI
-        run: echo '{}' > .claude/settings.json
+        run: echo '{}' > .claude/settings.json 2>/dev/null || true
 
       - uses: anthropics/claude-code-action@v1
         with:
@@ -33,9 +33,9 @@ jobs:
           settings: '{}'
           prompt: |
             Review this PR for:
-            - Shell script quality (shellcheck, set -e, proper quoting)
-            - Security issues (command injection, secrets, file access)
-            - Idempotency and signal-safe cleanup
+            - Code quality and best practices
+            - Potential bugs or regressions
+            - Security issues
             - Consistency with existing patterns
 
             If you find issues that can be fixed automatically, push fix commits.
