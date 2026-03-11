@@ -15,7 +15,8 @@ Short description of what this project does.
 - **Conventional commit format**: `type(scope): description`
 - **Small commits**: <200 LOC diffs
 - **PR creation**: Manual after feature complete
-- **CI must pass**: All checks green before merging
+- **Auto-merge**: PRs auto-merge when CI + Claude review pass (no manual approval needed)
+- **Squash-only**: All PRs squash-merge for clean linear history
 - **No force pushes to main**
 
 ## Tech Stack
@@ -43,7 +44,10 @@ Main session = orchestrator. Dispatches sub-agents, never implements complex tas
 -->
 
 ## CI Pipeline
-GitHub Actions runs on every PR to `main`. See `.github/workflows/ci.yml`.
+GitHub Actions runs on every PR to `main`:
+1. **CI checks** — tests, lint, typecheck, build (see `.github/workflows/ci.yml`)
+2. **Claude review** — automated code review, pushes fix commits if needed
+3. **Auto-merge** — squash-merges after CI + Claude review pass
 
 ## Testing
 ```bash

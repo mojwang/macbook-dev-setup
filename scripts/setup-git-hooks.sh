@@ -18,13 +18,40 @@ else
     exit 1
 fi
 
-# Install commit-msg hook for validation
-print_step "Installing commit message validation hook..."
+# Install hooks
 HOOKS_DIR=".git/hooks"
 mkdir -p "$HOOKS_DIR"
 
+# Install pre-commit hook to enforce feature branch workflow
+print_step "Installing feature branch enforcement hook..."
+cat > "$HOOKS_DIR/pre-commit" << 'HOOKEOF'
+#!/usr/bin/env bash
+# Enforce feature branch workflow — prevent commits to protected branches
+
+PROTECTED_BRANCHES=("main" "master" "develop" "staging" "production")
+current_branch=$(git branch --show-current)
+
+for protected in "${PROTECTED_BRANCHES[@]}"; do
+    if [[ "$current_branch" == "$protected" ]]; then
+        echo "❌ Cannot commit directly to '$current_branch'!" >&2
+        echo "" >&2
+        echo "Create a feature branch first:" >&2
+        echo "   git checkout -b feat/your-feature-name" >&2
+        echo "" >&2
+        echo "Remember: ALL changes require feature branches!" >&2
+        exit 1
+    fi
+done
+HOOKEOF
+
+chmod +x "$HOOKS_DIR/pre-commit"
+print_success "Feature branch enforcement hook installed"
+
+# Install commit-msg hook for validation
+print_step "Installing commit message validation hook..."
+
 cat > "$HOOKS_DIR/commit-msg" << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Validate commit messages against conventional commit format
 
 # Read the commit message
@@ -68,7 +95,7 @@ print_success "Commit message validation hook installed"
 
 # Create prepare-commit-msg hook to show template
 cat > "$HOOKS_DIR/prepare-commit-msg" << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Show helpful information when committing
 
 # Only show for normal commits (not merges, squashes, etc.)
@@ -108,6 +135,7 @@ echo
 print_success "Git hooks setup complete!"
 echo
 print_info "What's been configured:"
+echo "  ✓ Feature branch enforcement (pre-commit)"
 echo "  ✓ Commit template (.gitmessage)"
 echo "  ✓ Commit message validation"
 echo "  ✓ Helpful hints during commit"

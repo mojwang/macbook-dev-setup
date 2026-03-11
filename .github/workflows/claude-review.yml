@@ -3,6 +3,8 @@ name: Claude Review
 on:
   pull_request:
     types: [opened, synchronize]
+    paths-ignore:
+      - ".github/workflows/**"
 
 concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
@@ -18,13 +20,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 20
 
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           use_commit_signing: true
+          settings: '{}'
           prompt: |
             Review this PR for:
             - Shell script quality (shellcheck, set -e, proper quoting)

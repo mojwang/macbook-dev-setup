@@ -52,11 +52,13 @@ suggest_branch_name() {
 
 # Function to check if changes need a worktree
 needs_worktree() {
-    local changed_files=$(git diff --cached --name-only | wc -l)
-    local changed_dirs=$(git diff --cached --name-only | xargs -I {} dirname {} | sort -u | wc -l)
-    
+    local changed_files
+    local changed_dirs
+    changed_files=$(git diff --cached --name-only | wc -l)
+    changed_dirs=$(git diff --cached --name-only | while read -r f; do dirname "$f"; done | sort -u | wc -l)
+
     # Complex if: 3+ files OR changes span 3+ directories
-    if [[ $changed_files -ge 3 ]] || [[ $changed_dirs -ge 3 ]]; then
+    if [[ "$changed_files" -ge 3 ]] || [[ "$changed_dirs" -ge 3 ]]; then
         return 0
     fi
     return 1
@@ -90,7 +92,7 @@ main() {
         if needs_worktree; then
             echo "2. This looks like a complex feature (3+ files/dirs affected)."
             echo "   Consider using a worktree instead:"
-            echo "   git worktree add ../$(basename $(pwd)).feature feat/your-feature"
+            echo "   git worktree add ../$(basename "$(pwd)").feature feat/your-feature"
             echo ""
         fi
         
@@ -111,7 +113,7 @@ main() {
         echo ""
         echo "💡 TIP: This looks like a complex feature. For future complex work,"
         echo "   consider using worktrees to keep changes isolated:"
-        echo "   ../$(basename $(pwd)).$current_branch/"
+        echo "   ../$(basename "$(pwd)").$current_branch/"
     fi
     
     # If commit message provided, execute the commit
