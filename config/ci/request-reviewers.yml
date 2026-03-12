@@ -10,7 +10,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer $REPO_OWNER
+      - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer $REPO_OWNER --repo ${{ github.repository }}
         env:
           REPO_OWNER: ${{ github.repository_owner }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
