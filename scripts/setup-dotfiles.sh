@@ -34,6 +34,7 @@ backup_organized ~/.gitconfig "dotfiles" ".gitconfig backup"
 backup_organized ~/.scripts "dotfiles" "scripts backup"
 backup_organized ~/.config/nvim "dotfiles" "Neovim config backup"
 backup_organized ~/.config/zsh "dotfiles" "Zsh config backup"
+backup_organized ~/.config/starship.toml "dotfiles" "Starship config backup"
 
 # Install dotfiles
 install_dotfile() {
@@ -140,6 +141,9 @@ if [[ -d "dotfiles/.config/nvim" ]]; then
 else
     print_warning "Neovim configuration directory not found"
 fi
+
+# Setup Starship prompt configuration
+install_dotfile "dotfiles/.config/starship.toml" ~/.config/starship.toml "Starship prompt configuration"
 
 # Create scripts directory and copy scripts
 if [[ -d "dotfiles/scripts" ]]; then
