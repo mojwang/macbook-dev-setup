@@ -62,7 +62,7 @@ assert_contains "$(cat "$WEB_DIR/.gitignore")" "node_modules" "Web gitignore exc
 assert_contains "$(cat "$WEB_DIR/CLAUDE.md")" "NEVER commit to main" "CLAUDE.md has git rules"
 assert_contains "$(cat "$WEB_DIR/.github/workflows/claude-review.yml")" "anthropics/claude-code-action" "Claude review uses action"
 assert_contains "$(cat "$WEB_DIR/.github/workflows/claude-review.yml")" "auto-merge" "Claude review has auto-merge"
-assert_contains "$(cat "$WEB_DIR/.github/workflows/request-reviewers.yml")" "copilot" "Reviewer workflow requests Copilot"
+assert_contains "$(cat "$WEB_DIR/.github/workflows/request-reviewers.yml")" "repository_owner" "Reviewer workflow uses repo owner"
 
 rm -rf "$WEB_DIR"
 
