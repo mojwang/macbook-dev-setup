@@ -143,6 +143,7 @@ else
 fi
 
 # Setup Starship prompt configuration
+mkdir -p ~/.config
 install_dotfile "dotfiles/.config/starship.toml" ~/.config/starship.toml "Starship prompt configuration"
 
 # Create scripts directory and copy scripts
