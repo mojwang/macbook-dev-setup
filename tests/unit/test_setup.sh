@@ -34,3 +34,8 @@ assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/50-environment.zsh" "Environm
 
 it "should have modular zshrc loader"
 assert_file_exists "$ROOT_DIR/dotfiles/.zshrc" "Main .zshrc should exist"
+
+describe "Repo Inventory: Starship Config"
+
+it "should have starship prompt configuration"
+assert_file_exists "$ROOT_DIR/dotfiles/.config/starship.toml" "Starship config should exist"
