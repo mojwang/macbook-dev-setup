@@ -5,6 +5,8 @@ on:
     types: [opened, synchronize]
     paths-ignore:
       - ".github/workflows/**"
+  pull_request_review:
+    types: [submitted]
 
 concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
@@ -13,6 +15,11 @@ concurrency:
 jobs:
   review:
     runs-on: ubuntu-latest
+    # Skip if Claude's own review triggered this (avoid loops)
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'pull_request_review' &&
+       github.event.review.user.login == 'copilot-pull-request-reviewer')
     permissions:
       contents: write
       pull-requests: write
@@ -24,6 +31,25 @@ jobs:
 
       - name: Clear project settings for CI
         run: echo '{}' > .claude/settings.json 2>/dev/null || true
+
+      - name: Fetch Copilot review comments
+        id: copilot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUM=${{ github.event.pull_request.number }}
+
+          # Fetch Copilot review comments on this PR
+          COMMENTS=$(gh api "repos/${{ github.repository }}/pulls/${PR_NUM}/comments" \
+            --jq '[.[] | select(.user.login == "copilot-pull-request-reviewer") | {path, line, body}]' 2>/dev/null || echo '[]')
+
+          if [ "$COMMENTS" = "[]" ] || [ -z "$COMMENTS" ]; then
+            echo "copilot_feedback=none" >> "$GITHUB_OUTPUT"
+          else
+            # Write to file to avoid shell escaping issues
+            echo "$COMMENTS" > /tmp/copilot_comments.json
+            echo "copilot_feedback=present" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: anthropics/claude-code-action@v1
         with:
@@ -38,6 +64,12 @@ jobs:
             - Potential bugs or regressions
             - Security issues
             - Consistency with existing patterns
+
+            ${{ steps.copilot.outputs.copilot_feedback == 'present' && 'IMPORTANT — Copilot left review comments on this PR. Read /tmp/copilot_comments.json for the full list. For each comment:
+            1. If the feedback is valid and actionable, fix it and push a commit.
+            2. If the feedback is stale (refers to code no longer in the diff), note it as resolved.
+            3. If the feedback is incorrect or not applicable, briefly explain why.
+            Summarize your resolution of each Copilot comment in your review.' || '' }}
 
             If you find issues that can be fixed automatically, push fix commits.
             If the PR looks good, comment "LGTM — ready to merge".
