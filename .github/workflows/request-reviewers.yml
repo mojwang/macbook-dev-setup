@@ -10,6 +10,6 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer mojwang
+      - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer mojwang --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
