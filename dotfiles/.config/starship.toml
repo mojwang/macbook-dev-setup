@@ -1,0 +1,97 @@
+# Starship Configuration
+# Optimized for Nerd Fonts
+
+# Give pyenv shims more time (default 500ms too short)
+command_timeout = 1000
+
+# Overall prompt configuration
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$nodejs\
+$python\
+$rust\
+$golang\
+$java\
+$docker_context\
+$line_break\
+$character"""
+
+# Prompt character
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+# Directory
+[directory]
+truncation_length = 3
+truncation_symbol = "…/"
+home_symbol = "~"
+style = "bold blue"
+
+# Git branch
+[git_branch]
+symbol = " "
+style = "bold purple"
+
+# Git status
+[git_status]
+conflicted = "⚡"
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
+untracked = "?"
+stashed = "\\$"
+modified = "!"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+
+# Node.js
+[nodejs]
+symbol = " "
+style = "bold green"
+
+# Python
+[python]
+symbol = " "
+style = "bold yellow"
+python_binary = ["python3", "python"]
+
+# Rust
+[rust]
+symbol = " "
+style = "bold red"
+
+# Go
+[golang]
+symbol = " "
+style = "bold cyan"
+
+# Java
+[java]
+symbol = " "
+style = "bold orange"
+
+# Docker
+[docker_context]
+symbol = " "
+style = "bold blue"
+
+# Username (only show when SSH or root)
+[username]
+show_always = false
+style_user = "bold yellow"
+style_root = "bold red"
+
+# Hostname (only show when SSH)
+[hostname]
+ssh_only = true
+style = "bold green"
+
+# Time (disabled by default)
+[time]
+disabled = true
