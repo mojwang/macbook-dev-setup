@@ -59,3 +59,23 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+
+  all-checks-pass:
+    name: All Checks Pass
+    runs-on: ubuntu-latest
+    needs: [test, lint, typecheck, build]
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          for result in \
+            "${{ needs.test.result }}" \
+            "${{ needs.lint.result }}" \
+            "${{ needs.typecheck.result }}" \
+            "${{ needs.build.result }}"; do
+            if [ "$result" != "success" ]; then
+              echo "One or more jobs failed"
+              exit 1
+            fi
+          done
+          echo "All checks passed"
