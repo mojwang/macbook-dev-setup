@@ -10,7 +10,6 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
       - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer $REPO_OWNER
         env:
           REPO_OWNER: ${{ github.repository_owner }}
