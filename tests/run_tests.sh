@@ -19,7 +19,7 @@ echo "====================================="
 echo -e "${NC}"
 
 # Run all test files (including those in subdirectories)
-for test_file in "$TESTS_DIR"/{unit,integration,performance,stress,ci}/test_*.sh "$TESTS_DIR"/test_*.sh; do
+for test_file in "$TESTS_DIR"/{unit,integration,ci}/test_*.sh "$TESTS_DIR"/test_*.sh; do
     if [[ -f "$test_file" && "$test_file" != "$TESTS_DIR/test_framework.sh" ]]; then
         # Time each test file
         start_time=$(date +%s.%N 2>/dev/null || date +%s)

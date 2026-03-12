@@ -269,45 +269,6 @@ assert_equals "side-by-side" "$SETUP_DIFF_STYLE" "Should not override existing v
 unset SETUP_DIFF_STYLE
 
 # ============================================================================
-describe "TUI sourcing in setup scripts"
-# ============================================================================
-
-it "should source ui.sh in setup-validate.sh"
-if grep -q 'source.*ui\.sh' "$_PROJECT_ROOT/setup-validate.sh"; then
-    pass_test "setup-validate.sh sources ui.sh"
-else
-    fail_test "setup-validate.sh does not source ui.sh"
-fi
-
-it "should source ui.sh in setup-warp.sh"
-if grep -q 'source.*ui\.sh' "$_PROJECT_ROOT/scripts/setup-warp.sh"; then
-    pass_test "setup-warp.sh sources ui.sh"
-else
-    fail_test "setup-warp.sh does not source ui.sh"
-fi
-
-it "should source ui.sh in setup-help.sh"
-if grep -q 'source.*ui\.sh' "$_PROJECT_ROOT/scripts/setup-help.sh"; then
-    pass_test "setup-help.sh sources ui.sh"
-else
-    fail_test "setup-help.sh does not source ui.sh"
-fi
-
-it "should not have local print_section in setup-validate.sh"
-if grep -q 'print_section()' "$_PROJECT_ROOT/setup-validate.sh"; then
-    fail_test "setup-validate.sh still has local print_section"
-else
-    pass_test "setup-validate.sh has no local print_section"
-fi
-
-it "should not have local print_section in setup-warp.sh"
-if grep -q 'print_section()' "$_PROJECT_ROOT/scripts/setup-warp.sh"; then
-    fail_test "setup-warp.sh still has local print_section"
-else
-    pass_test "setup-warp.sh has no local print_section"
-fi
-
-# ============================================================================
 # Cleanup
 # ============================================================================
 _restore_path

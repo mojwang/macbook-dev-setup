@@ -282,6 +282,73 @@ assert_not_contains() {
     fi
 }
 
+# Sandbox for isolated test execution
+create_sandbox() {
+    SANDBOX_DIR="$(mktemp -d "${TMPDIR:-/tmp}/test_sandbox.XXXXXX")"
+    SANDBOX_HOME="$SANDBOX_DIR/home"
+    mkdir -p "$SANDBOX_HOME"
+    export SANDBOX_DIR SANDBOX_HOME
+}
+
+destroy_sandbox() {
+    if [[ -n "${SANDBOX_DIR:-}" && -d "$SANDBOX_DIR" ]]; then
+        rm -rf "$SANDBOX_DIR"
+    fi
+    unset SANDBOX_DIR SANDBOX_HOME
+}
+
+assert_exit_code() {
+    local expected="$1"
+    shift
+    local message="${!#}"
+    local cmd_args=("${@:1:$#-1}")
+
+    ((TEST_COUNT++))
+
+    local actual
+    eval "${cmd_args[@]}" >/dev/null 2>&1
+    actual=$?
+
+    if [[ "$expected" == "$actual" ]]; then
+        echo -e "${GREEN}✓${NC} $message"
+        ((PASSED_COUNT++))
+        return 0
+    else
+        echo -e "${RED}✗${NC} $message"
+        echo "  Expected exit code: $expected"
+        echo "  Actual exit code: $actual"
+        ((FAILED_COUNT++))
+        return 1
+    fi
+}
+
+assert_file_contains() {
+    local file="$1"
+    local needle="$2"
+    local message="${3:-File should contain string}"
+
+    ((TEST_COUNT++))
+
+    if [[ ! -f "$file" ]]; then
+        echo -e "${RED}✗${NC} $message"
+        echo "  File not found: $file"
+        ((FAILED_COUNT++))
+        return 1
+    fi
+
+    if grep -qF "$needle" "$file"; then
+        echo -e "${GREEN}✓${NC} $message"
+        ((PASSED_COUNT++))
+        return 0
+    else
+        echo -e "${RED}✗${NC} $message"
+        echo "  File: $file"
+        echo "  Should contain: $needle"
+        ((FAILED_COUNT++))
+        return 1
+    fi
+}
+
 test_case() {
     local test_name="$1"
     echo -e "\n  ${YELLOW}Test:${NC} $test_name"
@@ -315,60 +382,6 @@ summarize() {
     print_summary
 }
 
-# BDD-style test functions
-given() {
-    echo "  Given: $*"
-}
-
-when() {
-    echo "   When: $*"
-}
-
-expect() {
-    local condition="$1"
-    local message="${2:-Then assertion}"
-    echo "   Then: $message"
-    assert_true "$condition" "$message"
-}
-
-and() {
-    local condition="$1"
-    local message="${2:-And assertion}"
-    echo "    And: $message"
-    assert_true "$condition" "$message"
-}
-
-# SDD-style specification functions
-specify() {
-    local name="$1"
-    echo -e "\n${BLUE}Specification: $name${NC}"
-    echo "=================================="
-}
-
-invariant() {
-    local condition="$1"
-    local message="${2:-Invariant}"
-    echo "  Invariant: $message"
-    assert_true "$condition" "Invariant: $message"
-}
-
-precondition() {
-    local condition="$1"
-    local message="${2:-Precondition}"
-    echo "  Precondition: $message"
-    if ! eval "$condition"; then
-        skip_test "Precondition not met: $message"
-        return 1
-    fi
-    return 0
-}
-
-postcondition() {
-    local condition="$1"
-    local message="${2:-Postcondition}"
-    echo "  Postcondition: $message"
-    assert_true "$condition" "Postcondition: $message"
-}
 # Export functions for use in test files
 export -f assert_equals
 export -f assert_true
@@ -390,11 +403,7 @@ export -f mock_command
 export -f cleanup_mocks
 export -f print_test_summary
 export -f summarize
-export -f given
-export -f when
-export -f expect
-export -f and
-export -f specify
-export -f invariant
-export -f precondition
-export -f postcondition
+export -f create_sandbox
+export -f destroy_sandbox
+export -f assert_exit_code
+export -f assert_file_contains

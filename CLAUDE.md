@@ -12,7 +12,7 @@ Automated macOS dev environment setup for Apple Silicon.
 
 ## Project Rules
 1. Shell scripts: Use `#!/usr/bin/env bash` shebang (NOT `#!/bin/bash`), `set -e`, 30s timeouts, signal-safe cleanup
-2. Test new features with TDD (see docs/TESTING.md)
+2. Test new features with specification-first tests (see docs/TESTING.md)
 3. Backup before system changes
 4. Use modular zsh config in `.config/zsh/`
 
@@ -171,9 +171,16 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 ./tests/run_tests.sh [unit|integration|ci]
 ```
 
+### Test Quality Rules
+- Tests must run code and check outcomes (behavioral), not grep source files
+- Never `cat script.sh | assert_contains` — run the script instead
+- Use `create_sandbox` for tests that modify files
+- Label file-existence checks as "Repo Inventory", not "Unit Tests"
+- See docs/TESTING.md for anti-patterns and templates
+
 ## Documentation
 - [Commands](docs/COMMANDS.md) - All commands and options
-- [Testing](docs/TESTING.md) - Testing philosophy and guide
+- [Testing](docs/TESTING.md) - Specification-first testing guide
 - [Architecture](docs/architecture.md) - System design
 - [Git Workflow](docs/GIT-WORKFLOW.md) - Worktrees & Graphite
 - [MCP Servers](docs/MCP_SERVERS.md) - Claude integrations

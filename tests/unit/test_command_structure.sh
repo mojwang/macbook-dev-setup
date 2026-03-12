@@ -80,57 +80,7 @@ invalid_output=$(./setup.sh invalid_command 2>&1 || true)
 assert_contains "$invalid_output" "Unknown command" "Invalid command recognized"
 assert_contains "$invalid_output" "help" "Suggests running help"
 
-# Test 7: Script delegation
-it "should delegate to appropriate scripts"
-# Check that setup.sh references the correct scripts
-setup_content=$(cat setup.sh)
-assert_contains "$setup_content" "setup-validate.sh" "References validation script"
-assert_contains "$setup_content" "scripts/install-homebrew.sh" "References homebrew script"
-assert_contains "$setup_content" "scripts/setup-dotfiles.sh" "References dotfiles script"
-assert_contains "$setup_content" "scripts/setup-warp.sh" "References warp script"
-
-# Test 8: State detection
-it "should detect setup state correctly"
-# This is tested more thoroughly in setup-validate.sh
-# Just verify the function exists
-if grep -q "detect_setup_state()" setup.sh; then
-    assert_true "true" "State detection function exists"
-else
-    assert_false "true" "State detection function missing"
-fi
-
-# Test 9: Advanced menu (non-interactive test)
-it "should have advanced menu function"
-if grep -q "show_advanced_menu()" setup.sh; then
-    assert_true "true" "Advanced menu function exists"
-    
-    # Check menu options
-    setup_content=$(cat setup.sh)
-    assert_contains "$setup_content" "Set parallel jobs" "Advanced menu has job setting"
-    assert_contains "$setup_content" "Skip creating backups" "Advanced menu has backup option"
-    assert_contains "$setup_content" "Enable verbose logging" "Advanced menu has verbose option"
-else
-    assert_false "true" "Advanced menu function missing"
-fi
-
-# Test 10: Backwards compatibility and migration
-it "should integrate old functionality into new commands"
-# The old flags are now integrated into the smart detection system
-setup_content=$(cat setup.sh)
-
-# --sync functionality is now automatic in update mode
-assert_contains "$setup_content" "Syncing packages" "Sync functionality integrated"
-
-# update/sync commands are handled in the command case statement
-assert_true "grep -q 'sync\|update' setup.sh" "Update functionality integrated"
-
-# --dry-run is now the "preview" command
-assert_contains "$setup_content" '"preview")' "Dry-run migrated to preview command"
-
-# --minimal is now the "minimal" command
-assert_contains "$setup_content" '"minimal")' "Minimal flag migrated to command"
-
-# Test 11: Deprecation notice
+# Test 7: Deprecation notice
 it "should handle old flags gracefully"
 # Test unrecognized flags show error
 invalid_output=$(./setup.sh --sync 2>&1 || true)

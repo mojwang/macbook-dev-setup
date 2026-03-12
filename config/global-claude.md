@@ -2,7 +2,7 @@
 
 ## Core Principles
 - Be direct and concise
-- Test-driven development by default
+- Specification-first testing (test behavior, not implementation)
 - Security-first approach
 - Match existing project patterns
 

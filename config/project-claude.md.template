@@ -5,7 +5,7 @@ Short description of what this project does.
 
 ## Project Rules
 1. <!-- TODO: Add language-specific conventions (e.g., "TypeScript strict mode, no `any` types") -->
-2. Test new features with TDD
+2. Test new features with specification-first tests (run code, check outcomes — never grep source)
 3. Use modular architecture
 
 ## Git Workflow (ENFORCED)
