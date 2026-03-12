@@ -11,6 +11,6 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer copilot,mojwang
+      - run: gh pr edit ${{ github.event.pull_request.number }} --add-reviewer mojwang
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
