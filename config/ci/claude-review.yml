@@ -16,7 +16,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,8 +28,10 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          use_commit_signing: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: sonnet
           settings: '{}'
+          show_full_output: true
           prompt: |
             Review this PR for:
             - Code quality and best practices
