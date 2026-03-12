@@ -236,9 +236,9 @@ deploy_templates() {
         print_success "Deployed project CLAUDE.md template"
     fi
 
-    # Copy CI workflow templates
+    # Copy CI workflow templates and scripts
     mkdir -p "$TEMPLATE_DIR/ci"
-    for ci_file in "$REPO_DIR/config/ci"/*.yml; do
+    for ci_file in "$REPO_DIR/config/ci"/*.yml "$REPO_DIR/config/ci"/*.sh; do
         [[ -f "$ci_file" ]] || continue
         cp "$ci_file" "$TEMPLATE_DIR/ci/"
     done
@@ -483,7 +483,9 @@ EOF
     if [[ ! -f "$review_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/claude-review.yml" ]]; then
         cp "$TEMPLATE_DIR/ci/claude-review.yml" "$review_dest"
         print_success "Created .github/workflows/claude-review.yml"
-        print_info "Requires ANTHROPIC_API_KEY secret in GitHub repo settings"
+        print_info "Auth: set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN secret in GitHub repo"
+        print_info "  ANTHROPIC_API_KEY → direct API billing (per-project)"
+        print_info "  CLAUDE_CODE_OAUTH_TOKEN → managed billing via claude.ai (shared across repos)"
     fi
 
     # Deploy reviewer request workflow (only if not present)
@@ -491,6 +493,15 @@ EOF
     if [[ ! -f "$reviewers_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/request-reviewers.yml" ]]; then
         cp "$TEMPLATE_DIR/ci/request-reviewers.yml" "$reviewers_dest"
         print_success "Created .github/workflows/request-reviewers.yml"
+    fi
+
+    # Deploy repo setup script (only if not present)
+    local repo_setup_dest="$target_dir/.github/setup-github-repo.sh"
+    if [[ ! -f "$repo_setup_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/setup-github-repo.sh" ]]; then
+        mkdir -p "$target_dir/.github"
+        cp "$TEMPLATE_DIR/ci/setup-github-repo.sh" "$repo_setup_dest"
+        chmod +x "$repo_setup_dest"
+        print_success "Created .github/setup-github-repo.sh (run after gh repo create)"
     fi
 
     # Deploy .gitignore (type-specific, only if not present)
@@ -599,9 +610,10 @@ Project init creates:
     .claude/skills/                     base skills + type-specific skills
     .claude/settings.json               type-specific hooks (merged with existing)
     .claude-agents.json                 (only if not present)
-    .github/workflows/ci.yml              type-specific CI pipeline
-    .github/workflows/claude-review.yml   Claude auto-review + auto-merge
-    .github/workflows/request-reviewers.yml  auto-request Copilot reviewer
+    .github/workflows/ci.yml              type-specific CI pipeline (with All Checks Pass gate)
+    .github/workflows/claude-review.yml   Claude auto-review + Copilot reconciliation + auto-merge
+    .github/workflows/request-reviewers.yml  auto-request repo owner as reviewer
+    .github/setup-github-repo.sh           configure ruleset + repo settings (run after gh repo create)
     .github/pull_request_template.md      standardized PR format
     .gitignore                          type-specific ignore patterns
     .editorconfig                       consistent formatting
