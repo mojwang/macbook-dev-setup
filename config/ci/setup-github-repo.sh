@@ -83,7 +83,13 @@ STATUS_CHECKS=$(build_status_checks)
 # Check for existing ruleset
 # ─────────────────────────────────────────────────────────────────────────────
 
-EXISTING_RULESET_ID=$(gh api "repos/$REPO/rulesets" --jq '.[] | select(.name == "PR quality gates") | .id' 2>/dev/null || true)
+EXISTING_RULESET_ID=""
+SKIP_RULESETS=false
+if ! EXISTING_RULESET_ID=$(gh api "repos/$REPO/rulesets" --jq '.[] | select(.name == "PR quality gates") | .id' 2>/dev/null); then
+    echo "⚠ Rulesets not available (private repos require GitHub Pro). Skipping."
+    echo "  To fix: make the repo public, or upgrade to GitHub Pro."
+    SKIP_RULESETS=true
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Create or update ruleset
@@ -138,28 +144,27 @@ RULESET_BODY=$(cat <<ENDJSON
 ENDJSON
 )
 
-if [[ -n "$EXISTING_RULESET_ID" ]]; then
-    echo "Updating existing ruleset (ID: $EXISTING_RULESET_ID)..."
-    echo "$RULESET_BODY" | gh api "repos/$REPO/rulesets/$EXISTING_RULESET_ID" -X PUT --input - > /dev/null
-else
-    echo "Creating ruleset..."
-    echo "$RULESET_BODY" | gh api "repos/$REPO/rulesets" -X POST --input - > /dev/null
-fi
+if [[ "$SKIP_RULESETS" == "false" ]]; then
+    if [[ -n "$EXISTING_RULESET_ID" ]]; then
+        echo "Updating existing ruleset (ID: $EXISTING_RULESET_ID)..."
+        echo "$RULESET_BODY" | gh api "repos/$REPO/rulesets/$EXISTING_RULESET_ID" -X PUT --input - > /dev/null
+    else
+        echo "Creating ruleset..."
+        echo "$RULESET_BODY" | gh api "repos/$REPO/rulesets" -X POST --input - > /dev/null
+    fi
 
-echo "✓ Ruleset 'PR quality gates' configured"
-echo "  - Squash-only merges"
-echo "  - Required checks: $(echo "$STATUS_CHECKS" | grep -o '"context"' | wc -l | tr -d ' ') job(s)"
-echo "  - Admin bypass enabled"
-echo "  - No required approvals (solo dev)"
+    echo "✓ Ruleset 'PR quality gates' configured"
+    echo "  - Squash-only merges"
+    echo "  - Required checks: $(echo "$STATUS_CHECKS" | grep -o '"context"' | wc -l | tr -d ' ') job(s)"
+    echo "  - Admin bypass enabled"
+    echo "  - No required approvals (solo dev)"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Remove legacy branch protection if present (conflicts with rulesets)
-# ─────────────────────────────────────────────────────────────────────────────
-
-if gh api "repos/$REPO/branches/main/protection" > /dev/null 2>&1; then
-    echo "Removing legacy branch protection (conflicts with rulesets)..."
-    gh api "repos/$REPO/branches/main/protection" -X DELETE > /dev/null 2>&1 || true
-    echo "✓ Legacy branch protection removed"
+    # Remove legacy branch protection if present (conflicts with rulesets)
+    if gh api "repos/$REPO/branches/main/protection" > /dev/null 2>&1; then
+        echo "Removing legacy branch protection (conflicts with rulesets)..."
+        gh api "repos/$REPO/branches/main/protection" -X DELETE > /dev/null 2>&1 || true
+        echo "✓ Legacy branch protection removed"
+    fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
