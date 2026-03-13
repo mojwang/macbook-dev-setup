@@ -1,19 +1,11 @@
-## Summary
-<!-- 1-3 bullet points describing what changed and why -->
+## What & Why
+<!-- Intent in 1-2 sentences. What changed and why. -->
 
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation
-- [ ] Refactor
-- [ ] Tests
+## Proof it Works
+<!-- Test results, screenshots, logs, or "CI green" -->
 
-## Testing
-- [ ] All CI checks pass
-- [ ] Tested locally
+## Risk & AI Role
+<!-- Change tier: low/medium/high. Which parts were AI-generated? -->
 
-## Checklist
-- [ ] Self-reviewed
-- [ ] Follows project conventions
-- [ ] Tests added/updated for changes
+## Review Focus
+<!-- 1-2 specific areas where human review matters most -->

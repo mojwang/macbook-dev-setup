@@ -49,11 +49,40 @@ GitHub Actions runs on every PR to `main`:
 2. **Claude review** — automated code review, pushes fix commits if needed
 3. **Auto-merge** — squash-merges after CI + Claude review pass
 
+## Boundaries
+
+**Always** (do without asking):
+- Run tests after changes
+- Follow naming conventions and project patterns
+- Use feature branches, checkpoint commits
+
+**Ask first**:
+- Adding new dependencies
+- Schema or architecture changes
+- Deleting files or removing features
+
+**Never**:
+- Commit to main
+- Commit secrets, .env files, or API keys
+- Remove failing tests without explicit approval
+- Force push or skip CI checks
+
 ## Testing
+**Write tests BEFORE implementation** — especially when agents implement autonomously.
+Red-green-refactor: failing test first, minimal code to pass, then clean up.
+
 ```bash
 # TODO: Replace with your test commands
 npm test
 ```
+
+## Gotchas
+<!-- Non-obvious project-specific learnings. Agents: append new discoveries here. -->
+<!-- Examples:
+- `npm test` requires Docker running for integration tests
+- The /api/auth route uses edge runtime — no Node.js APIs available
+- Build fails silently if .env.local is missing NEXT_PUBLIC_API_URL
+-->
 
 ## Important
 - Do only what's asked
