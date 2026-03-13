@@ -22,6 +22,24 @@
 - Backup before system changes
 - Follow project conventions
 
+## Boundaries
+
+**Always** (do without asking):
+- Run tests after changes
+- Follow project conventions and naming patterns
+- Use feature branches, checkpoint commits
+
+**Ask first**:
+- Adding new dependencies
+- Schema or architecture changes
+- Deleting files or removing features
+
+**Never**:
+- Commit to main
+- Commit secrets, .env, or API keys
+- Remove failing tests without approval
+- Force push or skip CI checks
+
 ## Behavior
 - Do only what's asked
 - Prefer editing over creating files
@@ -29,6 +47,7 @@
 - Ask for clarification when blocked
 - For complex tasks (3+ files), use Research→Plan→Implement sub-agent pattern
 - Write findings and plans to persistent markdown before implementing
+- Write tests BEFORE implementation when agents implement autonomously
 - Git revert is the safety net; move fast and break nothing
 
 ## Environment

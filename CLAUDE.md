@@ -40,6 +40,27 @@ Automated macOS dev environment setup for Apple Silicon.
   - `feat(agents): evolve TaskMaster into Product Manager with discovery workflows`
   - `fix(git): enforce feature branch workflow for all commits`
 
+## Boundaries
+
+**Always** (do without asking):
+- Run tests after changes, run shellcheck on .sh files
+- Follow naming conventions and project patterns
+- Use feature branches, checkpoint commits on feature branches
+- Self-sufficient loops: implement → test → fix → commit
+
+**Ask first**:
+- Adding new dependencies or dev tools
+- Schema or architecture changes
+- Deleting files or removing features
+- Changes to CI/CD workflows or GitHub Actions
+
+**Never**:
+- Commit to main
+- Commit secrets, .env files, or API keys
+- Remove failing tests without explicit approval
+- Force push to any shared branch
+- Skip pre-commit hooks or CI checks
+
 ## Agentic Workflow (Default)
 The main Claude session acts as orchestrator. It never implements directly for complex tasks — it dispatches sub-agents from `.claude/agents/` and synthesizes results.
 
@@ -114,27 +135,9 @@ Continue sessions from phone/tablet via [claude.ai/code](https://claude.ai/code)
 - Terminal must stay open; reconnects automatically after sleep/network drops
 - QR code: press spacebar in `claude remote-control` mode, or scan from `/rc` output
 
-## Plugins (User Scope)
-Installed via `/plugin install name@claude-plugins-official`:
-- **github** — native GitHub MCP (richer PR/issue context)
-- **slack** — Slack MCP (read/send messages)
-- **playwright** — browser automation (replaces manual MCP config)
-- **pr-review-toolkit** — specialized PR review agents (code-reviewer, comment-analyzer, etc.)
-- **typescript-lsp** — TypeScript code intelligence (auto-diagnostics, jump-to-def)
-- **swift-lsp** — Swift code intelligence (via sourcekit-lsp)
-- **pyright-lsp** — Python code intelligence (via pyright)
-- **kotlin-lsp** — Kotlin code intelligence (via kotlin-language-server)
-- **frontend-design** — `/frontend-design` generates production-grade UI from descriptions
-- **figma** — Figma-to-code: `implement-design`, `code-connect-components`, `create-design-system-rules`
-- **feature-dev** — full feature dev workflow with exploration, architecture, and quality agents
-- **commit-commands** — streamlined git commands for committing, pushing, PRs
-- **security-guidance** — automatic security warnings on file edits (injection, XSS, secrets)
-- **hookify** — create hooks from conversation patterns
-- **skill-creator** — create, improve, and measure skills
-- **claude-code-setup** — `claude-automation-recommender` analyzes codebase, suggests automations
-- **claude-md-management** — `claude-md-improver` audits CLAUDE.md, `revise-claude-md` captures learnings
-- **plugin-dev** — full plugin development toolkit (create-plugin, agents, hooks, skills, MCP, commands)
-- **context7** — library docs lookup (replaces standalone MCP server config)
+## Plugins
+<!-- Agents: discover installed plugins via /plugin list. Only non-obvious notes below. -->
+- **TODO**: Evaluate `compound-engineering` plugin for structured multi-agent workflows
 
 ## Hooks
 Configured in `.claude/settings.json`:
@@ -153,20 +156,11 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - **/init-project [dir] [--type shell|web]** — bootstrap agentic workflow with type-specific skills (`disable-model-invocation: true`)
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
 
-## Key Directories
-- `/lib`: Core libraries (common.sh, signal-safety.sh)
-- `/scripts`: Component installers and utilities
-- `/dotfiles`: Shell configs and dotfiles
-- `/docs`: Detailed documentation
-- `/.claude/agents`: Native sub-agent definitions
-- `/.claude/skills`: Auto-invoked skills (security-review, shell-conventions, commit-review)
-
-## Commands Overview
-- **Setup**: preview, minimal, fix, warp, backup, info
-- **Git**: gci (interactive commit), gcft (feat commit)
-- **Info**: devhelp (tools/aliases reference)
 
 ## Testing
+**Write tests BEFORE implementation** — especially when agents implement autonomously.
+Red-green-refactor: failing test first, minimal code to pass, then clean up.
+
 ```bash
 ./tests/run_tests.sh [unit|integration|ci]
 ```
@@ -178,33 +172,10 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - Label file-existence checks as "Repo Inventory", not "Unit Tests"
 - See docs/TESTING.md for anti-patterns and templates
 
-## Documentation
-- [Commands](docs/COMMANDS.md) - All commands and options
-- [Testing](docs/TESTING.md) - Specification-first testing guide
-- [Architecture](docs/architecture.md) - System design
-- [Git Workflow](docs/GIT-WORKFLOW.md) - Worktrees & Graphite
-- [MCP Servers](docs/MCP_SERVERS.md) - Claude integrations
-- [Claude Agents](docs/CLAUDE_AGENTS.md) - Sub-agent architecture
-
 ## MCP Server Priority
 1. **Context7** (plugin): Library docs, code examples, API references (check first)
-2. **Taskmaster**: Direct task management commands via MCP
+2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Also usable as "Product Manager" sub-agent for PRD/discovery workflows.
 3. **Exa**: General web research (fallback for non-code queries)
-
-Note: For product discovery and PRD workflows, use "Product Manager" as a sub-agent via the Task tool
-
-## Taskmaster/Product Manager Configuration
-- **As "taskmaster" MCP Server**: Direct task commands (`task-master list`, `task-master next`)
-- **As "Product Manager" Sub-Agent**: Product discovery, PRD parsing, customer validation via Task tool
-- **Research**: Enabled if PERPLEXITY_API_KEY set, gracefully disabled otherwise
-- To enable research: Add `export PERPLEXITY_API_KEY="your-key"` to `~/.config/zsh/51-api-keys.zsh`
-- **Naming Convention**: "taskmaster" for MCP operations, "Product Manager" for agent workflows
-
-## Agent Architecture
-- `.claude/agents/`: Native sub-agents (researcher, planner, implementer, reviewer)
-- `.claude-agents.json`: Declarative config (capabilities, triggers, quality gates, workflows)
-- `scripts/claude-agents/`: Helper scripts (benchmarks, demo, workflow tests)
-- `docs/CLAUDE_AGENTS.md`: Full agent documentation
 
 ## Important
 - Do only what's asked; nothing more
