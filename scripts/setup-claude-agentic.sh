@@ -483,9 +483,15 @@ EOF
     if [[ ! -f "$review_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/claude-review.yml" ]]; then
         cp "$TEMPLATE_DIR/ci/claude-review.yml" "$review_dest"
         print_success "Created .github/workflows/claude-review.yml"
-        print_info "Auth: set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN secret in GitHub repo"
-        print_info "  ANTHROPIC_API_KEY → direct API billing (per-project)"
-        print_info "  CLAUDE_CODE_OAUTH_TOKEN → managed billing via claude.ai (shared across repos)"
+        print_info "Auth: set CLAUDE_CODE_OAUTH_TOKEN secret in GitHub repo"
+        print_info "  Generate at: claude.ai > Settings > Claude Code > OAuth Token"
+    fi
+
+    # Deploy Claude interactive workflow (@claude trigger, only if not present)
+    local claude_dest="$target_dir/.github/workflows/claude.yml"
+    if [[ ! -f "$claude_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/claude.yml" ]]; then
+        cp "$TEMPLATE_DIR/ci/claude.yml" "$claude_dest"
+        print_success "Created .github/workflows/claude.yml (@claude trigger)"
     fi
 
     # Deploy reviewer request workflow (only if not present)
