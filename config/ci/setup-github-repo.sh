@@ -173,7 +173,7 @@ fi
 
 echo ""
 echo "Manual steps remaining:"
-echo "  1. Add secret: ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN"
+echo "  1. Add secret: CLAUDE_CODE_OAUTH_TOKEN"
 echo "     → Settings > Secrets and variables > Actions > New repository secret"
 echo "  2. Enable Copilot auto-review (non-blocking):"
 echo "     → Settings > Code review > Copilot Code Review > Enable"
