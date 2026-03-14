@@ -155,6 +155,11 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 **User-invocable** (manual `/command` only):
 - **/init-project [dir] [--type shell|web]** — bootstrap agentic workflow with type-specific skills (`disable-model-invocation: true`)
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
+- **/init-design-system [dir] [--domain healthcare|saas|ecommerce]** — bootstrap shadcn/ui with domain customizations (`disable-model-invocation: true`)
+- **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
+
+**Web auto-invoked** (deployed with `--type web`):
+- **design-review** — design token compliance, component consistency, visual hierarchy, healthcare UX (activates on component/style changes)
 
 
 ## Testing
