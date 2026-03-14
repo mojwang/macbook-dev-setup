@@ -16,6 +16,7 @@ brew "fzf"                   # Fuzzy finder
 brew "ripgrep"               # Enhanced grep
 
 # Development utilities
+brew "shellcheck"            # Shell script linter
 brew "jq"                    # JSON processor
 brew "wget"
 brew "curl"

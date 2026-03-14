@@ -36,6 +36,7 @@ brew "gum"                   # Rich shell script UI (Charm)
 brew "zsh-autosuggestions"   # Fish-like autosuggestions for zsh
 
 # Development utilities
+brew "shellcheck"            # Shell script linter
 brew "jq"                    # JSON processor
 brew "yq"                    # YAML processor
 brew "wget"
