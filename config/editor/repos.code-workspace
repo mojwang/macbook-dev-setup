@@ -1,0 +1,85 @@
+{
+  "folders": [
+    {
+      "name": "ihw (web)",
+      "path": "personal/ihw"
+    },
+    {
+      "name": "macbook-dev-setup (shell)",
+      "path": "personal/macbook-dev-setup"
+    }
+    // Add future repos here:
+    // { "name": "tv-app (web/tv)", "path": "personal/tv-app" },
+    // { "name": "mobile-app (react-native)", "path": "personal/mobile-app" },
+  ],
+  "settings": {
+    // Workspace-wide defaults
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.rulers": [100],
+    "editor.bracketPairColorization.enabled": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.gradle": true,
+      "**/android/app/build": true
+    },
+    "git.autofetch": true,
+    "git.pruneOnFetch": true,
+    "git.branchProtection": ["main", "master"],
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "diffEditor.ignoreTrimWhitespace": false,
+
+    // Terminal profiles — per-repo shells with auto-cd
+    "terminal.integrated.profiles.osx": {
+      "ihw": {
+        "path": "/bin/zsh",
+        "args": ["-l"],
+        "icon": "globe",
+        "color": "terminal.ansiCyan",
+        "cwd": "${workspaceFolder:ihw (web)}"
+      },
+      "macbook-dev-setup": {
+        "path": "/bin/zsh",
+        "args": ["-l"],
+        "icon": "terminal",
+        "color": "terminal.ansiGreen",
+        "cwd": "${workspaceFolder:macbook-dev-setup (shell)}"
+      },
+      "repos (root)": {
+        "path": "/bin/zsh",
+        "args": ["-l"],
+        "icon": "folder",
+        "color": "terminal.ansiYellow"
+      }
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      // Core
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "editorconfig.editorconfig",
+      // TypeScript/JS
+      "ms-vscode.vscode-typescript-next",
+      // Shell
+      "timonwong.shellcheck",
+      "foxundermoon.shell-format",
+      // Tailwind
+      "bradlc.vscode-tailwindcss",
+      // React Native / Mobile
+      "msjsdiag.vscode-react-native",
+      // Git
+      "eamodio.gitlens",
+      "github.vscode-pull-request-github",
+      // Claude Code
+      "anthropic.claude-code"
+    ]
+  }
+}
