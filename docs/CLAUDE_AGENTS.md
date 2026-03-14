@@ -1,6 +1,6 @@
 # Claude Sub-Agents
 
-Orchestrator pattern with 4 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase 1-4).
+Orchestrator pattern with 5 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase 1-4).
 
 ## Native Sub-Agents
 
@@ -38,6 +38,14 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Output**: Review summary (PASSED/FAILED) with sections for tests, security, code quality, documentation, performance, and recommendations
 - **Key behavior**: Objective — reports facts, distinguishes blocking issues from suggestions. References specific file paths and line numbers.
 
+### Designer (`.claude/agents/designer.md`)
+- **Purpose**: Design system specialist — produces specs, audits, and visual QA
+- **Tools**: Read, Write, Edit, Bash, Grep, Glob
+- **When**: UI tasks (components, styles, pages), new feature specs, pre-PR design QA
+- **Input**: Task description, project design tokens, existing component inventory
+- **Output**: `design-spec.md` — component specs, token usage, layout guidance; design review feedback
+- **Key behavior**: Peer to engineering agents. Never writes implementation code. Artifacts consumed by planner and implementer.
+
 ## Orchestration Pattern
 
 ### Task Classification (decide first)
@@ -46,10 +54,10 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Sync/supervised** (core logic, security-sensitive): Work interactively
 
 ### Phase Flow
-1. **Research** → Dispatch researcher(s). Run in parallel for independent areas.
-2. **Plan** → Dispatch planner. Iterate 1-3 annotation cycles until approved.
+1. **Research** → Dispatch researcher + designer (parallel for UI tasks).
+2. **Plan** → Dispatch planner (reads `research.md` + `design-spec.md`).
 3. **Implement** → Dispatch implementer(s) in worktree isolation. Parallel for independent tasks.
-4. **Verify** → Dispatch reviewer. Must pass before PR creation.
+4. **Verify** → Dispatch reviewer + designer (parallel for design-system projects).
 
 ### Key Rules
 - Orchestrator never implements complex tasks itself
@@ -59,7 +67,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 
 ## Artifacts
 
-- **`research.md`** and **`plan.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
+- **`research.md`**, **`plan.md`**, and **`design-spec.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
 - Survive context compaction — persistent reference for orchestrator and agents.
 - Annotation cycles: user adds `NOTE:`/`Q:` to `plan.md`, re-runs planner to address.
 
