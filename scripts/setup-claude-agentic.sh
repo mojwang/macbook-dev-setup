@@ -29,7 +29,7 @@ cleanup_agentic() {
 setup_cleanup "cleanup_agentic"
 
 # Configuration
-TEMPLATE_VERSION="2.0.0"
+TEMPLATE_VERSION="2.1.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
@@ -612,7 +612,7 @@ Project init creates:
     git repo                            (initialized if not present)
     CLAUDE.md                           project template (customize for your stack)
     README.md                           minimal skeleton (if not present)
-    .claude/agents/                     researcher, planner, implementer, reviewer
+    .claude/agents/                     researcher, planner, implementer, reviewer, designer
     .claude/skills/                     base skills + type-specific skills
     .claude/settings.json               type-specific hooks (merged with existing)
     .claude-agents.json                 (only if not present)

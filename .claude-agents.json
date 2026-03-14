@@ -44,6 +44,16 @@
       "tools": ["Read", "Grep", "Glob", "Bash"],
       "triggers": ["after_implementation", "before_pr"],
       "outputs": ["review_summary"]
+    },
+
+    "designer": {
+      "name": "Designer",
+      "description": "Design system specialist. Produces design specs, visual QA, and UX patterns.",
+      "enabled": true,
+      "priority": "high",
+      "tools": ["Read", "Write", "Edit", "Bash", "Grep", "Glob"],
+      "triggers": ["ui_change", "design_task", "visual_qa", "new_page"],
+      "outputs": ["design-spec.md", "design_review"]
     }
   },
 
@@ -65,6 +75,16 @@
         },
         "review": "reviewer"
       }
+    },
+
+    "design_aware": {
+      "description": "Parallel design + engineering workflow for UI tasks",
+      "phases": {
+        "research": { "parallel": true, "agents": ["researcher", "designer"] },
+        "plan": "planner",
+        "implement": { "parallel": true, "agent": "implementer", "max_concurrent": 3 },
+        "review": { "parallel": true, "agents": ["reviewer", "designer"] }
+      }
     }
   },
 
@@ -78,6 +98,7 @@
   "quality_gates": {
     "pre_pr": {
       "required_agents": ["reviewer"],
+      "optional_agents": ["designer"],
       "failure_blocks_pr": true
     }
   },
