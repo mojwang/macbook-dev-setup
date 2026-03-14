@@ -40,6 +40,12 @@ Produce a review summary:
 ### Performance
 - Shell anti-patterns found (subshells, eager loading, etc.)
 
+### Design (if src/components/ui/ or components.json exists)
+- Token compliance: hardcoded colors/spacing vs design tokens
+- Component consistency: raw HTML where ui primitives exist
+- Image optimization: missing dimensions, unoptimized formats
+- CTA hierarchy: competing calls-to-action, unclear primary action
+
 ### Recommendations
 - Suggestions for improvement (optional, non-blocking)
 

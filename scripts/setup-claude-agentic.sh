@@ -199,7 +199,7 @@ deploy_templates() {
 
     # Copy web-specific skills from config/skills/
     local web_skill_src="$REPO_DIR/config/skills"
-    local web_skills=("typescript-conventions" "web-review")
+    local web_skills=("typescript-conventions" "web-review" "design-review" "init-design-system" "competitive-audit")
     for skill_name in "${web_skills[@]}"; do
         if [[ -f "$web_skill_src/$skill_name/SKILL.md" ]]; then
             mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name"
@@ -599,7 +599,7 @@ Modes:
 
 Project types (--type):
     shell       Shell/bash projects — shellcheck hook, shell-conventions skill
-    web         Web/TypeScript projects — tsc hook, typescript-conventions + web-review skills
+    web         Web/TypeScript projects — tsc hook, typescript-conventions + web-review + design skills
     (omitted)   Base only — universal skills (security-review, commit-review, deep-research)
 
 System setup installs:
