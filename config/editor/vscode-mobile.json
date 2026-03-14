@@ -1,0 +1,40 @@
+{
+  // Mobile repo: React Native + Android (Java/Kotlin)
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+
+  "files.associations": {
+    "*.kt": "kotlin",
+    "*.kts": "kotlin",
+    "*.gradle": "groovy",
+    "gradle.properties": "properties",
+    "*.tsx": "typescriptreact",
+    "*.jsx": "javascriptreact"
+  },
+
+  "java.configuration.updateBuildConfiguration": "automatic",
+
+  // Exclude heavy build dirs from explorer/search
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/android/app/build": true,
+    "**/android/.gradle": true,
+    "**/ios/Pods": true,
+    "**/ios/build": true
+  },
+
+  "search.exclude": {
+    "**/android/app/build": true,
+    "**/android/.gradle": true,
+    "**/ios/Pods": true
+  },
+
+  "react-native.packager.port": 8081
+}
