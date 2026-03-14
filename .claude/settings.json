@@ -3,6 +3,38 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'stale=$(git branch -vv 2>/dev/null | grep \": gone]\" | sed \"s/^[* ]*/  /\" | cut -d\" \" -f3); orphans=$(git worktree list 2>/dev/null | grep -v \"$(git rev-parse --show-toplevel)$\" | sed \"s/^/  /\"); msg=\"\"; if [ -n \"$stale\" ]; then msg=\"Stale branches (remote deleted):\\n$stale\"; fi; if [ -n \"$orphans\" ]; then [ -n \"$msg\" ] && msg=\"$msg\\n\"; msg=\"${msg}Active worktrees:\\n$orphans\"; fi; if [ -n \"$msg\" ]; then echo -e \"Git cleanup check:\\n$msg\\nRun gclean to remove stale branches.\"; fi'",
+            "statusMessage": "Checking git hygiene..."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ./scripts/health-check.sh --agent-mode 2>/dev/null || true",
+            "timeout": 10,
+            "statusMessage": "Running environment health check..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command\" 2>/dev/null); if echo \"$cmd\" | grep -qE \"^git commit|&& git commit|; git commit\"; then branch=$(git branch --show-current 2>/dev/null); for b in main master develop staging production; do if [ \"$branch\" = \"$b\" ]; then echo \"BLOCKED: Cannot commit to protected branch '\"'\"'$branch'\"'\"'. Create a feature branch first.\"; exit 2; fi; done; fi; exit 0'"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",

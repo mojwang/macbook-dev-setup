@@ -68,6 +68,7 @@ The main Claude session acts as orchestrator. It never implements directly for c
 - **Async/autonomous**: Peripheral features, prototyping, tests, refactors → full agent workflow, let it run
 - **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
 - **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
+- **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer alongside researcher/reviewer
 
 ### Execution Modes
 Two modes available depending on coordination needs:
@@ -88,11 +89,13 @@ Two modes available depending on coordination needs:
 ### Phase 1: Research
 Dispatch `researcher` sub-agent to explore affected code areas.
 - Run multiple researchers in parallel for independent areas
-- Output: `research.md` with findings
+- For UI tasks, dispatch `designer` in parallel with researcher for competitive/pattern research
+- Output: `research.md` with findings (+ `design-spec.md` from designer if applicable)
 - Skip for trivial tasks or well-understood areas
 
 ### Phase 2: Plan
 Dispatch `planner` sub-agent to create `plan.md` from research.
+- Planner reads both `research.md` and `design-spec.md` (if present)
 - Annotation cycle: user adds `NOTE:` or `Q:` inline → re-run planner to address
 - Iterate 1-3 rounds until plan is approved
 - Each task in the plan should be scoped for a single implementer
@@ -116,6 +119,7 @@ Dispatch implementers with the approved plan. Choose mode based on task:
 ### Phase 4: Verify
 Dispatch `reviewer` sub-agent to validate implementation.
 - Must pass before creating PR
+- For design-system projects, dispatch `designer` alongside reviewer for parallel QA
 - Can run security + quality reviewers in parallel
 - For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
@@ -123,9 +127,27 @@ Dispatch `reviewer` sub-agent to validate implementation.
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
 - Persistent artifacts (research.md, plan.md) survive context compaction
-- Clean up artifacts after PR merge
-- For agent teams: always clean up via lead, shut down teammates first
+- Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
+- Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
+
+### Post-Merge Cleanup (ENFORCED)
+After every PR merge, orchestrator must:
+1. **Remove worktrees**: `git worktree remove <path>` for all worktrees created during the task
+2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
+3. **Prune remote refs**: `git remote prune origin`
+4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`
+5. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
+
+Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.
+
+### Integrated Scripts (available to agents)
+These scripts have `--agent-mode` or `--force` flags for non-interactive agent use:
+- `./scripts/health-check.sh --agent-mode` — concise pre-flight check (critical tools, git identity, MCP health)
+- `./scripts/pre-push-check.sh --agent-mode` — pre-merge validation (tests, shellcheck, debugging code, branch safety)
+- `./scripts/git-safe-commit.sh` — branch protection enforcement (used by PreToolUse hook)
+- `./scripts/cleanup-mcp-processes.sh --force` — kill orphaned MCP processes without confirmation
+- `./scripts/cleanup.sh` — disk space cleanup (interactive, for manual use or orchestrator-guided sessions)
 
 ## Remote Control
 Continue sessions from phone/tablet via [claude.ai/code](https://claude.ai/code) or the Claude mobile app.
@@ -141,7 +163,16 @@ Continue sessions from phone/tablet via [claude.ai/code](https://claude.ai/code)
 
 ## Hooks
 Configured in `.claude/settings.json`:
-- **PostToolUse (Write|Edit)**: Auto-runs `shellcheck` on `.sh` files after every edit
+
+**SessionStart**:
+- Git hygiene check: warns about stale branches (remote deleted) and active worktrees
+- Environment health check: `./scripts/health-check.sh --agent-mode` — verifies critical tools (git, gh, node, npm, shellcheck, jq), git identity, Homebrew PATH, and MCP process count
+
+**PreToolUse (Bash)**:
+- Branch safety gate: blocks `git commit` on protected branches (main, master, develop, staging, production) — exit code 2 prevents the tool call
+
+**PostToolUse (Write|Edit)**:
+- Auto-runs `shellcheck` on `.sh` files after every edit
 - Supports self-sufficient loops — implementer agents get immediate lint feedback
 
 ## Skills
@@ -155,11 +186,11 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 **User-invocable** (manual `/command` only):
 - **/init-project [dir] [--type shell|web]** — bootstrap agentic workflow with type-specific skills (`disable-model-invocation: true`)
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
+
+**Design agent skills** (deployed with `--type web`, used by designer agent):
+- **design-review** — token compliance, component consistency, visual hierarchy, healthcare UX (auto-invoked on component/style changes)
 - **/init-design-system [dir] [--domain healthcare|saas|ecommerce]** — bootstrap shadcn/ui with domain customizations (`disable-model-invocation: true`)
 - **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
-
-**Web auto-invoked** (deployed with `--type web`):
-- **design-review** — design token compliance, component consistency, visual hierarchy, healthcare UX (activates on component/style changes)
 
 
 ## Testing

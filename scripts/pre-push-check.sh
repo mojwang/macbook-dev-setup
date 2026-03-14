@@ -109,34 +109,86 @@ check_git_status() {
     fi
 }
 
+# Agent-mode: non-interactive, concise output, exit code for pass/fail
+agent_mode() {
+    local issues=()
+
+    # Check branch
+    local current_branch=$(git branch --show-current)
+    if [[ "$current_branch" == "main" || "$current_branch" == "master" ]]; then
+        issues+=("On protected branch: $current_branch")
+    fi
+
+    # Run tests (suppress verbose output)
+    if ! ./tests/run_tests.sh > /dev/null 2>&1; then
+        issues+=("Test suite failed")
+    fi
+
+    # Run shellcheck
+    local sc_errors=0
+    while IFS= read -r script; do
+        if ! shellcheck "$script" > /dev/null 2>&1; then
+            ((sc_errors++))
+        fi
+    done < <(find . -name "*.sh" -type f ! -path "./.git/*" ! -path "./.claude/*" 2>/dev/null)
+    if [[ $sc_errors -gt 0 ]]; then
+        issues+=("ShellCheck issues in $sc_errors files")
+    fi
+
+    # Check for debugging code
+    local debug_hits=$(grep -rn "console\.log\|binding\.pry\|debugger" . \
+        --include="*.sh" --exclude-dir=".git" --exclude-dir="node_modules" 2>/dev/null | wc -l | tr -d ' ')
+    if [[ "$debug_hits" -gt 0 ]]; then
+        issues+=("Found $debug_hits debugging statements")
+    fi
+
+    # Output
+    if [[ ${#issues[@]} -gt 0 ]]; then
+        echo "PRE-PUSH VALIDATION FAILED:"
+        for issue in "${issues[@]}"; do
+            echo "  - $issue"
+        done
+        exit 1
+    fi
+
+    echo "Pre-push validation passed."
+    exit 0
+}
+
 # Main execution
 main() {
+    # Handle --agent-mode flag
+    if [[ "${1:-}" == "--agent-mode" ]]; then
+        agent_mode
+        return
+    fi
+
     echo -e "${BLUE}"
     echo "Pre-Push Validation Check"
     echo "========================"
     echo -e "${NC}"
-    
+
     # Run all checks
     check_git_status
     echo
-    
+
     run_tests
     echo
-    
+
     validate_setup
     echo
-    
+
     run_shellcheck
     echo
-    
+
     check_common_issues
     echo
-    
+
     # Summary
     if [[ $FAILED_CHECKS -eq 0 ]]; then
         echo -e "${GREEN}"
-        echo "✅ All checks passed!"
-        echo "====================" 
+        echo "All checks passed!"
+        echo "===================="
         echo -e "${NC}"
         echo "Your code is ready to push."
         echo
@@ -144,7 +196,7 @@ main() {
         echo "  git push origin main"
     else
         echo -e "${RED}"
-        echo "❌ Some checks failed!"
+        echo "Some checks failed!"
         echo "====================="
         echo -e "${NC}"
         echo "$FAILED_CHECKS check(s) failed."

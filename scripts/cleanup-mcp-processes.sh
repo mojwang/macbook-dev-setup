@@ -8,9 +8,13 @@ set -e
 trap 'echo -e "\n\nCleanup interrupted by user"; exit 130' INT TERM
 
 DRY_RUN=false
-if [[ "${1:-}" == "--dry-run" ]]; then
-    DRY_RUN=true
-fi
+FORCE=false
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run) DRY_RUN=true ;;
+        --force) FORCE=true ;;
+    esac
+done
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  MCP PROCESS CLEANUP"
@@ -30,12 +34,14 @@ if $DRY_RUN; then
     exit 0
 fi
 
-# Warning
-echo "⚠️  This will kill all MCP server processes."
-echo "   Claude Desktop and Claude Code will need to restart them."
-echo ""
-echo "Press ENTER to continue, or Ctrl+C to cancel..."
-read -r
+# Warning (skip in --force mode for agent use)
+if ! $FORCE; then
+    echo "This will kill all MCP server processes."
+    echo "   Claude Desktop and Claude Code will need to restart them."
+    echo ""
+    echo "Press ENTER to continue, or Ctrl+C to cancel..."
+    read -r
+fi
 
 echo ""
 echo "Killing MCP processes..."
