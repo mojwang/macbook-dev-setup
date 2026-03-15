@@ -264,10 +264,10 @@ else
 fi
 
 # Deploy VS Code workspace file based on profile
-WORKSPACE_FILE="${PROFILE_WORKSPACE:-repos.code-workspace}"
+WORKSPACE_FILE="${PROFILE_WORKSPACE:-personal.code-workspace}"
 WORKSPACE_SOURCE="config/editor/$WORKSPACE_FILE"
 REPOS_DIR="${PROFILE_REPOS_DIR:-personal}"
-WORKSPACE_TARGET="$HOME/repos/$REPOS_DIR/repos.code-workspace"
+WORKSPACE_TARGET="$HOME/repos/$REPOS_DIR/$WORKSPACE_FILE"
 if [[ -f "$WORKSPACE_SOURCE" ]]; then
     mkdir -p "$HOME/repos/$REPOS_DIR"
     if [[ -f "$WORKSPACE_TARGET" ]]; then
