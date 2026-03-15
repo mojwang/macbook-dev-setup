@@ -27,3 +27,9 @@ After every meaningful change:
 - Checkpoint-heavy: commit after each completed task for easy rollback
 - If stuck or going off track, stop and report back rather than hacking around issues
 - Mark completed tasks in `plan.md` with `[x]`
+
+## Worktree Cleanup
+When your work is complete (all tasks done, committed, and pushed):
+- Report completion status to orchestrator — include your worktree path and branch name
+- Do NOT remove your own worktree — orchestrator handles cleanup after PR merge
+- If your work is abandoned or reverted, explicitly tell orchestrator so it can clean up

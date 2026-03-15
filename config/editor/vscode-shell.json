@@ -1,0 +1,29 @@
+{
+  // Shell script repo
+  "editor.defaultFormatter": "foxundermoon.shell-format",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+
+  "shellcheck.enable": true,
+  "shellcheck.run": "onSave",
+  "shellcheck.executablePath": "shellcheck",
+
+  "files.associations": {
+    "*.sh": "shellscript",
+    "Brewfile": "ruby",
+    "Brewfile.*": "ruby",
+    "*.zsh": "shellscript",
+    ".zshrc": "shellscript",
+    ".zprofile": "shellscript",
+    ".zshenv": "shellscript"
+  },
+
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "on"
+  },
+
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

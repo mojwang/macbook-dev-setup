@@ -26,6 +26,8 @@ PROFILE_ADDS=()
 PROFILE_SKIP_MCP="false"
 PROFILE_SKIP_AGENTIC="false"
 PROFILE_MODULES=()
+PROFILE_REPOS_DIR=""
+PROFILE_WORKSPACE=""
 
 # Parse a key=value from a profile conf file
 # Usage: parse_profile_value <file> <key>
@@ -81,6 +83,8 @@ resolve_profile() {
     PROFILE_SKIP_AGENTIC="false"
     PROFILE_MODULES=()
     PROFILE_MODULES_STR=""
+    PROFILE_REPOS_DIR=""
+    PROFILE_WORKSPACE=""
 
     # Check for inheritance
     local parent
@@ -161,6 +165,20 @@ _load_profile_values() {
     skip_agentic=$(parse_profile_value "$file" "skip_agentic_setup")
     if [[ -n "$skip_agentic" ]]; then
         PROFILE_SKIP_AGENTIC="$skip_agentic"
+    fi
+
+    # Parse repos_dir (child overrides parent)
+    local repos_dir
+    repos_dir=$(parse_profile_value "$file" "repos_dir")
+    if [[ -n "$repos_dir" ]]; then
+        PROFILE_REPOS_DIR="$repos_dir"
+    fi
+
+    # Parse workspace (child overrides parent)
+    local workspace
+    workspace=$(parse_profile_value "$file" "workspace")
+    if [[ -n "$workspace" ]]; then
+        PROFILE_WORKSPACE="$workspace"
     fi
 
     # Parse modules (comma-separated, child merges with parent)
@@ -289,7 +307,7 @@ validate_profile() {
     fi
 
     # Check for unknown keys
-    local valid_keys="inherit exclude add skip_mcp_setup skip_agentic_setup modules"
+    local valid_keys="inherit exclude add skip_mcp_setup skip_agentic_setup modules repos_dir workspace"
     local line_num=0
     while IFS= read -r line || [[ -n "$line" ]]; do
         ((line_num++))

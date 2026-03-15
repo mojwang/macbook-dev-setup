@@ -35,6 +35,7 @@ claude-init-agentic --init $ARGUMENTS
    - `.github/workflows/ci.yml` (type-specific CI with All Checks Pass gate)
    - `.github/workflows/claude-review.yml` (Claude review + Copilot reconciliation + auto-merge)
    - `.github/workflows/request-reviewers.yml` (auto-request repo owner as reviewer)
+   - `.github/workflows/ci-health.yml` (weekly secret validity check)
    - `.github/setup-github-repo.sh` (configure ruleset after repo creation)
    - `.github/pull_request_template.md` (standardized PR format)
    - `.gitignore` (type-specific ignore patterns)

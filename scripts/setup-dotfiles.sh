@@ -263,6 +263,23 @@ else
     print_info "gh CLI not authenticated — skipping org detection (run 'gh auth login' to configure later)"
 fi
 
+# Deploy VS Code workspace file based on profile
+WORKSPACE_FILE="${PROFILE_WORKSPACE:-personal.code-workspace}"
+WORKSPACE_SOURCE="config/editor/$WORKSPACE_FILE"
+REPOS_DIR="${PROFILE_REPOS_DIR:-personal}"
+WORKSPACE_TARGET="$HOME/repos/$REPOS_DIR/$WORKSPACE_FILE"
+if [[ -f "$WORKSPACE_SOURCE" ]]; then
+    mkdir -p "$HOME/repos/$REPOS_DIR"
+    if [[ -f "$WORKSPACE_TARGET" ]]; then
+        print_info "VS Code workspace already exists at $WORKSPACE_TARGET, skipping"
+    else
+        cp "$WORKSPACE_SOURCE" "$WORKSPACE_TARGET"
+        print_success "VS Code workspace deployed to $WORKSPACE_TARGET"
+    fi
+else
+    print_info "No workspace template found at $WORKSPACE_SOURCE, skipping"
+fi
+
 print_success "Dotfiles setup completed"
 echo ""
 echo "Backup created at: $backup_dir"

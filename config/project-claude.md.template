@@ -35,6 +35,12 @@ Main session = orchestrator. Dispatches sub-agents, never implements complex tas
 - **Standard**: Multi-file changes → Research → Plan → Implement → Review
 - **Parallel**: Independent tasks → multiple implementers in worktree isolation
 
+### Design Workflow (if design system present)
+For UI tasks, the orchestrator dispatches the designer agent alongside researcher/reviewer.
+- Designer produces `design-spec.md` with component specs, token usage, and layout guidance
+- Planner incorporates design specs into implementation plans
+- Designer reviews implemented components for design compliance
+
 ## Key Directories
 <!-- TODO: Map your project structure, e.g.:
 - `/src/app/` — Pages and layouts

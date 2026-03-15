@@ -29,7 +29,7 @@ cleanup_agentic() {
 setup_cleanup "cleanup_agentic"
 
 # Configuration
-TEMPLATE_VERSION="2.0.0"
+TEMPLATE_VERSION="2.1.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
@@ -199,7 +199,7 @@ deploy_templates() {
 
     # Copy web-specific skills from config/skills/
     local web_skill_src="$REPO_DIR/config/skills"
-    local web_skills=("typescript-conventions" "web-review")
+    local web_skills=("typescript-conventions" "web-review" "design-review" "init-design-system" "competitive-audit")
     for skill_name in "${web_skills[@]}"; do
         if [[ -f "$web_skill_src/$skill_name/SKILL.md" ]]; then
             mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name"
@@ -599,7 +599,7 @@ Modes:
 
 Project types (--type):
     shell       Shell/bash projects — shellcheck hook, shell-conventions skill
-    web         Web/TypeScript projects — tsc hook, typescript-conventions + web-review skills
+    web         Web/TypeScript projects — tsc hook, typescript-conventions + web-review + design skills
     (omitted)   Base only — universal skills (security-review, commit-review, deep-research)
 
 System setup installs:
@@ -612,7 +612,7 @@ Project init creates:
     git repo                            (initialized if not present)
     CLAUDE.md                           project template (customize for your stack)
     README.md                           minimal skeleton (if not present)
-    .claude/agents/                     researcher, planner, implementer, reviewer
+    .claude/agents/                     researcher, planner, implementer, reviewer, designer
     .claude/skills/                     base skills + type-specific skills
     .claude/settings.json               type-specific hooks (merged with existing)
     .claude-agents.json                 (only if not present)
