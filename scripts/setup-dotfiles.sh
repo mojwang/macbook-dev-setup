@@ -263,11 +263,13 @@ else
     print_info "gh CLI not authenticated — skipping org detection (run 'gh auth login' to configure later)"
 fi
 
-# Deploy VS Code workspace file (only if repo is at expected location)
-WORKSPACE_SOURCE="config/editor/repos.code-workspace"
-WORKSPACE_TARGET="$HOME/repos/personal/repos.code-workspace"
-SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-if [[ -f "$WORKSPACE_SOURCE" ]] && [[ "$SCRIPT_DIR" == "$HOME/repos/personal/macbook-dev-setup" ]]; then
+# Deploy VS Code workspace file based on profile
+WORKSPACE_FILE="${PROFILE_WORKSPACE:-repos.code-workspace}"
+WORKSPACE_SOURCE="config/editor/$WORKSPACE_FILE"
+REPOS_DIR="${PROFILE_REPOS_DIR:-personal}"
+WORKSPACE_TARGET="$HOME/repos/$REPOS_DIR/repos.code-workspace"
+if [[ -f "$WORKSPACE_SOURCE" ]]; then
+    mkdir -p "$HOME/repos/$REPOS_DIR"
     if [[ -f "$WORKSPACE_TARGET" ]]; then
         print_info "VS Code workspace already exists at $WORKSPACE_TARGET, skipping"
     else
@@ -275,7 +277,7 @@ if [[ -f "$WORKSPACE_SOURCE" ]] && [[ "$SCRIPT_DIR" == "$HOME/repos/personal/mac
         print_success "VS Code workspace deployed to $WORKSPACE_TARGET"
     fi
 else
-    print_info "Skipping workspace deployment (repo not at ~/repos/personal/macbook-dev-setup)"
+    print_info "No workspace template found at $WORKSPACE_SOURCE, skipping"
 fi
 
 print_success "Dotfiles setup completed"
