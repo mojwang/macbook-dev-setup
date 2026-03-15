@@ -93,8 +93,10 @@ agent_mode() {
     done
 
     # Check git identity
-    local git_name=$(git config --global user.name 2>/dev/null || echo "")
-    local git_email=$(git config --global user.email 2>/dev/null || echo "")
+    local git_name
+    git_name=$(git config --global user.name 2>/dev/null || echo "")
+    local git_email
+    git_email=$(git config --global user.email 2>/dev/null || echo "")
     if [[ -z "$git_name" || -z "$git_email" ]]; then
         warnings+=("Git identity not configured")
     fi
@@ -105,7 +107,8 @@ agent_mode() {
     fi
 
     # Check for stale MCP processes (high count suggests hangs)
-    local mcp_count=$(ps aux | grep -E 'mcp|npx.*model|uvx.*mcp|node.*mcp' | grep -v grep | wc -l | tr -d ' ')
+    local mcp_count
+    mcp_count=$(pgrep -f 'mcp|npx.*model|uvx.*mcp|node.*mcp' | wc -l | tr -d ' ')
     if [[ "$mcp_count" -gt 20 ]]; then
         warnings+=("$mcp_count MCP processes running (possible orphans — run ./scripts/cleanup-mcp-processes.sh --force)")
     fi

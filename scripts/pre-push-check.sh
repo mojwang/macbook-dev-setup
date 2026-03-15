@@ -114,7 +114,8 @@ agent_mode() {
     local issues=()
 
     # Check branch
-    local current_branch=$(git branch --show-current)
+    local current_branch
+    current_branch=$(git branch --show-current)
     if [[ "$current_branch" == "main" || "$current_branch" == "master" ]]; then
         issues+=("On protected branch: $current_branch")
     fi
@@ -136,7 +137,8 @@ agent_mode() {
     fi
 
     # Check for debugging code
-    local debug_hits=$(grep -rn "console\.log\|binding\.pry\|debugger" . \
+    local debug_hits
+    debug_hits=$(grep -rn "console\.log\|binding\.pry\|debugger" . \
         --include="*.sh" --exclude-dir=".git" --exclude-dir="node_modules" 2>/dev/null | wc -l | tr -d ' ')
     if [[ "$debug_hits" -gt 0 ]]; then
         issues+=("Found $debug_hits debugging statements")
