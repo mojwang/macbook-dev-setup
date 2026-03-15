@@ -2,15 +2,15 @@
   "folders": [
     {
       "name": "ihw (web)",
-      "path": "personal/ihw"
+      "path": "ihw"
     },
     {
       "name": "macbook-dev-setup (shell)",
-      "path": "personal/macbook-dev-setup"
+      "path": "macbook-dev-setup"
     }
-    // Add future repos here:
-    // { "name": "tv-app (web/tv)", "path": "personal/tv-app" },
-    // { "name": "mobile-app (react-native)", "path": "personal/mobile-app" },
+    // Add future personal repos here:
+    // { "name": "tv-app (web/tv)", "path": "tv-app" },
+    // { "name": "mobile-app (react-native)", "path": "mobile-app" },
   ],
   "settings": {
     // Workspace-wide defaults
@@ -52,7 +52,7 @@
         "color": "terminal.ansiGreen",
         "cwd": "${workspaceFolder:macbook-dev-setup (shell)}"
       },
-      "repos (root)": {
+      "personal (root)": {
         "path": "/bin/zsh",
         "args": ["-l"],
         "icon": "folder",
