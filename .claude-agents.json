@@ -1,9 +1,19 @@
 {
   "version": "1.0.0",
   "project": "macbook-dev-setup",
-  "description": "Structured metadata for the 4 native sub-agents (researcher, planner, implementer, reviewer)",
+  "description": "Structured metadata for the 6 native sub-agents",
 
   "agents": {
+    "product": {
+      "name": "Product",
+      "description": "Product thinking specialist. Defines problems, scopes solutions, prioritizes work, and evaluates outcomes.",
+      "enabled": true,
+      "priority": "high",
+      "tools": ["Read", "Grep", "Glob", "Bash"],
+      "triggers": ["new_feature", "prioritization_needed", "scope_question", "post_launch_eval"],
+      "outputs": ["product-brief.md"]
+    },
+
     "researcher": {
       "name": "Researcher",
       "description": "Deep codebase exploration before planning. Use for any task touching 3+ files.",
@@ -59,8 +69,8 @@
 
   "workflows": {
     "standard": {
-      "description": "Sequential 4-phase workflow: research → plan → implement → review",
-      "phases": ["researcher", "planner", "implementer", "reviewer"]
+      "description": "Sequential workflow: product → research → plan → implement → review",
+      "phases": ["product", "researcher", "planner", "implementer", "reviewer"]
     },
 
     "parallel_implementation": {
@@ -84,6 +94,18 @@
         "plan": "planner",
         "implement": { "parallel": true, "agent": "implementer", "max_concurrent": 3 },
         "review": { "parallel": true, "agents": ["reviewer", "designer"] }
+      }
+    },
+
+    "product_aware": {
+      "description": "Full product-led workflow with define and evaluate phases",
+      "phases": {
+        "define": "product",
+        "research": { "parallel": true, "agents": ["researcher", "designer"] },
+        "plan": "planner",
+        "implement": { "parallel": true, "agent": "implementer", "max_concurrent": 3 },
+        "review": { "parallel": true, "agents": ["reviewer", "designer"] },
+        "evaluate": "product"
       }
     }
   },

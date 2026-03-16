@@ -1,10 +1,18 @@
 # Claude Sub-Agents
 
-Orchestrator pattern with 5 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase 1-4).
+Orchestrator pattern with 6 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase 1-4).
 
 ## Native Sub-Agents
 
 All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter for metadata.
+
+### Product (`.claude/agents/product.md`)
+- **Purpose**: Product thinking — problem definition, scoping, prioritization, outcome evaluation
+- **Tools**: Read, Grep, Glob, Bash
+- **When**: New features, competing priorities, unclear scope, post-launch evaluation
+- **Input**: Task description, user context, project goals
+- **Output**: `product-brief.md` — problem, JTBD, solution hypothesis, scope, success criteria, assumptions
+- **Key behavior**: Advisory peer to all agents. Opinionated but transparent. Orchestrator makes final calls.
 
 ### Researcher (`.claude/agents/researcher.md`)
 - **Purpose**: Deep codebase exploration before planning
@@ -54,10 +62,12 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Sync/supervised** (core logic, security-sensitive): Work interactively
 
 ### Phase Flow
+0. **Define** (optional) → Dispatch product agent for new features or unclear scope.
 1. **Research** → Dispatch researcher + designer (parallel for UI tasks).
-2. **Plan** → Dispatch planner (reads `research.md` + `design-spec.md`).
+2. **Plan** → Dispatch planner (reads `research.md` + `design-spec.md` + `product-brief.md`).
 3. **Implement** → Dispatch implementer(s) in worktree isolation. Parallel for independent tasks.
 4. **Verify** → Dispatch reviewer + designer (parallel for design-system projects).
+5. **Evaluate** (optional) → Dispatch product agent to assess outcomes.
 
 ### Key Rules
 - Orchestrator never implements complex tasks itself
@@ -67,7 +77,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 
 ## Artifacts
 
-- **`research.md`**, **`plan.md`**, and **`design-spec.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
+- **`research.md`**, **`plan.md`**, **`design-spec.md`**, and **`product-brief.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
 - Survive context compaction — persistent reference for orchestrator and agents.
 - Annotation cycles: user adds `NOTE:`/`Q:` to `plan.md`, re-runs planner to address.
 
