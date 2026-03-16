@@ -117,10 +117,10 @@ macbook-dev-setup/
 The project uses an orchestrator pattern for complex development tasks:
 
 - **Main Claude session** acts as orchestrator — dispatches sub-agents, never implements complex tasks directly
-- **4 native agents** in `.claude/agents/`: researcher → planner → implementer → reviewer
+- **6 native agents** in `.claude/agents/`: product → researcher → planner → implementer → reviewer → designer
 - **Worktree isolation**: Each implementer runs in its own git worktree, enabling parallel-safe execution
 - **Checkpoint commits**: One commit per completed task for easy rollback (slot machine rule: revert > fix)
-- **Ephemeral artifacts**: `research.md` → `plan.md` → implementation → review. Gitignored, cleaned up after PR merge.
+- **Ephemeral artifacts**: `product-brief.md` → `research.md` / `design-spec.md` → `plan.md` → implementation → review. Gitignored, cleaned up after PR merge.
 - **Task classification**: Trivial tasks skip the workflow; complex tasks get the full Phase 1-4 treatment
 
 See [Claude Agents](CLAUDE_AGENTS.md) for details on each agent and the orchestration protocol.
