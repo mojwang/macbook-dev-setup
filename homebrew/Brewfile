@@ -11,7 +11,9 @@ brew "git-lfs"               # Git Large File Storage
 brew "watchman"              # File watching service (Meta)
 
 # Programming languages & package managers
-brew "node"
+# Note: Node.js is managed exclusively by nvm (no brew "node").
+# Homebrew node conflicts with nvm in non-interactive shells (agents, CI)
+# because /opt/homebrew/bin/node takes PATH precedence over nvm versions.
 brew "nvm"
 brew "pnpm"
 brew "bun"                   # Modern JavaScript runtime
