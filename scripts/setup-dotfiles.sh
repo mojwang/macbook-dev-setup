@@ -124,6 +124,24 @@ if [[ -d "dotfiles/.config/zsh" ]]; then
             fi
         fi
     fi
+
+    # Deploy extension pack dotfiles
+    EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
+    if [[ -d "$EXTENSIONS_DIR" ]]; then
+        for ext_pack_dir in "$EXTENSIONS_DIR"/*/; do
+            [[ ! -d "$ext_pack_dir" ]] && continue
+            ext_dotfiles="${ext_pack_dir}dotfiles/.config/zsh"
+            if [[ -d "$ext_dotfiles" ]]; then
+                ext_name=$(basename "$ext_pack_dir")
+                echo "Deploying extension dotfiles: $ext_name..."
+                if cp "$ext_dotfiles"/*.zsh ~/.config/zsh/ 2>/dev/null; then
+                    print_success "Extension dotfiles '$ext_name' installed"
+                else
+                    print_warning "No .zsh files found in $ext_dotfiles"
+                fi
+            fi
+        done
+    fi
 else
     print_warning "Zsh configuration directory not found"
 fi

@@ -54,7 +54,7 @@
 - macOS Apple Silicon, zsh with modular config in `~/.config/zsh/`
 - Dev setup managed by `~/repos/personal/macbook-dev-setup/`
 - Language managers: nvm (Node.js, lazy-loaded), pyenv (Python), rbenv (Ruby), sdkman (Java/JVM)
-- Java: OpenJDK via Homebrew (`$JAVA_HOME = $HOMEBREW_PREFIX/opt/openjdk`)
+- Java: SDKMAN (`$SDKMAN_DIR = $HOME/.sdkman`)
 - Modern CLI tools: eza (ls), bat (cat), fd (find), fzf (fuzzy finder), zoxide (cd), delta (diff), starship (prompt), ripgrep (grep), tokei (loc), hyperfine (bench), ast-grep
 - Editor: nvim (default `$EDITOR`), VS Code available
 

@@ -508,9 +508,35 @@ main_setup() {
         fi
     fi
     
+    # Discover and apply extension packs
+    discover_extensions
+    if [[ ${#EXTENSION_PACKS[@]} -gt 0 ]]; then
+        ui_section_header "Extension Packs"
+        print_extensions_summary
+
+        for _ext_pack_dir in "${EXTENSION_PACKS[@]}"; do
+            local _ext_name
+            _ext_name=$(basename "$_ext_pack_dir")
+
+            # Load extension profile.conf (merges into current profile state)
+            load_extension_profile "$_ext_pack_dir"
+
+            # Run extension scripts
+            if [[ -d "${_ext_pack_dir}scripts" ]]; then
+                for _ext_script in "${_ext_pack_dir}scripts"/*.sh; do
+                    [[ ! -f "$_ext_script" ]] && continue
+                    print_step "Running extension script: $_ext_name/$(basename "$_ext_script")"
+                    if ! bash "$_ext_script"; then
+                        setup_errors_add "Extension script failed: $_ext_name/$(basename "$_ext_script")"
+                    fi
+                done
+            fi
+        done
+    fi
+
     # Check for Warp and offer optimization
     check_and_setup_warp
-    
+
     # Show completion message
     local duration=$(($(date +%s) - SCRIPT_START_TIME))
     local minutes=$((duration / 60))
@@ -521,6 +547,7 @@ main_setup() {
     summary_lines+=("Time: ${minutes}m ${seconds}s")
     [[ -n "${SETUP_PROFILE:-}" ]] && summary_lines+=("Profile: ${SETUP_PROFILE}")
     [[ "$is_minimal" == "true" ]] && summary_lines+=("Profile: minimal")
+    [[ ${#EXTENSION_PACKS[@]} -gt 0 ]] && summary_lines+=("Extensions: ${#EXTENSION_PACKS[@]} loaded")
 
     # Show MCP server status if available
     if command -v claude &>/dev/null; then
