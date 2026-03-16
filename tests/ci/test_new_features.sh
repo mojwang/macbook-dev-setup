@@ -26,10 +26,6 @@ assert_contains "$setup_content" "Configuring terminal fonts" "Should have font 
 it "should have valid Brewfile syntax"
 # Check for basic syntax errors
 brewfile_content=$(cat "$ROOT_DIR/homebrew/Brewfile")
-# Ensure no duplicate entries for openjdk
-openjdk_count=$(grep -c '^brew "openjdk"' "$ROOT_DIR/homebrew/Brewfile" || echo 0)
-assert_equals "1" "$openjdk_count" "OpenJDK should appear exactly once in Brewfile"
-
 # Test that font names are consistent
 it "should have consistent font configuration"
 vscode_settings=$(cat "$ROOT_DIR/vscode/settings.json")

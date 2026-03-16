@@ -20,6 +20,9 @@ source "$PROFILES_LIB_DIR/signal-safety.sh" 2>/dev/null || true
 # Profile directory
 PROFILES_DIR="${PROFILES_DIR:-$(cd "$PROFILES_LIB_DIR/../homebrew/profiles" && pwd)}"
 
+# Extension pack directory
+EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
+
 # Profile state (set by resolve_profile)
 PROFILE_EXCLUDES=()
 PROFILE_ADDS=()
@@ -390,5 +393,73 @@ print_profile_summary() {
     if [[ "$PROFILE_SKIP_AGENTIC" == "true" ]]; then
         print_info "Agentic setup: skipped"
     fi
+    echo ""
+}
+
+# ── Extension Pack Support ──────────────────────────────────────────
+
+# Extension pack state (set by discover_extensions / load_extension_profile)
+EXTENSION_PACKS=()
+
+# Discover all extension packs in EXTENSIONS_DIR
+# Each subdirectory with a profile.conf is an extension pack
+# Sets: EXTENSION_PACKS[] (list of pack directory paths)
+# Usage: discover_extensions
+discover_extensions() {
+    EXTENSION_PACKS=()
+
+    if [[ ! -d "$EXTENSIONS_DIR" ]]; then
+        return 0
+    fi
+
+    local pack_dir
+    for pack_dir in "$EXTENSIONS_DIR"/*/; do
+        [[ ! -d "$pack_dir" ]] && continue
+        # Must have at least a profile.conf or scripts/ directory
+        if [[ -f "${pack_dir}profile.conf" ]] || [[ -d "${pack_dir}scripts" ]]; then
+            EXTENSION_PACKS+=("$pack_dir")
+        fi
+    done
+}
+
+# Load an extension pack's profile.conf and merge into current profile state
+# Merges excludes/adds/modules additively (same as child profile behavior)
+# Usage: load_extension_profile <pack_directory>
+load_extension_profile() {
+    local pack_dir="$1"
+    local conf_file="${pack_dir}profile.conf"
+
+    if [[ ! -f "$conf_file" ]]; then
+        return 0
+    fi
+
+    local pack_name
+    pack_name=$(basename "$pack_dir")
+
+    [[ "${VERBOSE:-false}" == true ]] && print_info "Loading extension pack profile: $pack_name ($conf_file)"
+
+    # Merge extension values into existing profile state (additive)
+    _load_profile_values "$conf_file" "child"
+}
+
+# Print summary of discovered extension packs
+# Usage: print_extensions_summary
+print_extensions_summary() {
+    if [[ ${#EXTENSION_PACKS[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    echo ""
+    print_info "Extension packs:"
+    local pack_dir
+    for pack_dir in "${EXTENSION_PACKS[@]}"; do
+        local pack_name
+        pack_name=$(basename "$pack_dir")
+        local components=()
+        [[ -f "${pack_dir}profile.conf" ]] && components+=("profile")
+        [[ -d "${pack_dir}scripts" ]] && components+=("scripts")
+        [[ -d "${pack_dir}dotfiles" ]] && components+=("dotfiles")
+        print_info "  $pack_name (${components[*]})"
+    done
     echo ""
 }

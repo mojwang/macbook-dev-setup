@@ -30,14 +30,7 @@
     "diffEditor.ignoreTrimWhitespace": false,
 
     // Terminal profiles — add per-repo profiles as repos are added
-    "terminal.integrated.profiles.osx": {
-      "netflix (root)": {
-        "path": "/bin/zsh",
-        "args": ["-l"],
-        "icon": "folder",
-        "color": "terminal.ansiRed"
-      }
-    }
+    "terminal.integrated.profiles.osx": {}
   },
   "extensions": {
     "recommendations": [
