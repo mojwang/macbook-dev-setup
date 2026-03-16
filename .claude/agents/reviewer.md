@@ -60,6 +60,11 @@ _For deep design review, the orchestrator dispatches the designer agent. This se
 - Scope compliance: does the implementation stay within IN/OUT boundaries
 - Missing criteria: success metrics that can't be validated from code alone
 
+### Engineering Health
+- **Delivery risk**: Does this change increase deployment risk? Look for: touching 5+ files in one commit, modifying shared utilities without updating all callers, changes without corresponding tests.
+- **Cognitive load**: Does understanding this change require holding more than 3 unrelated concepts simultaneously? Flag changes that span multiple domains without clear separation.
+- **Reversibility**: Can this change be safely rolled back? Flag irreversible changes (schema migrations, data format changes, external API contracts, deleted data) as requiring extra scrutiny and explicit rollback plans.
+
 ### Recommendations
 - Suggestions for improvement (optional, non-blocking)
 
@@ -67,3 +72,4 @@ _For deep design review, the orchestrator dispatches the designer agent. This se
 - Be objective — report facts, not opinions
 - Distinguish blocking issues from suggestions
 - Reference specific file paths and line numbers for issues
+- Evaluate changes against delivery health: does this increase change failure risk, slow future changes, or make incidents harder to resolve? These matter as much as correctness.

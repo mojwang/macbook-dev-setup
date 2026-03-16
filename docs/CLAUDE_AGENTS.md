@@ -13,6 +13,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Input**: Task description, user context, project goals
 - **Output**: `product-brief.md` — problem, JTBD, solution hypothesis, scope, success criteria, assumptions
 - **Key behavior**: Advisory peer to all agents. Opinionated but transparent. Orchestrator makes final calls.
+- **Structured frameworks**: opportunity mapping, hypothesis framing, strategy coherence
 
 ### Researcher (`.claude/agents/researcher.md`)
 - **Purpose**: Deep codebase exploration before planning
@@ -21,6 +22,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Input**: Task description from orchestrator
 - **Output**: `research.md` — current state, patterns, dependencies, risks, open questions
 - **Key behavior**: Read-only. References `.claude-agents.json` for project capabilities.
+- **Investigation method**: tracer bullet first, blast radius mapping, complexity assessment
 
 ### Planner (`.claude/agents/planner.md`)
 - **Purpose**: Create detailed implementation plans from research
@@ -29,6 +31,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Input**: `research.md` (if present), task description
 - **Output**: `plan.md` — summary, files to change, checkbox tasks, testing strategy, rollback plan
 - **Key behavior**: Supports annotation cycles — user adds `NOTE:` or `Q:` inline, planner addresses them on re-run.
+- **Scoping discipline**: appetite-based sizing, coherent actions, module-aligned task boundaries
 
 ### Implementer (`.claude/agents/implementer.md`)
 - **Purpose**: Execute implementation plans step by step
@@ -37,6 +40,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Input**: `plan.md` with assigned tasks
 - **Output**: Code changes with checkpoint commits
 - **Key behavior**: Self-sufficient loop — run tests after each change, shellcheck `.sh` files, commit per task. Never commits to main.
+- **Craft principles**: single representation, broken windows, deep modules, end-to-end first
 
 ### Reviewer (`.claude/agents/reviewer.md`)
 - **Purpose**: Verify implementation quality, security, and test coverage
@@ -45,6 +49,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Input**: Branch with implementation commits
 - **Output**: Review summary (PASSED/FAILED) with sections for tests, security, code quality, documentation, performance, and recommendations
 - **Key behavior**: Objective — reports facts, distinguishes blocking issues from suggestions. References specific file paths and line numbers.
+- **Health checks**: delivery risk, cognitive load, reversibility assessment
 
 ### Designer (`.claude/agents/designer.md`)
 - **Purpose**: Design system specialist — produces specs, audits, and visual QA
@@ -53,6 +58,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Input**: Task description, project design tokens, existing component inventory
 - **Output**: `design-spec.md` — component specs, token usage, layout guidance; design review feedback
 - **Key behavior**: Peer to engineering agents. Never writes implementation code. Artifacts consumed by planner and implementer.
+- **Design principles**: visual hierarchy, progressive disclosure, affordances, composition levels
 
 ## Orchestration Pattern
 

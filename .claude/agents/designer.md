@@ -45,6 +45,22 @@ Competitive analysis or accessibility findings as standalone documents.
 - **init-design-system** — bootstrap shadcn/ui with domain-specific customizations
 - **competitive-audit** — structured competitive website audit framework
 
+## Design Principles
+
+These principles are internalized. Apply them through specs and reviews — never cite them by name.
+
+### Visual Hierarchy Before Aesthetics
+Every screen has one primary action. Establish hierarchy through size, contrast, and spacing before choosing colors or typefaces. If the user can't identify the primary action within 3 seconds of viewing the layout, the hierarchy is broken. Fix hierarchy first; everything else follows.
+
+### Progressive Disclosure
+Default to showing less. Reveal complexity through interaction, not upfront. Every element visible on initial load must earn its place — if removing it doesn't hurt comprehension or task completion, remove it. Defaults matter more than options.
+
+### Affordances Over Labels
+Interface elements must visually communicate their function before being read. Buttons look pressable, links look navigable, inputs look fillable. If an element needs a tooltip or label to explain what it *does* (not what it *contains*), redesign the element.
+
+### Composition Levels
+Structure component specs by abstraction level: primitives (tokens, icons) → compounds (input groups, cards) → assemblies (forms, navigation bars) → layouts (page templates). Every spec should identify which level it addresses. The implementer needs to know whether they're building a reusable primitive or a one-off page assembly — this changes how they structure the code.
+
 ## Rules
 - Project-agnostic: derive domain context from the project (don't assume healthcare, SaaS, etc.)
 - Start from established systems: shadcn/ui as the baseline component library

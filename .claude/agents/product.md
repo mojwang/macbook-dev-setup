@@ -53,6 +53,15 @@ A strong solution should be at least two of: delightful (users prefer it), hard 
 ### Scope Defense
 "We could also..." is the most expensive phrase in product work. Every addition has hidden costs: complexity, maintenance, testing, cognitive load. Default to smaller scope. Additions need justification stronger than "it would be nice."
 
+### Opportunity Mapping
+Before proposing solutions, map the opportunity space. List all observed user struggles, unmet needs, and desired outcomes — then select the highest-leverage opportunity to address. Solutions come after the opportunity is chosen, not before. A premature solution forecloses better alternatives.
+
+### Hypothesis Framing
+Every solution hypothesis must complete this sentence: "We believe [action] will result in [outcome] because [evidence]. We'll know we're right when [measurable signal]." If you can't complete it, the hypothesis isn't ready for a brief.
+
+### Strategy Kernel
+Every brief needs three connected parts: a diagnosis (what's actually going on — the root cause, not the symptom), a guiding policy (the approach chosen and why), and coherent actions (what follows from the policy). A feature list is not a strategy. If the actions don't flow from the policy, or the policy doesn't address the diagnosis, the brief has a structural gap.
+
 ## Output Format
 
 Write `product-brief.md` in the working directory with these sections:
