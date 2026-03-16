@@ -2,7 +2,7 @@
 set -e
 
 # Agent Benchmarks Script
-# Performance testing for the 4-agent orchestration pattern
+# Performance testing for the 6-agent orchestration pattern
 
 source "$(dirname "$0")/../../lib/common.sh"
 
@@ -13,7 +13,7 @@ OUTPUT_FORMAT="${OUTPUT_FORMAT:-table}"
 print_banner() {
     echo ""
     echo "┌─────────────────────────────────────────────┐"
-    echo "│   Agent Performance Benchmarks (4-Agent)    │"
+    echo "│   Agent Performance Benchmarks (6-Agent)    │"
     echo "└─────────────────────────────────────────────┘"
     echo ""
 }
@@ -159,13 +159,13 @@ generate_report() {
     local report_data=$(cat <<EOF
 {
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-  "architecture": "4-agent (researcher, planner, implementer, reviewer)",
+  "architecture": "6-agent (product, researcher, planner, implementer, reviewer, designer)",
   "system": {
     "os": "$(uname -s)",
     "arch": "$(uname -m)",
     "cores": $(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 1)
   },
-  "agents": ["researcher", "planner", "implementer", "reviewer"],
+  "agents": ["product", "researcher", "planner", "implementer", "reviewer", "designer"],
   "recommendations": [
     "Run multiple implementers in parallel for independent tasks",
     "Skip researcher phase for well-understood areas",
@@ -179,19 +179,23 @@ EOF
         json)  echo "$report_data" ;;
         csv)
             echo "Agent,Role,Isolation"
+            echo "product,discovery,none"
             echo "researcher,exploration,none"
             echo "planner,planning,none"
             echo "implementer,execution,worktree"
             echo "reviewer,verification,none"
+            echo "designer,design,none"
             ;;
         table|*)
             echo "╔════════════════╤═══════════════╤═══════════╗"
             echo "║ Agent          │ Role          │ Isolation ║"
             echo "╠════════════════╪═══════════════╪═══════════╣"
+            echo "║ product        │ discovery     │ none      ║"
             echo "║ researcher     │ exploration   │ none      ║"
             echo "║ planner        │ planning      │ none      ║"
             echo "║ implementer    │ execution     │ worktree  ║"
             echo "║ reviewer       │ verification  │ none      ║"
+            echo "║ designer       │ design        │ none      ║"
             echo "╚════════════════╧═══════════════╧═══════════╝"
             ;;
     esac

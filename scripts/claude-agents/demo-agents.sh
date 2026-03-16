@@ -2,7 +2,7 @@
 set -e
 
 # Claude Agents Demo Script
-# Demonstrates the 4-agent orchestration pattern
+# Demonstrates the 6-agent orchestration pattern
 
 source "$(dirname "$0")/../../lib/common.sh"
 
@@ -11,7 +11,7 @@ DEMO_MODE="${1:-interactive}"
 print_banner() {
     echo ""
     echo "╔══════════════════════════════════════════════╗"
-    echo "║     Claude Sub-Agents Demo (4-Agent)        ║"
+    echo "║     Claude Sub-Agents Demo (6-Agent)        ║"
     echo "╚══════════════════════════════════════════════╝"
     echo ""
 }

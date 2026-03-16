@@ -18,6 +18,12 @@
 # Logs
 *.log
 
+# Agentic workflow artifacts (ephemeral)
+research.md
+plan.md
+design-spec.md
+product-brief.md
+
 # Build artifacts
 /build/
 /dist/

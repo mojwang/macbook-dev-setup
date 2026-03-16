@@ -27,6 +27,12 @@ coverage/
 playwright-report/
 test-results/
 
+# Agentic workflow artifacts (ephemeral)
+research.md
+plan.md
+design-spec.md
+product-brief.md
+
 # Misc
 *.log
 *.tsbuildinfo
