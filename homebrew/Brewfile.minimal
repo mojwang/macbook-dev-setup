@@ -6,7 +6,8 @@ brew "git"
 brew "gh"                    # GitHub CLI
 
 # Essential programming languages
-brew "node"
+# Note: Node.js is managed by nvm (no brew "node" to avoid PATH conflicts)
+brew "nvm"
 brew "python"
 
 # Modern CLI essentials

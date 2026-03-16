@@ -2,12 +2,14 @@
 # Node.js, Python, Ruby, etc.
 
 # Node.js version management (NVM) - Lazy loaded for performance
+# Node.js is managed exclusively by nvm (not Homebrew) to avoid PATH conflicts
+# in non-interactive shells (agents, CI, scripts).
 export NVM_DIR="$HOME/.nvm"
 [ ! -d "$NVM_DIR" ] && mkdir -p "$NVM_DIR"
 
-# Lazy load NVM to improve shell startup time
-nvm() {
-    unset -f nvm node npm npx
+# Helper: source nvm and set up completions
+_load_nvm() {
+    unset -f nvm node npm npx 2>/dev/null
     if [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
         source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
         [ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && source "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
@@ -15,38 +17,13 @@ nvm() {
         source "$NVM_DIR/nvm.sh"
         [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
     fi
-    nvm "$@"
 }
 
-node() {
-    unset -f nvm node npm npx
-    if [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
-        source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
-    elif [ -s "$NVM_DIR/nvm.sh" ]; then
-        source "$NVM_DIR/nvm.sh"
-    fi
-    node "$@"
-}
-
-npm() {
-    unset -f nvm node npm npx
-    if [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
-        source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
-    elif [ -s "$NVM_DIR/nvm.sh" ]; then
-        source "$NVM_DIR/nvm.sh"
-    fi
-    npm "$@"
-}
-
-npx() {
-    unset -f nvm node npm npx
-    if [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]; then
-        source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
-    elif [ -s "$NVM_DIR/nvm.sh" ]; then
-        source "$NVM_DIR/nvm.sh"
-    fi
-    npx "$@"
-}
+# Lazy load NVM to improve shell startup time
+nvm()  { _load_nvm; nvm "$@"; }
+node() { _load_nvm; node "$@"; }
+npm()  { _load_nvm; npm "$@"; }
+npx()  { _load_nvm; npx "$@"; }
 
 # Auto-load .nvmrc files
 autoload -U add-zsh-hook
