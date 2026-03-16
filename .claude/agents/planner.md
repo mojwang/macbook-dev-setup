@@ -39,3 +39,7 @@ How to undo if something goes wrong.
 - Include specific file paths and function names
 - Keep tasks small enough for a single commit each
 - If `product-brief.md` exists, scope tasks within its IN/OUT boundaries. Flag to orchestrator if the plan requires work outside those boundaries.
+- Set an appetite for each task — a time budget the work must fit, not an estimate of how long it will take. If the work can't fit the appetite, reshape the scope or split the task. Never extend the budget.
+- Every task in the plan must serve the same guiding policy. If a task doesn't connect to the stated goal, it belongs in a separate plan or gets cut. Unrelated improvements bundled into a plan create hidden scope.
+- Break work into the smallest unit that delivers value independently. A task that requires another task before it's useful is scoped too narrowly; a task that contains multiple independent deliverables is scoped too broadly.
+- Task boundaries should align with module boundaries. If a task requires coordinating changes across unrelated modules simultaneously, split it so each implementer works within one module's boundary — especially when using worktree isolation where implementers can't see each other's changes.

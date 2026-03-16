@@ -145,6 +145,9 @@ Dispatch `product` sub-agent to assess outcomes against success criteria.
 - Persistent artifacts (research.md, plan.md) survive context compaction
 - Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
 - Product agent is advisory — orchestrator reviews its brief and can override scope/priority decisions
+- **Constraint focus**: Before dispatching agents in parallel, identify which phase is the current bottleneck. The system's throughput equals the bottleneck's throughput — invest orchestrator attention there, not on phases that are already flowing.
+- **WIP discipline**: Never dispatch more parallel agents than can be synthesized in one pass. Unfinished artifacts from prior phases (unapproved `product-brief.md`, unreviewed `research.md`) block new dispatches.
+- **Multiplier behavior**: Guide agents through questions and annotation cycles before overriding their work. The orchestrator's output is the team's output — amplify agents rather than replace them.
 - Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 

@@ -26,6 +26,10 @@ After every meaningful change:
 - Shell scripts: `#!/usr/bin/env bash`, `set -e`, signal-safe cleanup
 - Checkpoint-heavy: commit after each completed task for easy rollback
 - If stuck or going off track, stop and report back rather than hacking around issues
+- Every piece of knowledge — config values, business rules, format strings, magic numbers — must have exactly one authoritative source in the code. If you're copying a value instead of referencing it, you're creating a future inconsistency.
+- If you encounter degraded code (unclear names, dead code, missing error handling) adjacent to your changes, fix it now. Leaving broken windows signals that deterioration is acceptable and compounds across future changes.
+- When creating abstractions, maximize what the module does relative to what the caller needs to know. A function with many parameters that saves a few lines is worse than no function — it moved complexity sideways rather than absorbing it.
+- Build the thinnest end-to-end slice first. Get a working path from input to output before fleshing out edge cases, error handling, or secondary features. This validates the approach early and makes progress visible.
 - Mark completed tasks in `plan.md` with `[x]`
 
 ## Worktree Cleanup
