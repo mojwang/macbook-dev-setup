@@ -3,6 +3,8 @@ npm
 yarn
 pnpm
 typescript
+typescript-language-server
+pyright
 ts-node
 nodemon
 eslint
