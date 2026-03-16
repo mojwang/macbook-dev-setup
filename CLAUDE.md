@@ -69,6 +69,7 @@ The main Claude session acts as orchestrator. It never implements directly for c
 - **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
 - **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
 - **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer alongside researcher/reviewer
+- **Product-first**: New features, competing priorities, unclear scope → dispatch product agent before research
 
 ### Execution Modes
 Two modes available depending on coordination needs:
@@ -86,8 +87,16 @@ Two modes available depending on coordination needs:
 - Require plan approval for risky teammates before they implement
 - 3-5 teammates max, 5-6 tasks per teammate
 
+### Phase 0: Define (optional)
+Dispatch `product` sub-agent to frame the problem and scope the solution.
+- Use for new features, competing priorities, or when "what to build" is unclear
+- Skip for bug fixes, refactors, or well-defined tasks
+- Output: `product-brief.md` with problem, scope, success criteria
+- Orchestrator reviews brief before proceeding. Annotation cycle: add `NOTE:` or `Q:` inline → re-run product agent
+
 ### Phase 1: Research
 Dispatch `researcher` sub-agent to explore affected code areas.
+- Researcher reads `product-brief.md` (if present) to focus exploration
 - Run multiple researchers in parallel for independent areas
 - For UI tasks, dispatch `designer` in parallel with researcher for competitive/pattern research
 - Output: `research.md` with findings (+ `design-spec.md` from designer if applicable)
@@ -95,6 +104,7 @@ Dispatch `researcher` sub-agent to explore affected code areas.
 
 ### Phase 2: Plan
 Dispatch `planner` sub-agent to create `plan.md` from research.
+- Planner reads `product-brief.md` (if present) for scope boundaries
 - Planner reads both `research.md` and `design-spec.md` (if present)
 - Annotation cycle: user adds `NOTE:` or `Q:` inline → re-run planner to address
 - Iterate 1-3 rounds until plan is approved
@@ -123,11 +133,18 @@ Dispatch `reviewer` sub-agent to validate implementation.
 - Can run security + quality reviewers in parallel
 - For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
+### Phase 5: Evaluate (optional)
+Dispatch `product` sub-agent to assess outcomes against success criteria.
+- Run after implementation is shipped and has had time to produce results
+- Output: evaluation addendum to `product-brief.md`
+- Skip for refactors, infra work, or tasks without user-facing outcomes
+
 ### Orchestration Rules
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
 - Persistent artifacts (research.md, plan.md) survive context compaction
 - Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
+- Product agent is advisory — orchestrator reviews its brief and can override scope/priority decisions
 - Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 
@@ -136,7 +153,7 @@ After every PR merge, orchestrator must:
 1. **Remove worktrees**: `git worktree remove <path>` for all worktrees created during the task
 2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
 3. **Prune remote refs**: `git remote prune origin`
-4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`
+4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`
 5. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
 
 Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.
@@ -215,7 +232,7 @@ Red-green-refactor: failing test first, minimal code to pass, then clean up.
 
 ## MCP Server Priority
 1. **Context7** (plugin): Library docs, code examples, API references (check first)
-2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Also usable as "Product Manager" sub-agent for PRD/discovery workflows.
+2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `product` agent.
 3. **Exa**: General web research (fallback for non-code queries)
 
 ## Important
