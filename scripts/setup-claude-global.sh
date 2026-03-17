@@ -38,7 +38,7 @@ TEMPLATE_FILE="$CONFIG_DIR/global-claude.md"
 EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
 
 # Version information
-TEMPLATE_VERSION="2.1.0"
+TEMPLATE_VERSION="2.2.0"
 VERSION_MARKER="# Claude Global Config Version:"
 
 # Resolve the effective template by concatenating base + profile overlay.

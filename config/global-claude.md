@@ -1,4 +1,4 @@
-# Claude Global Config v2.0
+# Claude Global Config v2.2.0
 
 ## Core Principles
 - Be direct and concise
@@ -49,6 +49,43 @@
 - Write findings and plans to persistent markdown before implementing
 - Write tests BEFORE implementation when agents implement autonomously
 - Git revert is the safety net; move fast and break nothing
+- If something goes sideways during implementation, STOP and re-plan — don't push through a failing approach
+- After receiving a correction, save the lesson to memory to prevent repeating the same mistake
+
+## Workflow Orchestration
+
+### Plan Mode
+- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
+- Write detailed specs upfront to reduce ambiguity
+- If something goes sideways, STOP and re-plan immediately
+- Use plan mode for verification steps, not just building
+
+### Subagent Strategy
+- Use subagents liberally to keep main context window clean
+- Offload research, exploration, and parallel analysis to subagents
+- One task per subagent for focused execution
+- For complex problems, throw more compute at it via subagents
+
+### Autonomous Bug Fixing
+- When given a bug report: just fix it — don't ask for hand-holding
+- Point at logs, errors, failing tests — then resolve them
+- Zero context switching required from the user
+- Go fix failing CI tests without being told how
+
+## Task Management
+1. **Plan First**: Write plan with checkable items before implementing
+2. **Verify Plan**: Check in with user before starting implementation
+3. **Track Progress**: Mark items complete as you go
+4. **Explain Changes**: High-level summary at each step
+5. **Document Results**: Add review notes to the plan
+6. **Capture Lessons**: After ANY correction, save the lesson to memory so the mistake isn't repeated
+
+## Quality Standards
+- **Simplicity First**: Make every change as simple as possible. Minimal code impact.
+- **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
+- **Minimal Impact**: Only touch what's necessary. No side effects or new bugs.
+- **Verification Before Done**: Never consider a task complete without proving it works — run tests, check logs, diff against main when relevant
+- **Demand Elegance**: For non-trivial changes, pause and ask "is there a more elegant way?" Challenge your own work before presenting it. Skip this for simple, obvious fixes.
 
 ## Environment
 - macOS Apple Silicon, zsh with modular config in `~/.config/zsh/`
