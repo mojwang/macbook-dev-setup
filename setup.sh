@@ -68,6 +68,7 @@ Commands:
     backup     Manage setup backups
     info       Learn about installed tools, aliases & features
     advanced   Interactive mode for advanced options
+    new-extension <name> [dir]  Scaffold a new extension pack
     help       Show this help message
 
 Options:
@@ -388,6 +389,16 @@ main_setup() {
         exit 1
     fi
     
+    # Discover extension packs and merge their profiles BEFORE package install
+    discover_extensions
+    if [[ ${#EXTENSION_PACKS[@]} -gt 0 ]]; then
+        ui_section_header "Extension Packs"
+        print_extensions_summary
+        for _ext_pack_dir in "${EXTENSION_PACKS[@]}"; do
+            load_extension_profile "$_ext_pack_dir"
+        done
+    fi
+
     # Install or update based on state
     if [[ "$setup_state" == "fresh" ]]; then
         # Fresh installation
@@ -508,20 +519,13 @@ main_setup() {
         fi
     fi
     
-    # Discover and apply extension packs
-    discover_extensions
+    # Run extension pack scripts (profiles were already loaded before package install)
     if [[ ${#EXTENSION_PACKS[@]} -gt 0 ]]; then
-        ui_section_header "Extension Packs"
-        print_extensions_summary
-
+        ui_section_header "Extension Pack Scripts"
         for _ext_pack_dir in "${EXTENSION_PACKS[@]}"; do
             local _ext_name
             _ext_name=$(basename "$_ext_pack_dir")
 
-            # Load extension profile.conf (merges into current profile state)
-            load_extension_profile "$_ext_pack_dir"
-
-            # Run extension scripts
             if [[ -d "${_ext_pack_dir}scripts" ]]; then
                 for _ext_script in "${_ext_pack_dir}scripts"/*.sh; do
                     [[ ! -f "$_ext_script" ]] && continue
@@ -697,11 +701,16 @@ case "${1:-}" in
         main_setup
         ;;
     
+    "new-extension")
+        shift
+        "$ROOT_DIR/scripts/scaffold-extension.sh" "$@"
+        ;;
+
     "")
         # Default: smart setup
         main_setup
         ;;
-    
+
     *)
         print_error "Unknown command: $1"
         echo "Run './setup.sh help' for usage"
