@@ -35,6 +35,7 @@ CLAUDE_DIR="$HOME/.claude"
 CLAUDE_GLOBAL_MD="$CLAUDE_DIR/CLAUDE.md"
 CONFIG_DIR="$(dirname "$0")/../config"
 TEMPLATE_FILE="$CONFIG_DIR/global-claude.md"
+EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
 
 # Version information
 TEMPLATE_VERSION="2.1.0"
@@ -78,11 +79,51 @@ resolve_template() {
     print_info "Using profile overlay: global-claude-${profile}.md"
 }
 
+# Append extension pack CLAUDE.md overlays from $EXTENSIONS_DIR/*/claude/global-claude-overlay.md.
+#
+# Scans all installed extension packs for optional Claude overlays and appends
+# them to the assembled template. Updates EXTENSION_OVERLAYS_APPLIED with the
+# list of applied overlay names (for metadata tracking).
+# Requires TEMPLATE_FILE to already point to a valid file (base or assembled).
+EXTENSION_OVERLAYS_APPLIED=()
+append_extension_overlays() {
+    [[ -d "$EXTENSIONS_DIR" ]] || return 0
+
+    local overlay
+    for overlay in "$EXTENSIONS_DIR"/*/claude/global-claude-overlay.md; do
+        [[ -f "$overlay" ]] || continue
+
+        local ext_name
+        ext_name=$(basename "$(dirname "$(dirname "$overlay")")")
+
+        # Validate overlay has a markdown heading
+        if ! grep -q '^## ' "$overlay" 2>/dev/null; then
+            print_warning "Extension overlay '$ext_name' has no ## heading — skipping"
+            continue
+        fi
+
+        # If TEMPLATE_FILE is still the original (not yet assembled), create a temp copy
+        if [[ "$TEMPLATE_FILE" == "$CONFIG_DIR/"* ]]; then
+            local assembled
+            assembled=$(safe_mktemp "claude-global-assembled.XXXXXX")
+            cat "$TEMPLATE_FILE" > "$assembled"
+            TEMPLATE_FILE="$assembled"
+        fi
+
+        # Append with a blank separator
+        printf '\n' >> "$TEMPLATE_FILE"
+        cat "$overlay" >> "$TEMPLATE_FILE"
+        EXTENSION_OVERLAYS_APPLIED+=("$ext_name")
+        print_info "Appended extension overlay: $ext_name"
+    done
+}
+
 setup_global_claude() {
     print_info "Setting up global Claude Code configuration..."
 
-    # Assemble base + profile overlay
+    # Assemble base + profile overlay + extension overlays
     resolve_template
+    append_extension_overlays
 
     # Validate template file exists
     if [[ ! -f "$TEMPLATE_FILE" ]]; then
@@ -181,7 +222,12 @@ install_template_with_metadata() {
     {
         echo "$VERSION_MARKER $TEMPLATE_VERSION"
         echo "# Last Updated: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "# Source: macbook-dev-setup/config/global-claude.md${SETUP_PROFILE:+ + global-claude-${SETUP_PROFILE}.md}"
+        local source_line="macbook-dev-setup/config/global-claude.md"
+        [[ -n "${SETUP_PROFILE:-}" ]] && source_line+=" + global-claude-${SETUP_PROFILE}.md"
+        for _ext in "${EXTENSION_OVERLAYS_APPLIED[@]}"; do
+            source_line+=" + ext:${_ext}"
+        done
+        echo "# Source: $source_line"
         echo ""
         cat "$TEMPLATE_FILE"
     } > "$temp_file"
@@ -206,8 +252,9 @@ strip_metadata_header() {
 # Main execution
 case "${1:-}" in
     --check)
-        # Assemble base + profile overlay for comparison
+        # Assemble base + profile overlay + extension overlays for comparison
         resolve_template
+        append_extension_overlays
 
         # Validate template exists first
         if [[ ! -f "$TEMPLATE_FILE" ]]; then
@@ -281,9 +328,11 @@ case "${1:-}" in
         echo "  --help            Show this help message"
         echo ""
         echo "Environment variables:"
-        echo "  SETUP_PROFILE   Profile name to apply (e.g., 'personal', 'work')"
-        echo "                  Concatenates config/global-claude-\$SETUP_PROFILE.md onto base"
-        echo "  CI              Set to 'true' to run in non-interactive mode"
+        echo "  SETUP_PROFILE    Profile name to apply (e.g., 'personal', 'work')"
+        echo "                   Concatenates config/global-claude-\$SETUP_PROFILE.md onto base"
+        echo "  EXTENSIONS_DIR   Extension packs directory (default: ~/.config/macbook-dev-setup.d)"
+        echo "                   Appends */claude/global-claude-overlay.md from each extension"
+        echo "  CI               Set to 'true' to run in non-interactive mode"
         ;;
     *)
         setup_global_claude

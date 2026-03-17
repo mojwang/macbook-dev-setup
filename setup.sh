@@ -68,6 +68,7 @@ Commands:
     backup     Manage setup backups
     info       Learn about installed tools, aliases & features
     advanced   Interactive mode for advanced options
+    new-extension <name> [dir]  Scaffold a new extension pack
     help       Show this help message
 
 Options:
@@ -700,11 +701,16 @@ case "${1:-}" in
         main_setup
         ;;
     
+    "new-extension")
+        shift
+        "$ROOT_DIR/scripts/scaffold-extension.sh" "$@"
+        ;;
+
     "")
         # Default: smart setup
         main_setup
         ;;
-    
+
     *)
         print_error "Unknown command: $1"
         echo "Run './setup.sh help' for usage"

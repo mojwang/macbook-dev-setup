@@ -29,6 +29,7 @@ cleanup_agentic() {
 setup_cleanup "cleanup_agentic"
 
 # Configuration
+EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
 TEMPLATE_VERSION="2.1.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
@@ -113,6 +114,34 @@ install_plugins() {
             print_warning "Failed to install plugin: $plugin (continuing)"
         fi
     done
+
+    # Scan extension packs for additional plugins
+    if [[ -d "$EXTENSIONS_DIR" ]]; then
+        for ext_plugins_conf in "$EXTENSIONS_DIR"/*/claude/plugins.conf; do
+            [[ -f "$ext_plugins_conf" ]] || continue
+            local ext_name
+            ext_name=$(basename "$(dirname "$(dirname "$ext_plugins_conf")")")
+            print_info "Scanning extension plugins: $ext_name"
+            while IFS= read -r line || [[ -n "$line" ]]; do
+                # Skip comments and empty lines
+                line="${line%%#*}"
+                line="${line// /}"
+                [[ -z "$line" ]] && continue
+
+                local plugin_name="${line%%@*}"
+                if echo "$installed_plugins" | grep -q "^${plugin_name}$" 2>/dev/null; then
+                    ((skipped++)) || true
+                    continue
+                fi
+                print_info "Installing extension plugin: $line"
+                if claude plugin install "$line" 2>/dev/null; then
+                    ((installed++)) || true
+                else
+                    print_warning "Failed to install extension plugin: $line (continuing)"
+                fi
+            done < "$ext_plugins_conf"
+        done
+    fi
 
     if [[ $installed -gt 0 ]]; then
         print_success "Installed $installed plugin(s), $skipped already present"
@@ -298,6 +327,28 @@ create_symlink() {
     if ! echo "$PATH" | tr ':' '\n' | grep -q "^${SYMLINK_DIR}$"; then
         print_info "Add to your shell config: export PATH=\"$SYMLINK_DIR:\$PATH\""
     fi
+}
+
+create_scaffold_symlink() {
+    print_step "Creating scaffold-extension symlink..."
+
+    mkdir -p "$SYMLINK_DIR"
+
+    local target="$REPO_DIR/scripts/scaffold-extension.sh"
+    local link="$SYMLINK_DIR/scaffold-extension"
+
+    if [[ -L "$link" ]]; then
+        local current_target
+        current_target=$(readlink "$link")
+        if [[ "$current_target" == "$target" ]]; then
+            print_success "Symlink already exists: $link"
+            return 0
+        fi
+        rm "$link"
+    fi
+
+    ln -s "$target" "$link"
+    print_success "Created symlink: $link -> $target"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -673,6 +724,7 @@ case "${1:-}" in
         install_lsp_deps
         deploy_templates
         create_symlink
+        create_scaffold_symlink
         print_success "Claude agentic workflow setup complete!"
         ;;
 esac
