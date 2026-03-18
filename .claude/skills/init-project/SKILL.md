@@ -54,7 +54,7 @@ claude-init-agentic --init $ARGUMENTS
 |---|---|---|---|
 | (none) | security-review, commit-review, deep-research | base settings | — |
 | `--type shell` | + shell-conventions | shellcheck on .sh edits | test, shellcheck, security-scan, All Checks Pass |
-| `--type web` | + typescript-conventions, web-review | tsc --noEmit on .ts/.tsx edits | test, lint, typecheck, build, All Checks Pass |
+| `--type web` | + typescript-conventions, web-review, design-review, design-elevation | tsc --noEmit on .ts/.tsx edits | test, lint, typecheck, build, All Checks Pass |
 
 ## Claude Review Auth Options
 

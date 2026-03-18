@@ -28,10 +28,11 @@ Structured framework for auditing competitor websites and synthesizing actionabl
 For each approved site, capture and analyze:
 
 ### Visual Design
-- Playwright screenshots: desktop (1440px) + mobile (390px) for homepage and 2-3 key pages
+- Playwright screenshots: desktop (1440px), tablet (768px), mobile (390px) for homepage and 2-3 key pages
 - Color palette extraction (primary, secondary, accent, neutrals)
 - Typography system (headings, body, font families, sizes)
 - White space and density patterns
+- Animation and interaction quality (transitions, hover effects, loading states)
 
 ### Navigation & Information Architecture
 - Primary navigation structure and labeling
@@ -56,6 +57,12 @@ For each approved site, capture and analyze:
 - Blog/resource center presence
 - Service page depth and structure
 - Patient/customer education content
+
+### Accessibility & Performance
+- Lighthouse accessibility score (run via Playwright)
+- Keyboard navigation quality (tab order, focus visibility)
+- Page load speed (first meaningful paint)
+- Mobile usability (touch targets, text readability)
 
 ## Phase 3: Synthesis
 
