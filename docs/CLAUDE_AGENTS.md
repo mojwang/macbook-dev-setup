@@ -1,19 +1,31 @@
 # Claude Sub-Agents
 
-Orchestrator pattern with 6 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase 1-4).
+Orchestrator pattern with 7 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase -1 through Phase 5).
 
 ## Native Sub-Agents
 
 All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter for metadata.
 
-### Product (`.claude/agents/product.md`)
-- **Purpose**: Product thinking — problem definition, scoping, prioritization, outcome evaluation
+### Product Strategist (`.claude/agents/product-strategist.md`)
+- **Purpose**: Full-lifecycle product strategy — idea validation, discovery, MVP scoping, PMF assessment, positioning, growth
+- **Tools**: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+- **When**: New product ideas, "should we build this?" questions, market validation, PMF assessment
+- **Input**: Raw idea, conversation context, `product-lab/stage.json` for state
+- **Output**: Persistent artifacts in `product-lab/` — evaluation, discovery, MVP scope, positioning, growth engine
+- **Key behavior**: Questions over statements, facts over opinions, pushback over validation. Guides founders through 7 lifecycle stages with evidence gates.
+- **Invocation**: `/product-lab [mode] [idea-name]` or directly as sub-agent
+- **Companion files**: `FRAMEWORKS.md`, `STAGE-PLAYBOOKS.md`, `ARTIFACTS.md` in `.claude/skills/product-lab/`
+
+### Product Tactician (`.claude/agents/product-tactician.md`)
+- **Purpose**: Per-feature product thinking — problem definition, scoping, prioritization, outcome evaluation
 - **Tools**: Read, Grep, Glob, Bash
-- **When**: New features, competing priorities, unclear scope, post-launch evaluation
-- **Input**: Task description, user context, project goals
+- **When**: New features within an existing project, competing priorities, unclear scope, post-launch evaluation
+- **Input**: Task description, user context, project goals, `product-lab/` artifacts (if present)
 - **Output**: `product-brief.md` — problem, JTBD, solution hypothesis, scope, success criteria, assumptions
 - **Key behavior**: Advisory peer to all agents. Opinionated but transparent. Orchestrator makes final calls.
 - **Structured frameworks**: opportunity mapping, hypothesis framing, strategy coherence
+
+**Strategist vs. Tactician**: The strategist decides whether to build the product at all (lifecycle-level). The tactician scopes individual features within a validated product. Strategist outputs (positioning, discovery, MVP scope) feed into the tactician's problem framing.
 
 ### Researcher (`.claude/agents/researcher.md`)
 - **Purpose**: Deep codebase exploration before planning
@@ -68,12 +80,13 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Sync/supervised** (core logic, security-sensitive): Work interactively
 
 ### Phase Flow
-0. **Define** (optional) → Dispatch product agent for new features or unclear scope.
+-1. **Strategy** (optional) → Dispatch product-strategist for "should we build this?" questions. Output: `product-lab/` artifacts.
+0. **Define** (optional) → Dispatch product-tactician for per-feature scoping.
 1. **Research** → Dispatch researcher + designer (parallel for UI tasks).
 2. **Plan** → Dispatch planner (reads `research.md` + `design-spec.md` + `product-brief.md`).
 3. **Implement** → Dispatch implementer(s) in worktree isolation. Parallel for independent tasks.
 4. **Verify** → Dispatch reviewer + designer (parallel for design-system projects).
-5. **Evaluate** (optional) → Dispatch product agent to assess outcomes.
+5. **Evaluate** (optional) → Dispatch product-tactician to assess outcomes.
 
 ### Key Rules
 - Orchestrator never implements complex tasks itself
@@ -84,6 +97,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 ## Artifacts
 
 - **`research.md`**, **`plan.md`**, **`design-spec.md`**, and **`product-brief.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
+- **`product-lab/`**: Persistent artifacts from product-strategist. NOT cleaned up after PR merge — they represent ongoing product strategy state across sessions.
 - Survive context compaction — persistent reference for orchestrator and agents.
 - Annotation cycles: user adds `NOTE:`/`Q:` to `plan.md`, re-runs planner to address.
 

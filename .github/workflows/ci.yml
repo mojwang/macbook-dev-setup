@@ -122,8 +122,8 @@ jobs:
 
     - name: Validate Agent Definitions
       run: |
-        echo "Validating 6-agent definitions..."
-        for agent in product researcher planner implementer reviewer designer; do
+        echo "Validating 7-agent definitions..."
+        for agent in product-strategist product-tactician researcher planner implementer reviewer designer; do
           if [[ -f ".claude/agents/${agent}.md" ]]; then
             echo "✓ ${agent} agent definition exists"
           else

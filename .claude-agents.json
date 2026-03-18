@@ -1,12 +1,22 @@
 {
   "version": "1.0.0",
   "project": "macbook-dev-setup",
-  "description": "Structured metadata for the 6 native sub-agents",
+  "description": "Structured metadata for the 7 native sub-agents",
 
   "agents": {
-    "product": {
-      "name": "Product",
-      "description": "Product thinking specialist. Defines problems, scopes solutions, prioritizes work, and evaluates outcomes.",
+    "product-strategist": {
+      "name": "Product Strategist",
+      "description": "Full-lifecycle product strategist. Idea validation, discovery, MVP, PMF, positioning, growth.",
+      "enabled": true,
+      "priority": "high",
+      "tools": ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "WebSearch", "WebFetch"],
+      "triggers": ["new_product_idea", "market_validation", "pmf_assessment", "positioning"],
+      "outputs": ["product-lab/"]
+    },
+
+    "product-tactician": {
+      "name": "Product Tactician",
+      "description": "Per-feature product thinking. Defines problems, scopes solutions, prioritizes work, and evaluates outcomes.",
       "enabled": true,
       "priority": "high",
       "tools": ["Read", "Grep", "Glob", "Bash"],
@@ -69,8 +79,8 @@
 
   "workflows": {
     "standard": {
-      "description": "Sequential workflow: product → research → plan → implement → review",
-      "phases": ["product", "researcher", "planner", "implementer", "reviewer"]
+      "description": "Sequential workflow: product-tactician → research → plan → implement → review",
+      "phases": ["product-tactician", "researcher", "planner", "implementer", "reviewer"]
     },
 
     "parallel_implementation": {
@@ -98,14 +108,15 @@
     },
 
     "product_aware": {
-      "description": "Full product-led workflow with define and evaluate phases",
+      "description": "Full product-led workflow with strategy, define, and evaluate phases",
       "phases": {
-        "define": "product",
+        "strategy": "product-strategist",
+        "define": "product-tactician",
         "research": { "parallel": true, "agents": ["researcher", "designer"] },
         "plan": "planner",
         "implement": { "parallel": true, "agent": "implementer", "max_concurrent": 3 },
         "review": { "parallel": true, "agents": ["reviewer", "designer"] },
-        "evaluate": "product"
+        "evaluate": "product-tactician"
       }
     }
   },

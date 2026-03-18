@@ -159,13 +159,13 @@ generate_report() {
     local report_data=$(cat <<EOF
 {
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-  "architecture": "6-agent (product, researcher, planner, implementer, reviewer, designer)",
+  "architecture": "7-agent (product-strategist, product-tactician, researcher, planner, implementer, reviewer, designer)",
   "system": {
     "os": "$(uname -s)",
     "arch": "$(uname -m)",
     "cores": $(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 1)
   },
-  "agents": ["product", "researcher", "planner", "implementer", "reviewer", "designer"],
+  "agents": ["product-strategist", "product-tactician", "researcher", "planner", "implementer", "reviewer", "designer"],
   "recommendations": [
     "Run multiple implementers in parallel for independent tasks",
     "Skip researcher phase for well-understood areas",
@@ -179,7 +179,8 @@ EOF
         json)  echo "$report_data" ;;
         csv)
             echo "Agent,Role,Isolation"
-            echo "product,discovery,none"
+            echo "product-strategist,strategy,none"
+            echo "product-tactician,discovery,none"
             echo "researcher,exploration,none"
             echo "planner,planning,none"
             echo "implementer,execution,worktree"
@@ -190,7 +191,8 @@ EOF
             echo "╔════════════════╤═══════════════╤═══════════╗"
             echo "║ Agent          │ Role          │ Isolation ║"
             echo "╠════════════════╪═══════════════╪═══════════╣"
-            echo "║ product        │ discovery     │ none      ║"
+            echo "║ prod-strategist│ strategy      │ none      ║"
+            echo "║ prod-tactician │ discovery     │ none      ║"
             echo "║ researcher     │ exploration   │ none      ║"
             echo "║ planner        │ planning      │ none      ║"
             echo "║ implementer    │ execution     │ worktree  ║"
