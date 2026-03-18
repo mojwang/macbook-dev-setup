@@ -30,6 +30,37 @@ npx shadcn@latest init  # style=new-york, CSS vars=yes, path=src/components/ui
 - Preserve existing token names for backward compatibility
 - Add shadcn variables alongside existing definitions
 
+### 3.5. Typography Scale
+Define heading and body type scale as CSS custom properties. Use a modular scale (1.25 ratio for healthcare, 1.2 for SaaS):
+```css
+/* Healthcare defaults: 18px base, 1.6 line-height */
+--text-xs: 0.75rem;     /* 12px — captions, legal */
+--text-sm: 0.875rem;    /* 14px — small labels */
+--text-base: 1.125rem;  /* 18px — body text */
+--text-lg: 1.25rem;     /* 20px — lead text */
+--text-xl: 1.5rem;      /* 24px — h4 */
+--text-2xl: 1.875rem;   /* 30px — h3 */
+--text-3xl: 2.25rem;    /* 36px — h2 */
+--text-4xl: 3rem;       /* 48px — h1 */
+--leading-tight: 1.25;
+--leading-normal: 1.6;
+--leading-relaxed: 1.75;
+```
+
+### 3.6. Spacing Scale
+Define a spacing rhythm based on a 4px base unit as CSS custom properties:
+```css
+--space-1: 0.25rem;  /* 4px */
+--space-2: 0.5rem;   /* 8px */
+--space-3: 0.75rem;  /* 12px */
+--space-4: 1rem;     /* 16px */
+--space-6: 1.5rem;   /* 24px */
+--space-8: 2rem;     /* 32px */
+--space-12: 3rem;    /* 48px */
+--space-16: 4rem;    /* 64px */
+--space-24: 6rem;    /* 96px */
+```
+
 ### 4. Install Baseline Components
 ```bash
 npx shadcn@latest add button card input label badge separator sheet navigation-menu
@@ -57,6 +88,12 @@ Generate `docs/design/design-system.md` with:
 - Token mapping reference
 - Component inventory with variants
 - Usage guidelines and migration notes
+
+Generate `docs/design/tokens.md` with:
+- Full color token inventory (semantic name → value → usage)
+- Typography scale reference with usage guidance (h1-h6, body, small, caption)
+- Spacing scale reference with common patterns (section padding, card gaps, form spacing)
+- Mapping from raw Tailwind classes to semantic tokens for migration
 
 ## Verification
 - `npm run build` passes
