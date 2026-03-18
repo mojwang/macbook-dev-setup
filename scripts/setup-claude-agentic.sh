@@ -228,7 +228,7 @@ deploy_templates() {
 
     # Copy web-specific skills from config/skills/
     local web_skill_src="$REPO_DIR/config/skills"
-    local web_skills=("typescript-conventions" "web-review" "design-review" "init-design-system" "competitive-audit")
+    local web_skills=("typescript-conventions" "web-review" "design-review" "design-elevation" "init-design-system" "competitive-audit")
     for skill_name in "${web_skills[@]}"; do
         if [[ -f "$web_skill_src/$skill_name/SKILL.md" ]]; then
             mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name"
