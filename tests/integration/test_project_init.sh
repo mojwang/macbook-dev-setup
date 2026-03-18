@@ -32,7 +32,7 @@ assert_file_exists "$WEB_DIR/.claude-agents.json" ".claude-agents.json created"
 assert_directory_exists "$WEB_DIR/.git" "Git repo initialized"
 
 # Agents
-for agent in product researcher planner implementer reviewer designer; do
+for agent in product-tactician researcher planner implementer reviewer designer; do
     assert_file_exists "$WEB_DIR/.claude/agents/${agent}.md" "Agent: $agent"
 done
 

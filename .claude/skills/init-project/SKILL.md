@@ -28,7 +28,7 @@ claude-init-agentic --init $ARGUMENTS
    - Git repository (initialized if new)
    - `CLAUDE.md` (from template — enforced git workflow, CI section)
    - `README.md` (skeleton if not present)
-   - `.claude/agents/` (product, researcher, planner, implementer, reviewer, designer)
+   - `.claude/agents/` (product-tactician, researcher, planner, implementer, reviewer, designer)
    - `.claude/skills/` (base + type-specific skills)
    - `.claude/settings.json` (type-specific hooks, merged with existing)
    - `.claude-agents.json` (only if not present)

@@ -69,7 +69,8 @@ The main Claude session acts as orchestrator. It never implements directly for c
 - **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
 - **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
 - **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer in Phase 1 (parallel with researcher) and Phase 4 (parallel with reviewer). Designer produces `design-spec.md` which planner and implementer consume as required input.
-- **Product-first**: New features, competing priorities, unclear scope → dispatch product agent before research
+- **Product-first**: New features, competing priorities, unclear scope → dispatch product-tactician agent before research
+- **Strategy-first**: "Should we build this?" questions, new product ideas, market validation → dispatch product-strategist via `/product-lab` before any other phase
 
 ### Execution Modes
 Two modes available depending on coordination needs:
@@ -87,12 +88,21 @@ Two modes available depending on coordination needs:
 - Require plan approval for risky teammates before they implement
 - 3-5 teammates max, 5-6 tasks per teammate
 
+### Phase -1: Strategy (optional)
+Dispatch `product-strategist` sub-agent when the question is "should we build this" — not "what to build."
+- Use for new product ideas, market validation, or when product-market fit is uncertain
+- Invoke via `/product-lab evaluate [idea-name]` or `/product-lab [stage]`
+- Output: persistent artifacts in `product-lab/` (evaluation, discovery, MVP scope, positioning, etc.)
+- These artifacts are NOT ephemeral — they persist across sessions and feed downstream agents
+- `product-lab/positioning.md` → designer (audience, tone); `product-lab/discovery.md` → product-tactician (evidence); `product-lab/mvp-scope.md` → planner (boundaries)
+
 ### Phase 0: Define (optional)
-Dispatch `product` sub-agent to frame the problem and scope the solution.
+Dispatch `product-tactician` sub-agent to frame the problem and scope the solution for a specific feature.
 - Use for new features, competing priorities, or when "what to build" is unclear
 - Skip for bug fixes, refactors, or well-defined tasks
+- Consumes `product-lab/` artifacts (if present) for strategic context
 - Output: `product-brief.md` with problem, scope, success criteria
-- Orchestrator reviews brief before proceeding. Annotation cycle: add `NOTE:` or `Q:` inline → re-run product agent
+- Orchestrator reviews brief before proceeding. Annotation cycle: add `NOTE:` or `Q:` inline → re-run product-tactician
 
 ### Phase 1: Research
 Dispatch `researcher` sub-agent to explore affected code areas.
@@ -134,7 +144,7 @@ Dispatch `reviewer` sub-agent to validate implementation.
 - For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
 ### Phase 5: Evaluate (optional)
-Dispatch `product` sub-agent to assess outcomes against success criteria.
+Dispatch `product-tactician` sub-agent to assess outcomes against success criteria.
 - Run after implementation is shipped and has had time to produce results
 - Output: evaluation addendum to `product-brief.md`
 - Skip for refactors, infra work, or tasks without user-facing outcomes
@@ -144,7 +154,8 @@ Dispatch `product` sub-agent to assess outcomes against success criteria.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
 - Persistent artifacts (research.md, plan.md) survive context compaction
 - Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
-- Product agent is advisory — orchestrator reviews its brief and can override scope/priority decisions
+- Product agents are advisory — orchestrator reviews briefs and can override scope/priority decisions
+- Product-strategist artifacts (`product-lab/`) are persistent; product-tactician artifacts (`product-brief.md`) are ephemeral
 - **Constraint focus**: Before dispatching agents in parallel, identify which phase is the current bottleneck. The system's throughput equals the bottleneck's throughput — invest orchestrator attention there, not on phases that are already flowing.
 - **WIP discipline**: Never dispatch more parallel agents than can be synthesized in one pass. Unfinished artifacts from prior phases (unapproved `product-brief.md`, unreviewed `research.md`) block new dispatches.
 - **Multiplier behavior**: Guide agents through questions and annotation cycles before overriding their work. The orchestrator's output is the team's output — amplify agents rather than replace them.
@@ -208,6 +219,7 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
 - **/init-design-system [dir] [--domain healthcare|saas|ecommerce]** — bootstrap shadcn/ui with domain customizations (`disable-model-invocation: true`)
 - **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
+- **/product-lab [mode] [idea-name]** — YC-powered product lifecycle co-pilot: evaluate ideas, run discovery, scope MVPs, assess PMF (`agent: product-strategist`)
 
 **Web auto-invoked** (deployed with `--type web`):
 - **design-review** — token compliance, component consistency, visual hierarchy, typography/spacing rhythm, animation quality, cross-page consistency, healthcare UX (activates on component/style changes)
@@ -238,7 +250,7 @@ Red-green-refactor: failing test first, minimal code to pass, then clean up.
 
 ## MCP Server Priority
 1. **Context7** (plugin): Library docs, code examples, API references (check first)
-2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `product` agent.
+2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `product-tactician` and `product-strategist` agents.
 3. **Exa**: General web research (fallback for non-code queries)
 
 ## Important
