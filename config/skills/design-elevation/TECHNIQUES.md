@@ -1,6 +1,6 @@
 # Design Techniques Catalog
 
-Organized by outcome. Each technique includes when to use and when NOT to use. Pick 2-3 per spec — not more.
+Organized by outcome. Each technique includes when to use and when NOT to use. Pick 2-3 per spec — not more. For data-heavy specs, combine one Visualize Data technique with one Communicate Numbers technique.
 
 ## Establish Trust
 
@@ -168,3 +168,151 @@ Avoid: Utility-first applications, accessibility-critical flows without fallback
 A display font or distinctive type treatment that carries brand identity.
 Use: Headings, hero sections, key messaging.
 Avoid: Body text, UI elements, form labels.
+
+## Visualize Data
+
+**Maximize Data-Ink Ratio**
+Remove every non-data element (gridlines, borders, decorative fills) until nothing else can be removed without losing information. Every pixel should encode data. (Tufte)
+Use: Every chart, as a finishing pass.
+Avoid: Never skip this.
+
+**Direct Labeling**
+Place data labels directly on or adjacent to data series instead of using a separate legend. Eliminates eye-travel cost.
+Use: Line charts with 2-5 series, bar charts, any chart where a legend forces cross-referencing.
+Avoid: Charts with 10+ overlapping series where labels would collide, interactive contexts with hover tooltips.
+
+**Gray + One Accent**
+Render all data in muted gray, highlight the one series you want the audience to focus on in a single accent color. Forces attention to the insight.
+Use: Presentations, executive summaries, any context with a specific point to make.
+Avoid: Exploratory dashboards where users need to compare all series equally.
+
+**Annotation Callouts**
+Add text annotations directly on the chart surface pointing to notable data points, explaining *why* something happened. Turns description into explanation.
+Use: Time series with notable events, narrative/presentation contexts.
+Avoid: Real-time operational dashboards, exploratory tools where users define their own narrative.
+
+**Sparklines**
+Tiny word-sized line charts embedded inline with text or table cells. Show trend shape without axes, labels, or chrome. (Tufte)
+Use: KPI tables needing current value + trend. Dashboards with many metrics. Inline with prose.
+Avoid: When precise values matter more than trend shape.
+
+**Small Multiples**
+Repeat the same chart type across a grid, one panel per category, all sharing the same axes. Enables comparison without spaghetti overlap.
+Use: Comparing trends across 6-30 categories (regions, products, cohorts).
+Avoid: Fewer than 4 categories (just overlay them). Wildly different scales across categories.
+
+**Slopegraph**
+Two vertical axes (before/after) connected by lines. Shows rank changes and magnitude changes simultaneously.
+Use: Comparing values between exactly two time periods. Before/after with 5-15 items.
+Avoid: More than two time periods. Fewer than 3 items.
+
+**Waterfall Chart**
+Shows how an initial value is affected by sequential positive and negative values, arriving at a final total.
+Use: Financial breakdowns (revenue to profit), explaining how a metric changed through contributing factors.
+Avoid: Non-additive factors. More than 12-15 contributing factors.
+
+**Reference Lines and Bands**
+Horizontal/vertical lines or shaded bands indicating targets, averages, thresholds. Provides instant "good vs. bad" context.
+Use: Any metric chart with targets. SLA monitoring. Goal tracking.
+Avoid: Exploratory contexts where no target exists yet.
+
+**Progressive Data Disclosure**
+Show simplified view by default; reveal detailed data on hover/click/drill-down. "Overview first, zoom and filter, details on demand." (Shneiderman)
+Use: Interactive dashboards. Dense datasets. Mixed-expertise audiences.
+Avoid: Static reports, printed materials, presentation slides.
+
+## Communicate Numbers
+
+**Big Number Display**
+A single metric in very large typography (48-72px+) as the dominant visual element. The number IS the visualization.
+Use: KPI cards, single-stat slides, status boards, hero stats.
+Avoid: When the number needs heavy context. When showing multiple equally-important metrics.
+
+**Trend Indicator (Delta + Arrow)**
+Show change direction (arrow) and magnitude (+12%) next to current value. Color-code green/red only when direction has clear meaning. Always add arrow shape as redundant cue for colorblind users.
+Use: Any current-value display. KPI cards. Dashboard headers.
+Avoid: When "up" isn't inherently good or bad without context.
+
+**Contextual Benchmark**
+Always pair a number with a comparison: vs. target, vs. last period, vs. industry. A number without context is just a number.
+Use: Every KPI display. Every metric card. Every data slide.
+Avoid: When the benchmark itself would be misleading (anomalous comparison period).
+
+**Progress-to-Goal**
+Show current value as progress toward a defined target. Bullet charts (Tufte) are most ink-efficient: single horizontal bar with target marker and qualitative ranges.
+Use: Sales targets, fundraising, OKR tracking, SLA compliance.
+Avoid: When there is no defined target. Avoid circular gauges — use bullet charts instead.
+
+**Humanized Scale**
+Translate abstract large numbers into relatable terms. "1.3M tons" becomes "enough to fill 520 Olympic swimming pools." Makes numbers memorable and shareable.
+Use: Public communications, marketing, investor decks, journalism.
+Avoid: Technical contexts where precision matters. Internal operational dashboards.
+
+**Anchoring**
+Present a reference number first to set expectations, then reveal the actual number. "Industry average: 2.3%. Our rate: 0.4%." The anchor makes the actual number land with impact.
+Use: Presentations, pitch decks, competitive comparisons, before/after narratives.
+Avoid: Dashboards where all values are visible simultaneously.
+
+**Magnitude Formatting**
+Format large numbers for scanability: $1.2M not $1,234,567. Use K/M/B suffixes. Right-align in tables. Use tabular (monospace) numerals for alignment.
+Use: Every dashboard, every KPI card, every data table.
+Avoid: Financial audits requiring exact figures.
+
+**Conditional Color Encoding**
+Apply background/text color to numbers based on thresholds. Red/amber/green for status. Heatmap intensity for tables. Add icon redundancy for accessibility.
+Use: Status matrices, scorecards, data tables with 10+ rows.
+Avoid: When threshold definitions are ambiguous.
+
+## Structure Dashboards
+
+**KPI Header Strip**
+Horizontal row of 3-6 large-number cards spanning full width at top. Each: metric name, big number, trend indicator, optional sparkline.
+Use: Executive dashboards. Any dashboard where the first question is "are we on track?"
+Avoid: Analytical dashboards where no single metric is the headline.
+
+**Inverted Pyramid Layout**
+Top: aggregate/summary. Middle: breakdowns/segments. Bottom: detail tables/drill-downs. Executives scan top, analysts scroll down.
+Use: Dashboards serving mixed audiences.
+Avoid: Dashboards for a single expert persona who always wants detail first.
+
+**Card Grid Dashboard**
+Independent, equally-sized cards in responsive grid. Each card is self-contained with title, chart, and optional action. Cards can be rearranged.
+Use: Overview dashboards covering multiple domains. Customizable user dashboards.
+Avoid: When charts need to be read in sequence. When cross-chart comparison requires aligned axes.
+
+**Narrative Dashboard (Scrollytelling)**
+Vertically scrolling page interleaving text with charts, guiding the reader through a data story with beginning, middle, end.
+Use: Data journalism, annual reports, onboarding users into complex data.
+Avoid: Real-time monitoring. Expert tools where narrative slows power users.
+
+**The 3-Second Rule**
+The most critical information on any dashboard must be comprehensible within 3 seconds of looking. Test by glancing and asking for the main takeaway.
+Use: Every dashboard design review, as a QA gate.
+Avoid: Never skip this.
+
+## Present Data
+
+**Single-Stat Slide**
+One enormous number centered on the slide. Nothing else except a short label. Forces the audience to absorb one fact.
+Use: Opening a section with a dramatic stat. TED-style keynotes.
+Avoid: Internal meetings expecting information density.
+
+**Build-Up Reveal**
+Show chart progressively: axes, then one series, then comparison, then annotation. Each build adds one idea. Creates narrative tension.
+Use: Complex charts in live presentations. Charts with a punchline. Max 2-3 per deck.
+Avoid: Leave-behind decks. Async reading contexts.
+
+**Insight Title (Not Descriptive Title)**
+Replace "Q3 Revenue by Region" with "Northeast revenue grew 40% while all other regions declined." The title states the takeaway.
+Use: Every presentation chart. Single highest-impact presentation technique.
+Avoid: Dashboards where users draw their own conclusions. Editorially neutral contexts.
+
+**Chart Simplification for Slides**
+Strip analytical charts for presentation: remove gridlines, reduce axis ticks, enlarge fonts to 18pt+, reduce to 2-3 colors, add takeaway title. A slide chart should have 50% of the elements of a dashboard chart.
+Use: Every time a chart moves from a dashboard into a slide deck.
+Avoid: Never present an analytical chart as-is in a slide.
+
+**Highlight Table**
+Simple data table with conditional formatting (bold, color, size) on key cells. More credible than charts for skeptical audiences.
+Use: Financial audiences, audit committees, detailed quarterly results.
+Avoid: When the story is about trend/shape rather than precise values.

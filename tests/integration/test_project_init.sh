@@ -42,6 +42,12 @@ assert_file_exists "$WEB_DIR/.claude/skills/commit-review/SKILL.md" "Skill: comm
 assert_file_exists "$WEB_DIR/.claude/skills/deep-research/SKILL.md" "Skill: deep-research"
 assert_file_exists "$WEB_DIR/.claude/skills/typescript-conventions/SKILL.md" "Skill: typescript-conventions"
 assert_file_exists "$WEB_DIR/.claude/skills/web-review/SKILL.md" "Skill: web-review"
+assert_file_exists "$WEB_DIR/.claude/skills/design-review/SKILL.md" "Skill: design-review"
+assert_file_exists "$WEB_DIR/.claude/skills/design-elevation/SKILL.md" "Skill: design-elevation"
+assert_file_exists "$WEB_DIR/.claude/skills/design-elevation/TECHNIQUES.md" "Skill: design-elevation TECHNIQUES"
+assert_file_exists "$WEB_DIR/.claude/skills/design-elevation/REFERENCES.md" "Skill: design-elevation REFERENCES"
+assert_file_exists "$WEB_DIR/.claude/skills/init-design-system/SKILL.md" "Skill: init-design-system"
+assert_file_exists "$WEB_DIR/.claude/skills/competitive-audit/SKILL.md" "Skill: competitive-audit"
 
 # Settings
 assert_file_exists "$WEB_DIR/.claude/settings.json" "Settings created"
