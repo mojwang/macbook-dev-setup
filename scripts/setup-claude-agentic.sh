@@ -456,22 +456,25 @@ EOF
             local skill_name
             skill_name=$(basename "$skill_dir")
             mkdir -p "$claude_dir/skills/$skill_name"
-            local dest="$claude_dir/skills/$skill_name/SKILL.md"
-            local src="$skill_dir/SKILL.md"
-            [[ -f "$src" ]] || continue
-            if [[ -f "$dest" ]]; then
-                if ! diff -q "$src" "$dest" >/dev/null 2>&1; then
-                    print_warning "Skill differs: $skill_name/SKILL.md"
-                    diff -u "$dest" "$src" || true
-                    if [[ -t 0 ]]; then
-                        if ui_confirm "Update $skill_name/SKILL.md?" "n"; then
-                            cp "$src" "$dest"
+            for src_file in "$skill_dir"*.md; do
+                [[ -f "$src_file" ]] || continue
+                local file_name
+                file_name=$(basename "$src_file")
+                local dest="$claude_dir/skills/$skill_name/$file_name"
+                if [[ -f "$dest" ]]; then
+                    if ! diff -q "$src_file" "$dest" >/dev/null 2>&1; then
+                        print_warning "Skill differs: $skill_name/$file_name"
+                        diff -u "$dest" "$src_file" || true
+                        if [[ -t 0 ]]; then
+                            if ui_confirm "Update $skill_name/$file_name?" "n"; then
+                                cp "$src_file" "$dest"
+                            fi
                         fi
                     fi
+                else
+                    cp "$src_file" "$dest"
                 fi
-            else
-                cp "$src" "$dest"
-            fi
+            done
         done
     done
 
