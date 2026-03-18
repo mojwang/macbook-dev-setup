@@ -29,23 +29,78 @@ Does well: Location-centric design, insurance clarity upfront, simple booking.
 Borrow: How they handle multi-location with location-specific content.
 Avoid: Template-feeling page layouts.
 
-## Aspirational Web (Non-Healthcare)
+## Developer Tools & SaaS
 
 **Linear**
-Lesson: Clarity is a feature. Dense information presented without clutter through hierarchy and spacing.
-Apply when: Organizing complex service offerings or pricing structures.
+Does well: Clarity as a feature. Dense information without clutter through hierarchy and spacing. Keyboard-first interaction. Performance IS design.
+Borrow: Tight visual consistency across every component. Speed of rendering communicates quality.
+Avoid: Strongly opinionated dark aesthetic won't work for audiences expecting warmth.
 
 **Stripe**
-Lesson: Technical density made beautiful through consistent spacing rhythm, restrained color, and type scale.
-Apply when: Building documentation-style pages, API references, or detailed service descriptions.
+Does well: Technical density made beautiful. Restrained color (mostly monochrome + one accent). KPI cards surface critical numbers within seconds.
+Borrow: Whitespace as structural element. Consistent spacing rhythm, type scale as polish signal.
+Avoid: Information density assumes high user sophistication. Too sparse for non-technical users.
+
+**Vercel**
+Does well: Analytics dashboard that makes web performance data immediately actionable. Sidebar nav streamlines developer workflow.
+Borrow: Design for the user's workflow, not data completeness. Show what's actionable, hide what's just informational.
+Avoid: Developer-centric patterns that assume technical literacy.
+
+## Consumer & Media
 
 **Apple Health**
-Lesson: Warmth and technology coexist. Rounded shapes, warm gradients, human-centered language about clinical topics.
-Apply when: Bridging clinical accuracy with patient-friendly tone.
+Does well: Warmth and technology coexist. Summary cards → trend charts → daily detail. Activity Rings are a masterclass in progress-to-goal visualization.
+Borrow: Present health/sensitive data with calm, neutral visual tone. Progressive detail hierarchy.
+Avoid: Platform-specific iOS patterns don't translate to web.
+
+**Spotify Wrapped**
+Does well: Turns personal data into shareable, emotional, story-driven experience. One insight per screen. Bold typography, animated transitions.
+Borrow: Data as gift — make users feel seen by their own data. Design for screenshot-sharing.
+Avoid: Style over substance. Bold visual approach undermines credibility in business contexts.
 
 **Headspace**
-Lesson: Calming UX through animation pacing, muted palettes, and progressive disclosure.
-Apply when: Building wellness or mental health adjacent features, onboarding flows.
+Does well: Calming UX through animation pacing, muted palettes, and progressive disclosure.
+Borrow: When building wellness or mental health adjacent features, onboarding flows.
+Avoid: The soft aesthetic doesn't fit data-intensive or action-oriented contexts.
+
+**Robinhood**
+Does well: Made financial data accessible to non-experts by stripping jargon. Portfolio chart IS the home screen.
+Borrow: Radical simplification for non-expert audiences. One primary visualization per screen.
+Avoid: Oversimplification can hide risk. "Gamifying" serious decisions drew criticism.
+
+## Data & Analytics
+
+**New York Times Graphics Desk**
+Does well: Best-in-class narrative data visualization. Scrollytelling with interactive charts. Extreme attention to annotation.
+Borrow: Annotate everything — a chart without annotation is a chart without an argument. Scrolling as reveal mechanism.
+Avoid: Production quality requires dedicated teams. Don't attempt scrollytelling without the craft to execute.
+
+**Our World in Data**
+Does well: Makes global research data accessible through simple, well-labeled charts. Radical transparency on methodology. Every chart downloadable/embeddable.
+Borrow: Make data portable and citable. Use familiar chart types executed with extreme clarity over novel exotic formats.
+Avoid: Academic aesthetic. Not for brand-forward products.
+
+**Information is Beautiful (McCandless)**
+Does well: Complex datasets as beautiful, shareable infographics. Four pillars: information + function + visual form + story.
+Borrow: If any pillar is missing, the visualization fails. No story = boring. No information = empty.
+Avoid: Static infographic style doesn't scale to interactive dashboards.
+
+## Enterprise & Monitoring
+
+**Datadog / Grafana**
+Does well: Information-dense dashboards for experts. RED method layout (rate, errors, duration). Time-series with reference bands for thresholds.
+Borrow: Consistent layout patterns across pages reduces cognitive load. Service hierarchy mirrors data flow.
+Avoid: Extremely dense. Requires training. No model for casual users.
+
+**Notion**
+Does well: Composable block system for custom layouts. Multiple views of same data (table, board, calendar, gallery).
+Borrow: Give users composable primitives, not fixed dashboards. Same data, different lenses.
+Avoid: Too much flexibility leads to inconsistency. Provide strong defaults.
+
+**USAFacts**
+Does well: Unbiased data presentation. Progressive disclosure: overview first, breakdown on interaction. Source attribution on every visualization.
+Borrow: Source attribution builds trust. "Simple first, detail upon interaction."
+Avoid: Deliberately neutral stance can feel dry. Not for contexts that need to persuade.
 
 ## Anti-References (What to Avoid)
 
