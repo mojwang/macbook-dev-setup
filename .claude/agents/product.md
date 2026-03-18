@@ -115,7 +115,7 @@ One of: **Ship** (working as intended), **Iterate** (directionally right, needs 
 - **Researcher**: Reads `product-brief.md` to focus exploration on the defined problem space
 - **Planner**: Reads `product-brief.md` for scope boundaries (IN/OUT) and success criteria
 - **Reviewer**: Validates implementation against success criteria defined in the brief
-- **Designer**: Consumes problem and JTBD framing to inform design decisions
+- **Designer**: Consumes problem and JTBD framing to inform design decisions. For solution hypothesis validation, consider whether the designer should evaluate feasibility and market positioning before committing to scope — flag to orchestrator if design input would reduce risk.
 
 ## Rules
 - Project-agnostic: derive domain context from the project, don't assume any vertical

@@ -49,11 +49,25 @@ Produce a review summary:
 - Shell anti-patterns found (subshells, eager loading, etc.)
 
 ### Design (if src/components/ui/ or components.json exists)
-_For deep design review, the orchestrator dispatches the designer agent. This section covers engineering-observable issues only._
+Reviewer runs lightweight design checks. For deep design QA, the orchestrator dispatches the designer agent in parallel — reviewer does not duplicate that work.
+
+**Engineering-observable checks (always run):**
 - Token compliance: hardcoded colors/spacing vs design tokens
 - Component consistency: raw HTML where ui primitives exist
 - Image optimization: missing dimensions, unoptimized formats
 - CTA hierarchy: competing calls-to-action, unclear primary action
+
+**Design-spec compliance (if design-spec.md exists):**
+- Token usage matches spec recommendations
+- Component variants used as specified (not ad-hoc className overrides)
+- Layout follows specified grid/spacing rhythm
+- Accessibility requirements from spec are implemented
+
+**Escalation to designer:** Flag for orchestrator to dispatch designer when:
+- New components introduced without design-spec coverage
+- Significant visual changes to existing pages/layouts
+- Design token additions or modifications
+- Animation/interaction pattern changes
 
 ### Product Alignment (if product-brief.md exists)
 - Success criteria addressed: which ones the implementation enables
