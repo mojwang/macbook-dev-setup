@@ -91,6 +91,14 @@ Update after every stage transition and at the end of meaningful interactions.
 **Assessment**: Proceed to discovery / Iterate on idea / Kill
 **Reasoning**: [2-3 sentences]
 **Open questions**: [what still needs answers]
+
+## Next Actions
+
+### Founder (human-only)
+- [ ] [things only the founder can do — interviews, sales conversations, judgment calls]
+
+### Agent-delegable
+- [ ] **[agent-name]**: [research or analysis an agent can execute]
 ```
 
 ---
@@ -144,6 +152,14 @@ Update after every stage transition and at the end of meaningful interactions.
 - [ ] Riskiest assumption has T1/T2 evidence
 
 **Recommendation**: Ready for MVP / Need more interviews / Pivot / Kill
+
+## Next Actions
+
+### Founder (human-only)
+- [ ] [remaining interviews, relationship-building, pricing conversations]
+
+### Agent-delegable
+- [ ] **[agent-name]**: [research, analysis, or spec work agents can do]
 ```
 
 ---
@@ -196,6 +212,15 @@ Update after every stage transition and at the end of meaningful interactions.
 | 2 | [milestone] | [deliverable] |
 | ... | | |
 | 8 | Launch to first users | MVP live + feedback collection |
+
+## Next Actions
+
+### Founder (human-only)
+- [ ] [outreach to first users, pricing conversations, onboarding calls]
+
+### Agent-delegable
+- [ ] **planner**: Create implementation plan from this MVP scope
+- [ ] **[agent-name]**: [other agent-delegable work]
 ```
 
 ---

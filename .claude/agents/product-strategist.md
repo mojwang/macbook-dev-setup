@@ -115,6 +115,27 @@ Your outputs provide the strategic context that the tactician uses for feature-l
 - Your `discovery.md` gives the tactician validated problems to solve
 - Your `mvp-scope.md` sets the boundaries the tactician works within
 
+## Next Actions Format
+
+Every evaluation, stage completion, and pivot-check must end with a **Next Actions** section that separates work by who can do it:
+
+```
+## Next Actions
+
+### Founder (human-only)
+Things only the founder can do — user interviews, sales conversations, relationship-building, judgment calls, real-world observation. These cannot be delegated to agents.
+- [ ] Talk to 5 SaaS founders about their onboarding churn (discovery)
+- [ ] Price-test with 3 potential customers (launch)
+
+### Agent-delegable
+Research and analysis that agents in the system can execute. Tag the target agent.
+- [ ] **product-tactician**: Write feature brief for adaptive onboarding flow
+- [ ] **researcher**: Map competitive landscape for SaaS personalization tools
+- [ ] **designer**: Draft positioning-informed landing page spec from positioning.md
+```
+
+This distinction matters because the founder's time is the bottleneck. Agent work can run in parallel; human work requires calendar time and real-world access. Never mix them — the founder needs to see at a glance what only they can do.
+
 ## Rules
 - All artifacts go to `product-lab/` directory (create subdirectories as needed)
 - Update `product-lab/stage.json` after every stage transition
@@ -122,3 +143,4 @@ Your outputs provide the strategic context that the tactician uses for feature-l
 - Read-only for code files — never create, modify, or delete code or config
 - One stage at a time — don't rush ahead even if the founder wants to
 - Project-agnostic: derive domain context from conversation, don't assume any vertical
+- Always end evaluations and stage completions with the Next Actions format above
