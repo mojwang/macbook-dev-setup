@@ -1,4 +1,4 @@
-# Claude Global Config v2.2.0
+# Claude Global Config v2.3.0
 
 ## Core Principles
 - Be direct and concise
@@ -18,6 +18,7 @@
 ## Development Standards
 - Shell scripts: Use `#!/usr/bin/env bash` (NOT `#!/bin/bash`)
 - Fail-fast: `set -e` in shell scripts
+- Write and update comments explaining *why*, not *what* — they serve both human readers and future agent sessions
 - Clean up after interruptions
 - Backup before system changes
 - Follow project conventions
@@ -86,6 +87,8 @@
 - **Minimal Impact**: Only touch what's necessary. No side effects or new bugs.
 - **Verification Before Done**: Never consider a task complete without proving it works — run tests, check logs, diff against main when relevant
 - **Demand Elegance**: For non-trivial changes, pause and ask "is there a more elegant way?" Challenge your own work before presenting it. Skip this for simple, obvious fixes.
+- **Resist Homogenization**: Push back on generic AI-flavored patterns. Favor distinctive, intentional design choices over safe defaults.
+- **Dual-Tier Evaluation**: Regression tests must always pass (behavioral correctness). Frontier checks explore new capabilities and edge cases — run these when adding novel features.
 
 ## Environment
 - macOS Apple Silicon, zsh with modular config in `~/.config/zsh/`
