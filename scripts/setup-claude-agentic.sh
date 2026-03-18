@@ -232,7 +232,7 @@ deploy_templates() {
     for skill_name in "${web_skills[@]}"; do
         if [[ -f "$web_skill_src/$skill_name/SKILL.md" ]]; then
             mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name"
-            cp "$web_skill_src/$skill_name/SKILL.md" "$TEMPLATE_DIR/skills/web/$skill_name/"
+            cp "$web_skill_src/$skill_name/"*.md "$TEMPLATE_DIR/skills/web/$skill_name/"
         fi
     done
 

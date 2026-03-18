@@ -68,7 +68,7 @@ The main Claude session acts as orchestrator. It never implements directly for c
 - **Async/autonomous**: Peripheral features, prototyping, tests, refactors → full agent workflow, let it run
 - **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
 - **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
-- **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer alongside researcher/reviewer
+- **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer in Phase 1 (parallel with researcher) and Phase 4 (parallel with reviewer). Designer produces `design-spec.md` which planner and implementer consume as required input.
 - **Product-first**: New features, competing priorities, unclear scope → dispatch product agent before research
 
 ### Execution Modes
@@ -210,13 +210,16 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
 
 **Web auto-invoked** (deployed with `--type web`):
-- **design-review** — design token compliance, component consistency, visual hierarchy, healthcare UX (activates on component/style changes)
+- **design-review** — token compliance, component consistency, visual hierarchy, typography/spacing rhythm, animation quality, cross-page consistency, healthcare UX (activates on component/style changes)
+- **design-elevation** — interrogation framework (5 lenses), technique selection (~83 techniques), reference library (19 exemplars). Auto-invoked when designer produces `design-spec.md`. Includes TECHNIQUES.md and REFERENCES.md companion files.
+- **typescript-conventions** — strict types, React/Next.js patterns, error handling, async patterns, state management, testing (activates on .ts/.tsx edits)
+- **web-review** — accessibility, SEO, Core Web Vitals, structured data, mobile/viewport, social sharing (activates on page/component changes)
 
-**Design agent skills** (deployed with `--type web`, used by designer agent):
-- **design-review** — token compliance, component consistency, visual hierarchy, healthcare UX (auto-invoked on component/style changes)
-- **/init-design-system [dir] [--domain healthcare|saas|ecommerce]** — bootstrap shadcn/ui with domain customizations (`disable-model-invocation: true`)
-- **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
 
+### Skill & Tool Quality
+- Invest in tool descriptions and parameter names — quality here outweighs prompt optimization
+- Consolidate related operations into fewer tools; minimize overlap
+- Error messages should steer toward correct usage, not just report failure
 
 ## Testing
 **Write tests BEFORE implementation** — especially when agents implement autonomously.
