@@ -28,6 +28,18 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Missing `width`/`height` on images (layout shift)
 - Horizontal scroll risk from absolute positioning or overflow
 
+## Design Intentionality
+- Flag default shadcn components used without domain customization (e.g., generic Card with no variant for the specific use case)
+- Flag generic headings ("Our Services", "About Us", "Contact") that could belong to any website
+- Flag stock-feeling visual treatments: identical card grids, centered-text-over-hero patterns, evenly-spaced three-column layouts with no hierarchy
+- Flag components that lack a clear "why this treatment" justification
+
+## Typography & Spacing Rhythm
+- Flag text sizes not matching the project type scale (random `text-sm`, `text-lg` without scale reference)
+- Flag spacing values off the established rhythm (e.g., `py-7` or `mt-5` when the rhythm is 4/8/12/16/24/32)
+- Flag inconsistent line-height across similar text elements
+- Flag heading sizes that don't follow a clear scale progression
+
 ## Healthcare-Specific
 - Provider credentials without structured data (`schema.org/MedicalBusiness`)
 - Missing trust signals on conversion pages (certifications, testimonials, insurance logos)
