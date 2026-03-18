@@ -51,3 +51,20 @@ trap cleanup EXIT INT TERM
 - Use `$(command)` for substitution (not backticks)
 - Functions: `func_name() {` format
 - Local variables in functions: `local var="value"`
+
+### Logging
+- Use a `log()` function for structured output: `log "INFO" "message"`
+- Log to stderr so stdout stays clean for piping: `echo "[INFO] $msg" >&2`
+- Prefix log lines with severity: `INFO`, `WARN`, `ERROR`
+- Support `--verbose` / `--quiet` flags via a global verbosity level
+
+### Debug Mode
+- Support `DEBUG=1` or `--debug` for verbose tracing
+- Use `set -x` only inside debug blocks, not globally
+- Wrap debug output: `[[ "${DEBUG:-0}" == "1" ]] && echo "DEBUG: ..." >&2`
+
+### Performance
+- Avoid unnecessary subshells: `var=$(cat file)` → `var=$(<file)`
+- Prefer builtins over external commands: `[[ -f file ]]` over `test -f file`
+- Don't fork in loops: move `grep`/`sed` outside loops, pipe instead
+- Lazy-load heavy sourcing: defer `nvm`, `pyenv`, `rbenv` until first use

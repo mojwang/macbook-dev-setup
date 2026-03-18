@@ -40,3 +40,28 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Use design tokens from globals.css `@theme` (e.g., brand colors)
 - Prefer `gap` over margins between flex/grid children
 - Max width containers: `mx-auto max-w-7xl px-4`
+
+## Error Handling
+- Server components: let errors bubble to `error.tsx` boundaries
+- Client components: `try/catch` in event handlers, show user-facing feedback
+- API calls: handle network errors, show meaningful messages, never silently swallow
+- Form validation: validate on submit, show inline errors per field, use `aria-invalid`
+
+## Async & Data Patterns
+- Server components: `async` function with direct `fetch()` or DB queries — no `useEffect` for data
+- Client components: use `useTransition` for non-urgent updates, `useOptimistic` for instant feedback
+- Server Actions: use `"use server"` functions for mutations, call from `action` prop or `startTransition`
+- Cache: use Next.js `fetch` cache options or `unstable_cache` for expensive operations
+
+## State Management
+- Server state: keep in server components, pass via props — no client-side duplication
+- Client state: `useState` for local, lift to nearest shared parent, Context for cross-tree
+- URL state: use `searchParams` for filterable/shareable state (pagination, filters, sort)
+- Avoid external state libraries unless complexity justifies it
+
+## Testing Patterns
+- Unit tests: Vitest + Testing Library — test behavior, not implementation
+- Use `screen.getByRole`, `getByText`, `getByLabelText` — never query by class name
+- Mock only external boundaries (API calls, browser APIs) — never mock internal modules
+- Data files: test that exports match expected schema and constraints
+- Pages: test that key content renders, links work, metadata is correct

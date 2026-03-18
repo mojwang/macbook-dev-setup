@@ -40,6 +40,18 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Flag inconsistent line-height across similar text elements
 - Flag heading sizes that don't follow a clear scale progression
 
+## Animation & Interaction Quality
+- Flag transitions longer than 300ms or shorter than 100ms without justification
+- Flag missing `prefers-reduced-motion` respect on animations
+- Flag inconsistent transition timing across similar elements (e.g., cards hover at 200ms but buttons at 400ms)
+- Flag jarring state changes without transitions (hover, focus, open/close)
+
+## Cross-Page Consistency
+- Flag inconsistent section padding across pages (e.g., `py-16` on homepage but `py-12` on about)
+- Flag heading style inconsistency across pages for same-level content
+- Flag navigation/header/footer differences between pages
+- Flag inconsistent card treatments across pages (shadow, border, padding, radius)
+
 ## Healthcare-Specific
 - Provider credentials without structured data (`schema.org/MedicalBusiness`)
 - Missing trust signals on conversion pages (certifications, testimonials, insurance logos)
