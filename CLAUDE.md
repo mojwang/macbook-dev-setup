@@ -70,7 +70,7 @@ The main Claude session acts as orchestrator. It never implements directly for c
 - **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
 - **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer in Phase 1 (parallel with researcher) and Phase 4 (parallel with reviewer). Designer produces `design-spec.md` which planner and implementer consume as required input.
 - **Product-first**: New features, competing priorities, unclear scope → dispatch product-tactician agent before research
-- **Strategy-first**: "Should we build this?" questions, new product ideas, market validation → dispatch product-strategist via `/product-lab` before any other phase
+- **Strategy-first**: "Should we build this?" questions, new product ideas, market validation → dispatch product-strategist (directly or via `/product-lab`) before any other phase
 
 ### Execution Modes
 Two modes available depending on coordination needs:
@@ -91,7 +91,8 @@ Two modes available depending on coordination needs:
 ### Phase -1: Strategy (optional)
 Dispatch `product-strategist` sub-agent when the question is "should we build this" — not "what to build."
 - Use for new product ideas, market validation, or when product-market fit is uncertain
-- Invoke via `/product-lab evaluate [idea-name]` or `/product-lab [stage]`
+- Orchestrator dispatches directly as sub-agent, or conductor invokes via `/product-lab [mode]`
+- Pass mode as part of the prompt when dispatching (e.g., "evaluate hyper-personalized-product-design")
 - Output: persistent artifacts in `product-lab/` (evaluation, discovery, MVP scope, positioning, etc.)
 - These artifacts are NOT ephemeral — they persist across sessions and feed downstream agents
 - `product-lab/positioning.md` → designer (audience, tone); `product-lab/discovery.md` → product-tactician (evidence); `product-lab/mvp-scope.md` → planner (boundaries)
