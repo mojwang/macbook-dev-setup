@@ -537,8 +537,7 @@ EOF
     if [[ ! -f "$review_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/claude-review.yml" ]]; then
         cp "$TEMPLATE_DIR/ci/claude-review.yml" "$review_dest"
         print_success "Created .github/workflows/claude-review.yml"
-        print_info "Auth: set CLAUDE_CODE_OAUTH_TOKEN secret in GitHub repo"
-        print_info "  Generate at: claude.ai > Settings > Claude Code > OAuth Token"
+        print_info "Auth: run .github/setup-github-repo.sh after gh repo create (auto-sets token from Keychain)"
     fi
 
     # Deploy Claude interactive workflow (@claude trigger, only if not present)
