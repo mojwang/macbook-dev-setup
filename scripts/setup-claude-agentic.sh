@@ -364,6 +364,8 @@ read_keychain_password() {
     if [[ "$raw" =~ ^[0-9a-fA-F]+$ ]] && (( ${#raw} % 2 == 0 )); then
         local decoded
         decoded=$(printf '%s' "$raw" | xxd -r -p 2>/dev/null || true)
+        # Strip trailing garbage after newline (Keychain may store extra bytes)
+        decoded="${decoded%%$'\n'*}"
         if [[ -n "$decoded" ]] && [[ "$decoded" == sk-* ]]; then
             printf '%s' "$decoded"
             return
