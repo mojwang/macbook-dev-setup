@@ -168,15 +168,62 @@ if [[ "$SKIP_RULESETS" == "false" ]]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Reminder for manual steps
+# Configure CLAUDE_CODE_OAUTH_TOKEN secret
+# ─────────────────────────────────────────────────────────────────────────────
+
+KEYCHAIN_SERVICE="claude-code-oauth-token"
+KEYCHAIN_ACCOUNT="github-actions"
+
+# Check if secret already exists on the repo
+EXISTING_SECRET=$(gh secret list -R "$REPO" 2>/dev/null | grep "^CLAUDE_CODE_OAUTH_TOKEN" || true)
+
+if [[ -n "$EXISTING_SECRET" ]]; then
+    echo "✓ CLAUDE_CODE_OAUTH_TOKEN already set on $REPO"
+else
+    # Try to read token from macOS Keychain
+    TOKEN=""
+    if command -v security &>/dev/null; then
+        TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" -w 2>/dev/null || true)
+    fi
+
+    if [[ -n "$TOKEN" ]]; then
+        echo "$TOKEN" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$REPO" --body -
+        echo "✓ CLAUDE_CODE_OAUTH_TOKEN set from Keychain"
+    elif [[ -t 0 ]]; then
+        # Interactive — prompt for token
+        echo ""
+        echo "CLAUDE_CODE_OAUTH_TOKEN not found in Keychain."
+        echo "  Generate one: claude setup-token"
+        echo ""
+        read -r -p "Paste token (or press Enter to skip): " TOKEN
+        if [[ -n "$TOKEN" ]]; then
+            echo "$TOKEN" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$REPO" --body -
+            echo "✓ CLAUDE_CODE_OAUTH_TOKEN set on $REPO"
+
+            # Offer to save to Keychain for future repos
+            read -r -p "Save to Keychain for future repos? [Y/n] " SAVE_CHOICE
+            if [[ "${SAVE_CHOICE:-Y}" =~ ^[Yy]$ ]]; then
+                security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" -w "$TOKEN" -U
+                echo "✓ Token saved to Keychain (service: $KEYCHAIN_SERVICE)"
+            fi
+        else
+            echo "⚠ Skipped — Claude review workflow will fail until token is set"
+            echo "  Run: gh secret set CLAUDE_CODE_OAUTH_TOKEN -R $REPO"
+        fi
+    else
+        # Non-interactive (piped/CI) — warn only
+        echo "⚠ CLAUDE_CODE_OAUTH_TOKEN not set (no Keychain entry, non-interactive)"
+        echo "  Store token: security add-generic-password -s $KEYCHAIN_SERVICE -a $KEYCHAIN_ACCOUNT -w <TOKEN> -U"
+        echo "  Then re-run this script, or: gh secret set CLAUDE_CODE_OAUTH_TOKEN -R $REPO"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Remaining manual steps
 # ─────────────────────────────────────────────────────────────────────────────
 
 echo ""
-echo "Manual steps remaining:"
-echo "  1. Add secret: CLAUDE_CODE_OAUTH_TOKEN"
-echo "     → Run 'claude setup-token' to generate a long-lived token"
-echo "     → Run 'gh secret set CLAUDE_CODE_OAUTH_TOKEN' and paste the token"
-echo "     → CI health check (.github/workflows/ci-health.yml) monitors this weekly"
-echo "  2. Enable Copilot auto-review (non-blocking):"
-echo "     → Settings > Code review > Copilot Code Review > Enable"
-echo "     Note: Do NOT use copilot_code_review in rulesets — it's a hard merge gate"
+echo "Optional manual steps:"
+echo "  • Enable Copilot auto-review (non-blocking):"
+echo "    → Settings > Code review > Copilot Code Review > Enable"
+echo "    Note: Do NOT use copilot_code_review in rulesets — it's a hard merge gate"
