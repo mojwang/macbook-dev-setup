@@ -537,7 +537,34 @@ EOF
     if [[ ! -f "$review_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/claude-review.yml" ]]; then
         cp "$TEMPLATE_DIR/ci/claude-review.yml" "$review_dest"
         print_success "Created .github/workflows/claude-review.yml"
-        print_info "Auth: run .github/setup-github-repo.sh after gh repo create (auto-sets token from Keychain)"
+    fi
+
+    # Auto-set CLAUDE_CODE_OAUTH_TOKEN if repo has a GitHub remote and token is in Keychain
+    local keychain_service="claude-code-oauth-token"
+    local keychain_account="github-actions"
+    local repo_nwo=""
+    repo_nwo=$(git -C "$target_dir" remote get-url origin 2>/dev/null | sed -n 's|.*github\.com[:/]\(.*\)\.git$|\1|p; s|.*github\.com[:/]\(.*\)$|\1|p' || true)
+
+    if [[ -n "$repo_nwo" ]] && command -v security &>/dev/null && command -v gh &>/dev/null; then
+        local existing_secret
+        existing_secret=$(gh secret list -R "$repo_nwo" 2>/dev/null | grep "^CLAUDE_CODE_OAUTH_TOKEN" || true)
+
+        if [[ -n "$existing_secret" ]]; then
+            print_success "CLAUDE_CODE_OAUTH_TOKEN already set on $repo_nwo"
+        else
+            local token
+            token=$(security find-generic-password -s "$keychain_service" -a "$keychain_account" -w 2>/dev/null || true)
+
+            if [[ -n "$token" ]]; then
+                if echo "$token" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$repo_nwo" --body - 2>/dev/null; then
+                    print_success "CLAUDE_CODE_OAUTH_TOKEN set on $repo_nwo from Keychain"
+                else
+                    print_warning "Failed to set CLAUDE_CODE_OAUTH_TOKEN on $repo_nwo"
+                fi
+            else
+                print_info "No CLAUDE_CODE_OAUTH_TOKEN in Keychain — run .github/setup-github-repo.sh to configure"
+            fi
+        fi
     fi
 
     # Deploy Claude interactive workflow (@claude trigger, only if not present)
