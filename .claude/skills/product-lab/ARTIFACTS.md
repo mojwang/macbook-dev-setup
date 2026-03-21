@@ -280,7 +280,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 **Assessment date**: YYYY-MM-DD
 
-## Sean Ellis Test
+## Disappointment Test
 
 **Question**: "How would you feel if you could no longer use [product]?"
 
@@ -342,7 +342,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 **Date**: YYYY-MM-DD
 
-## Dunford's Five Components
+## Five Components of Positioning
 
 ### 1. Competitive Alternatives
 What customers would use if this product didn't exist:

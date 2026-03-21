@@ -82,7 +82,7 @@ design-spec.md
 product-brief.md
 
 # Product strategy artifacts (persistent across sessions, not committed)
-product-lab/
+/product-lab/
 
 # Claude Code worktree metadata
 .claude/worktrees/

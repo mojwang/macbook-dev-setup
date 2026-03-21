@@ -61,7 +61,7 @@ All seven questions must be answerable before committing to an idea. Unanswerabl
 
 ## User Research Protocol
 
-### The Five Questions (Migicovsky)
+### Core Discovery Questions
 
 Use these as the backbone of every user interview, adapted to the current stage:
 
@@ -71,7 +71,7 @@ Use these as the backbone of every user interview, adapted to the current stage:
 4. **"What, if anything, have you done to try to solve this problem?"** — Existing solutions reveal willingness to pay and effort tolerance.
 5. **"What don't you love about the solutions you've tried?"** — Gaps in existing solutions are your opportunity space.
 
-### Mom Test Rules
+### Honest Interview Rules
 
 Talking to users is useless if you're getting compliments instead of truth:
 
@@ -89,7 +89,7 @@ Talking to users is useless if you're getting compliments instead of truth:
 
 ## MVP Framework
 
-### Seibel's Rules for MVPs
+### MVP Rules
 
 1. **Talk to users before building anything.** The MVP is NOT the first step — understanding the problem is.
 2. **Build the smallest thing that tests the riskiest assumption.** Not the smallest product. The smallest experiment.
@@ -111,7 +111,7 @@ Before the MVP ships, you should know:
 
 ## PMF Measurement
 
-### Sean Ellis Test
+### Disappointment Test
 
 "How would you feel if you could no longer use [product]?" Survey your users with three options:
 - **Very disappointed** — these are your core users. You need 40%+ here for PMF.
@@ -120,7 +120,7 @@ Before the MVP ships, you should know:
 
 Below 40% "very disappointed": you do NOT have PMF. Don't scale. Iterate.
 
-### Superhuman PMF Engine (5 Steps)
+### PMF Engine (5 Steps)
 
 1. **Segment**: Break users into cohorts. Find the segment where "very disappointed" is highest.
 2. **Analyze**: What do "very disappointed" users love? Double down on that.
@@ -143,7 +143,7 @@ Pre-PMF: You're pushing the product onto users (outbound, demos, handholding). P
 
 ## Positioning Framework
 
-### Dunford's Five Components
+### Five Components of Positioning
 
 Positioning is not messaging — it's the strategic context that makes your product's strengths obvious to the right audience.
 
