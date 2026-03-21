@@ -160,12 +160,12 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 
 **Opening diagnostic**:
 - "How many active users do you have? What's the trend — growing, flat, declining?"
-- "Run the Sean Ellis test yet? What percentage said 'very disappointed'?"
+- "Run the PMF test yet? What percentage said 'very disappointed'?"
 - "Are users coming back without being prompted? How often?"
 - "Are users telling others about it? How do you know?"
 
 **Activities**:
-- Run Sean Ellis survey: "How would you feel if you could no longer use this?"
+- Run PMF survey: "How would you feel if you could no longer use this?"
 - Segment users — find the cohort where "very disappointed" is highest
 - Analyze what "very disappointed" users love — double down on that
 - Track retention curves: D1, D7, D30
@@ -174,7 +174,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - Interview "not disappointed" users to understand why they signed up
 
 **Evidence gates** (all required to advance):
-- [ ] Sean Ellis test completed with 40%+ "very disappointed" in at least one segment
+- [ ] PMF test completed with 40%+ "very disappointed" in at least one segment
 - [ ] Retention data shows flattening curve (users stick around)
 - [ ] Word-of-mouth or organic growth detected
 - [ ] Clear understanding of what core users love and why
@@ -183,7 +183,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 **Artifact produced**: `product-lab/pmf-assessment.md`
 
 **Red flags**:
-- Sean Ellis score below 40% across all segments
+- PMF score below 40% across all segments
 - Retention curve never flattens — continuous decay
 - All growth is paid/push, no organic pull
 - You're adding features hoping to find PMF (feature creep ≠ product-market fit)
