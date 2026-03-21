@@ -598,6 +598,22 @@ EOF
         print_success "Created .github/workflows/request-reviewers.yml"
     fi
 
+    # Deploy CI health check workflow (only if not present)
+    local health_dest="$target_dir/.github/workflows/ci-health.yml"
+    if [[ ! -f "$health_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/ci-health.yml" ]]; then
+        cp "$TEMPLATE_DIR/ci/ci-health.yml" "$health_dest"
+        print_success "Created .github/workflows/ci-health.yml (weekly secret check)"
+    fi
+
+    # Deploy Lighthouse CI workflow for web projects (only if not present)
+    if [[ "$project_type" == "web" ]]; then
+        local lh_dest="$target_dir/.github/workflows/lighthouse.yml"
+        if [[ ! -f "$lh_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/lighthouse-web.yml" ]]; then
+            cp "$TEMPLATE_DIR/ci/lighthouse-web.yml" "$lh_dest"
+            print_success "Created .github/workflows/lighthouse.yml"
+        fi
+    fi
+
     # Deploy repo setup script (only if not present)
     local repo_setup_dest="$target_dir/.github/setup-github-repo.sh"
     if [[ ! -f "$repo_setup_dest" ]] && [[ -f "$TEMPLATE_DIR/ci/setup-github-repo.sh" ]]; then

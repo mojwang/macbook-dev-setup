@@ -70,7 +70,7 @@ build_status_checks() {
             checks="$checks"',{"context":"test"},{"context":"shellcheck"},{"context":"security-scan"}'
             ;;
         web)
-            checks="$checks"',{"context":"test"},{"context":"lint"},{"context":"typecheck"},{"context":"build"}'
+            checks="$checks"',{"context":"test"},{"context":"lint"},{"context":"typecheck"},{"context":"build"},{"context":"e2e"}'
             ;;
     esac
 

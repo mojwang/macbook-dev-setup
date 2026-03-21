@@ -1,0 +1,42 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: lighthouse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm install -g @lhci/cli@0.14.x
+      - run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Post Lighthouse summary
+        if: always()
+        run: |
+          echo "## Lighthouse Results" >> "$GITHUB_STEP_SUMMARY"
+          if [ -d ".lighthouseci" ]; then
+            for f in .lighthouseci/lhr-*.json; do
+              URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf8')).finalUrl)")
+              PERF=$(node -e "console.log(Math.round(JSON.parse(require('fs').readFileSync('$f','utf8')).categories.performance.score*100))")
+              A11Y=$(node -e "console.log(Math.round(JSON.parse(require('fs').readFileSync('$f','utf8')).categories.accessibility.score*100))")
+              SEO=$(node -e "console.log(Math.round(JSON.parse(require('fs').readFileSync('$f','utf8')).categories.seo.score*100))")
+              BP=$(node -e "console.log(Math.round(JSON.parse(require('fs').readFileSync('$f','utf8')).categories['best-practices'].score*100))")
+              echo "| $URL | $PERF | $A11Y | $SEO | $BP |" >> "$GITHUB_STEP_SUMMARY"
+            done
+            sed -i '2i | URL | Perf | A11y | SEO | BP |' "$GITHUB_STEP_SUMMARY"
+            sed -i '3i |---|---|---|---|---|' "$GITHUB_STEP_SUMMARY"
+          fi
