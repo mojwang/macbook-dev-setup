@@ -273,6 +273,14 @@ deploy_templates() {
     done
     print_success "Deployed CI workflow templates"
 
+    # Copy Netlify templates
+    mkdir -p "$TEMPLATE_DIR/netlify"
+    for nf_file in "$REPO_DIR/config/netlify"/*; do
+        [[ -f "$nf_file" ]] || continue
+        cp "$nf_file" "$TEMPLATE_DIR/netlify/"
+    done
+    print_success "Deployed Netlify templates"
+
     # Copy .gitignore templates
     mkdir -p "$TEMPLATE_DIR/gitignore"
     for gi_file in "$REPO_DIR/config/gitignore"/gitignore-*; do
@@ -662,6 +670,27 @@ EOF
         if [[ ! -f "$nvmrc_dest" ]] && [[ -f "$TEMPLATE_DIR/editor/nvmrc" ]]; then
             cp "$TEMPLATE_DIR/editor/nvmrc" "$nvmrc_dest"
             print_success "Created .nvmrc"
+        fi
+    fi
+
+    # Deploy netlify.toml for web projects (only if not present)
+    if [[ "$project_type" == "web" ]]; then
+        local netlify_dest="$target_dir/netlify.toml"
+        if [[ ! -f "$netlify_dest" ]] && [[ -f "$TEMPLATE_DIR/netlify/netlify.toml" ]]; then
+            cp "$TEMPLATE_DIR/netlify/netlify.toml" "$netlify_dest"
+            print_success "Created netlify.toml"
+        fi
+
+        # Add Netlify badge placeholder to CLAUDE.md if not already present
+        local claude_md="$target_dir/CLAUDE.md"
+        if [[ -f "$claude_md" ]] && ! grep -q "api.netlify.com/api/v1/badges" "$claude_md"; then
+            local project_name
+            project_name=$(basename "$target_dir")
+            sed -i '' "2i\\
+<!-- TODO: After connecting Netlify, replace NETLIFY_SITE_ID with your Site ID from Site configuration > General -->\\
+[![Netlify Status](https://api.netlify.com/api/v1/badges/NETLIFY_SITE_ID/deploy-status)](https://app.netlify.com/projects/${project_name}/deploys)\\
+" "$claude_md"
+            print_info "Added Netlify badge placeholder to CLAUDE.md — update NETLIFY_SITE_ID after connecting"
         fi
     fi
 
