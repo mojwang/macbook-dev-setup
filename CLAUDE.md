@@ -220,7 +220,7 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
 - **/init-design-system [dir] [--domain healthcare|saas|ecommerce]** — bootstrap shadcn/ui with domain customizations (`disable-model-invocation: true`)
 - **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
-- **/product-lab [mode] [idea-name]** — YC-powered product lifecycle co-pilot: evaluate ideas, run discovery, scope MVPs, assess PMF (`agent: product-strategist`)
+- **/product-lab [mode] [idea-name]** — Product lifecycle co-pilot: evaluate ideas, run discovery, scope MVPs, assess PMF (`agent: product-strategist`)
 
 **Web auto-invoked** (deployed with `--type web`):
 - **design-review** — token compliance, component consistency, visual hierarchy, typography/spacing rhythm, animation quality, cross-page consistency, healthcare UX (activates on component/style changes)
