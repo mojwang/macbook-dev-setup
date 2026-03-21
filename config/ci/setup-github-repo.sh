@@ -174,6 +174,23 @@ fi
 KEYCHAIN_SERVICE="claude-code-oauth-token"
 KEYCHAIN_ACCOUNT="github-actions"
 
+# macOS security -w returns hex-encoded output for non-ASCII or binary-stored passwords
+read_keychain_password() {
+    local raw
+    raw=$(security find-generic-password -s "$1" -a "$2" -w 2>/dev/null || true)
+    [[ -z "$raw" ]] && return
+    # Detect hex encoding: all hex chars + even length
+    if [[ "$raw" =~ ^[0-9a-fA-F]+$ ]] && (( ${#raw} % 2 == 0 )); then
+        local decoded
+        decoded=$(printf '%s' "$raw" | xxd -r -p 2>/dev/null || true)
+        if [[ -n "$decoded" ]] && [[ "$decoded" == sk-* ]]; then
+            printf '%s' "$decoded"
+            return
+        fi
+    fi
+    printf '%s' "$raw"
+}
+
 # Check if secret already exists on the repo
 EXISTING_SECRET=$(gh secret list -R "$REPO" 2>/dev/null | grep "^CLAUDE_CODE_OAUTH_TOKEN" || true)
 
@@ -183,7 +200,7 @@ else
     # Try to read token from macOS Keychain
     TOKEN=""
     if command -v security &>/dev/null; then
-        TOKEN=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" -w 2>/dev/null || true)
+        TOKEN=$(read_keychain_password "$KEYCHAIN_SERVICE" "$KEYCHAIN_ACCOUNT")
     fi
 
     if [[ -n "$TOKEN" ]]; then

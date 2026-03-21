@@ -355,6 +355,23 @@ create_scaffold_symlink() {
 # Project init mode functions
 # ─────────────────────────────────────────────────────────────────────────────
 
+# macOS security -w returns hex-encoded output for non-ASCII or binary-stored passwords
+read_keychain_password() {
+    local raw
+    raw=$(security find-generic-password -s "$1" -a "$2" -w 2>/dev/null || true)
+    [[ -z "$raw" ]] && return
+    # Detect hex encoding: all hex chars + even length
+    if [[ "$raw" =~ ^[0-9a-fA-F]+$ ]] && (( ${#raw} % 2 == 0 )); then
+        local decoded
+        decoded=$(printf '%s' "$raw" | xxd -r -p 2>/dev/null || true)
+        if [[ -n "$decoded" ]] && [[ "$decoded" == sk-* ]]; then
+            printf '%s' "$decoded"
+            return
+        fi
+    fi
+    printf '%s' "$raw"
+}
+
 init_project() {
     local target_dir="${1:-.}"
     local project_type="${2:-}"
@@ -553,7 +570,7 @@ EOF
             print_success "CLAUDE_CODE_OAUTH_TOKEN already set on $repo_nwo"
         else
             local token
-            token=$(security find-generic-password -s "$keychain_service" -a "$keychain_account" -w 2>/dev/null || true)
+            token=$(read_keychain_password "$keychain_service" "$keychain_account")
 
             if [[ -n "$token" ]]; then
                 if echo "$token" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$repo_nwo" --body - 2>/dev/null; then
