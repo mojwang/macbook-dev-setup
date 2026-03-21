@@ -575,7 +575,7 @@ EOF
             token=$(read_keychain_password "$keychain_service" "$keychain_account")
 
             if [[ -n "$token" ]]; then
-                if echo "$token" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$repo_nwo" --body - 2>/dev/null; then
+                if gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$repo_nwo" --body "$token" 2>/dev/null; then
                     print_success "CLAUDE_CODE_OAUTH_TOKEN set on $repo_nwo from Keychain"
                 else
                     print_warning "Failed to set CLAUDE_CODE_OAUTH_TOKEN on $repo_nwo"

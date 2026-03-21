@@ -206,7 +206,7 @@ else
     fi
 
     if [[ -n "$TOKEN" ]]; then
-        echo "$TOKEN" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$REPO" --body -
+        gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$REPO" --body "$TOKEN"
         echo "✓ CLAUDE_CODE_OAUTH_TOKEN set from Keychain"
     elif [[ -t 0 ]]; then
         # Interactive — prompt for token
@@ -216,7 +216,7 @@ else
         echo ""
         read -r -p "Paste token (or press Enter to skip): " TOKEN
         if [[ -n "$TOKEN" ]]; then
-            echo "$TOKEN" | gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$REPO" --body -
+            gh secret set CLAUDE_CODE_OAUTH_TOKEN -R "$REPO" --body "$TOKEN"
             echo "✓ CLAUDE_CODE_OAUTH_TOKEN set on $REPO"
 
             # Offer to save to Keychain for future repos
