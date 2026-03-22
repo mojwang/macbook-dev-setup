@@ -20,12 +20,12 @@ Short description of what this project does.
 - **No force pushes to main**
 
 ## Tech Stack
-<!-- TODO: List your tech stack, e.g.:
-- **Framework**: Next.js 15 (App Router) + TypeScript
+<!-- TODO:WEB_TECH_STACK
+- **Framework**: Next.js 15 (App Router, TypeScript)
 - **Styling**: Tailwind CSS v4
 - **Testing**: Vitest (unit) + Playwright (e2e)
-- **Deployment**: Netlify
--->
+- **Deployment**: Netlify (static export to `out/`, no server runtime)
+TODO:WEB_TECH_STACK -->
 
 ## Agentic Workflow (Default)
 Main session = orchestrator. Dispatches sub-agents, never implements complex tasks directly.
@@ -84,11 +84,14 @@ npm test
 
 ## Gotchas
 <!-- Non-obvious project-specific learnings. Agents: append new discoveries here. -->
-<!-- Examples:
-- `npm test` requires Docker running for integration tests
-- The /api/auth route uses edge runtime — no Node.js APIs available
-- Build fails silently if .env.local is missing NEXT_PUBLIC_API_URL
--->
+<!-- TODO:WEB_GOTCHAS
+- Metadata routes (`robots.ts`, `sitemap.ts`) need `export const dynamic = "force-static"`
+- `next start` doesn't work with static export — use `npx serve out` for local preview
+- `headers()` in `next.config.ts` is incompatible with `output: "export"` — use `netlify.toml` instead
+- `NODE_ENV=production` must be set in the build command — static prerendering breaks otherwise
+- Build output is `out/` not `.next/` — CI artifacts and size reports must reference `out/`
+- ESLint flat config requires `@eslint/eslintrc` as a devDependency for Next.js 15 compat
+TODO:WEB_GOTCHAS -->
 
 ## Important
 - Do only what's asked

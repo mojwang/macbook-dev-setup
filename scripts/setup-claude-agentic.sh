@@ -30,7 +30,7 @@ setup_cleanup "cleanup_agentic"
 
 # Configuration
 EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
-TEMPLATE_VERSION="2.1.0"
+TEMPLATE_VERSION="2.2.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
@@ -288,6 +288,17 @@ deploy_templates() {
         cp "$gh_file" "$TEMPLATE_DIR/github/"
     done
     print_success "Deployed GitHub templates"
+
+    # Copy web config templates (next.config.ts, netlify.toml, eslint.config.mjs)
+    mkdir -p "$TEMPLATE_DIR/web"
+    local web_config_src="$REPO_DIR/config/web"
+    if [[ -d "$web_config_src" ]]; then
+        for web_file in "$web_config_src"/*; do
+            [[ -f "$web_file" ]] || continue
+            cp "$web_file" "$TEMPLATE_DIR/web/"
+        done
+        print_success "Deployed web config templates"
+    fi
 
     # Copy editor config templates
     mkdir -p "$TEMPLATE_DIR/editor"
@@ -628,6 +639,29 @@ EOF
             cp "$TEMPLATE_DIR/editor/nvmrc" "$nvmrc_dest"
             print_success "Created .nvmrc"
         fi
+    fi
+
+    # Deploy web config files (only if not present, web projects only)
+    if [[ "$project_type" == "web" ]] && [[ -d "$TEMPLATE_DIR/web" ]]; then
+        local web_files=("next.config.ts" "netlify.toml" "eslint.config.mjs")
+        for wf in "${web_files[@]}"; do
+            local wf_dest="$target_dir/$wf"
+            if [[ ! -f "$wf_dest" ]] && [[ -f "$TEMPLATE_DIR/web/$wf" ]]; then
+                cp "$TEMPLATE_DIR/web/$wf" "$wf_dest"
+                print_success "Created $wf"
+            fi
+        done
+    fi
+
+    # Fill in web-specific CLAUDE.md sections for web projects
+    if [[ "$project_type" == "web" ]] && [[ -f "$claude_md" ]]; then
+        # Replace TODO:WEB_TECH_STACK markers with actual content (remove comment wrappers)
+        sed -i '' '/<!-- TODO:WEB_TECH_STACK$/d' "$claude_md"
+        sed -i '' '/^TODO:WEB_TECH_STACK -->$/d' "$claude_md"
+        # Replace TODO:WEB_GOTCHAS markers with actual content (remove comment wrappers)
+        sed -i '' '/<!-- TODO:WEB_GOTCHAS$/d' "$claude_md"
+        sed -i '' '/^TODO:WEB_GOTCHAS -->$/d' "$claude_md"
+        print_success "Filled in web tech stack and gotchas in CLAUDE.md"
     fi
 
     if [[ $agents_updated -gt 0 ]]; then
