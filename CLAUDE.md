@@ -44,6 +44,7 @@ Automated macOS dev environment setup for Apple Silicon.
 
 **Always** (do without asking):
 - Run tests after changes, run shellcheck on .sh files
+- For web projects: launch dev server and provide links for visual verification before committing
 - Follow naming conventions and project patterns
 - Use feature branches, checkpoint commits on feature branches
 - Self-sufficient loops: implement → test → fix → commit
