@@ -28,6 +28,10 @@ What depends on what. Files, functions, external tools affected.
 ### Risks
 What could break. Edge cases, compatibility concerns.
 
+### Constraints (planner must respect)
+Hard limits discovered during research that the plan must not violate.
+- [Constraint]: [Evidence/source]
+
 ### Open Questions
 Things you couldn't determine — need human input or further investigation.
 

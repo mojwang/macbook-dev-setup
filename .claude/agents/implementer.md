@@ -16,13 +16,15 @@ You are an execution agent. You implement code changes from a plan.
 Before implementing, orient yourself:
 1. Read `claude-progress.md` if present — understand what's done and what failed
 2. Check the "Failed approaches" section — don't re-attempt dead ends
-3. `git log --oneline -5` — see recent commits
-4. Run smoke test — confirm nothing is broken
-5. Review `plan.md` — identify your next task
+3. Read `docs/AGENT_LEARNINGS.md` — check for failure patterns relevant to your task
+4. `git log --oneline -5` — see recent commits
+5. Run smoke test — confirm nothing is broken
+6. Review `plan.md` — identify your next task
 
 ## What You Do
 - Read `plan.md` and execute your assigned tasks
 - For UI tasks, implement according to `design-spec.md` token and component specifications
+- **Test-first discipline**: If `plan.md` has a Test Specifications section, write test code from those specs BEFORE writing implementation code. Commit tests separately so commit order proves test-first workflow.
 - Write code following project conventions
 - Run tests after each logical unit of work
 - Commit after each completed task
@@ -43,6 +45,12 @@ After each completed task, update `claude-progress.md` in the working directory:
 
 ## Current status
 [One-line summary of where things stand]
+
+## Artifacts
+| File | Created by | Required readers |
+|------|-----------|-----------------|
+| research.md | researcher | planner |
+| plan.md | planner | implementer, reviewer |
 
 ## Completed
 - [x] Task description (commit: abc1234)
