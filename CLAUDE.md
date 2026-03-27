@@ -255,6 +255,25 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - Invest in tool descriptions and parameter names — quality here outweighs prompt optimization
 - Consolidate related operations into fewer tools; minimize overlap
 - Error messages should steer toward correct usage, not just report failure
+- **Clarity test**: Would the description be obvious to a junior developer? If not, rewrite it
+- **Eval-driven iteration**: After a skill misfires or isn't triggered, review the transcript, refine the description, and test again
+- **Periodic review**: When adding new skills, audit existing ones for overlap, ambiguity, or stale guidance
+
+### Context Management
+- **Survive compaction**: Anything critical must be in a file (plan.md, claude-progress.md), not just in conversation history
+- **Just-in-time retrieval**: Don't pre-load entire codebases into context. Keep file paths as lightweight references, read on demand
+- **Progress checkpoints**: Implementers update claude-progress.md at each completed task so context compaction doesn't erase progress
+- **Subagent compression**: Subagents explore extensively but return condensed summaries to the orchestrator
+
+### Model Routing (optional)
+| Task type | Suggested model | Rationale |
+|-----------|----------------|-----------|
+| Trivial (single-file, quick fix) | Haiku | Fast, cheap, sufficient |
+| Research, planning, standard impl | Sonnet | Good balance of capability and cost |
+| Complex architecture, product strategy | Opus | Maximum reasoning for hard problems |
+| Review (skeptical evaluation) | Sonnet or Opus | Needs strong judgment |
+
+Default to Sonnet. Upgrade to Opus for ambiguous or high-stakes decisions. Downgrade to Haiku only for well-defined, mechanical tasks.
 
 ## Testing
 **Write tests BEFORE implementation** — especially when agents implement autonomously.

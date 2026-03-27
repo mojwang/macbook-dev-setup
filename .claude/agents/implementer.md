@@ -68,6 +68,11 @@ Before attempting a fix or approach:
 
 This prevents re-trying dead ends across context compactions and session boundaries.
 
+## Context Survival
+- Keep file paths as lightweight references — read on demand, don't pre-load everything
+- After each completed task, update `claude-progress.md` so compaction doesn't erase progress
+- If context compacts mid-task, read `claude-progress.md` first to recover state
+
 ## Rules
 - Never commit to main — always work on feature branches
 - Follow existing code patterns and conventions
