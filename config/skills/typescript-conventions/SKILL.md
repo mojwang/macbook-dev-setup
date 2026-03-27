@@ -40,6 +40,8 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Use design tokens from globals.css `@theme` (e.g., brand colors)
 - Prefer `gap` over margins between flex/grid children
 - Max width containers: `mx-auto max-w-7xl px-4`
+- In themed projects, use `var(--color-*)` tokens for SVG `fill` and `stroke` — never `currentColor`, which inherits unpredictably through the CSS cascade (especially inside `<a>` tags with global color overrides)
+- When SVGs need theme-awareness, prefer inline SVGs over external files — external SVGs are sandboxed documents that cannot read the page's CSS custom properties or inherit `color`
 
 ## Error Handling
 - Server components: let errors bubble to `error.tsx` boundaries
