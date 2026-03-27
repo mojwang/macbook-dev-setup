@@ -151,10 +151,19 @@ Dispatch `product-tactician` sub-agent to assess outcomes against success criter
 - Output: evaluation addendum to `product-brief.md`
 - Skip for refactors, infra work, or tasks without user-facing outcomes
 
+### Session Startup (every session)
+Before dispatching agents or doing work, the orchestrator runs:
+1. `git branch --show-current` — verify not on main
+2. Read `claude-progress.md` if present — understand where last session left off
+3. `git log --oneline -10` — review recent changes
+4. Run smoke test (build/test) — confirm nothing is broken
+5. Review plan.md or task list — identify next priority
+6. Only then: dispatch agents or begin work
+
 ### Orchestration Rules
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
-- Persistent artifacts (research.md, plan.md) survive context compaction
+- Persistent artifacts (research.md, plan.md, claude-progress.md) survive context compaction
 - Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
 - Product agents are advisory — orchestrator reviews briefs and can override scope/priority decisions
 - Product-strategist artifacts (`product-lab/`) are persistent; product-tactician artifacts (`product-brief.md`) are ephemeral
@@ -169,7 +178,7 @@ After every PR merge, orchestrator must:
 1. **Remove worktrees**: `git worktree remove <path>` for all worktrees created during the task
 2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
 3. **Prune remote refs**: `git remote prune origin`
-4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`
+4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`
 5. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
 
 Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.
