@@ -14,6 +14,7 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Heading hierarchy is sequential (no skipping h1 → h3)
 - Focus states visible on all interactive elements
 - Color is not the sole indicator of meaning
+- Global CSS color rules on interactive elements (`a { color: ... }`) affect all descendants including SVG fills — verify that `currentColor` usage in nested elements resolves correctly in both themes
 
 ## SEO Checks
 - Every page exports `metadata` with unique `title` and `description`

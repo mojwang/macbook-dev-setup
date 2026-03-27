@@ -59,7 +59,7 @@ GitHub Actions runs on every PR to `main`:
 
 **Always** (do without asking):
 - Run tests after changes
-- Launch dev server and provide links for visual verification before committing
+- Launch dev server and provide links for visual verification before committing — verify in both light and dark mode for themed projects
 - Follow naming conventions and project patterns
 - Use feature branches, checkpoint commits
 

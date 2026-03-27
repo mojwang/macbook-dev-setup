@@ -52,6 +52,13 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Flag navigation/header/footer differences between pages
 - Flag inconsistent card treatments across pages (shadow, border, padding, radius)
 
+## Dark Mode & Theming
+- Flag `fill="currentColor"` or `stroke="currentColor"` in inline SVGs — `currentColor` inherits from the CSS cascade (`color` property), which is often wrong inside `<a>` tags or components with color overrides. Use explicit token references (`var(--color-foreground)`, `var(--color-*)`) instead.
+- Flag `dark:invert` on colored or brand assets — CSS `invert` is a pixel-level operation that produces unpredictable colors (e.g., dark green inverts to pink). Use theme-aware color tokens or conditional rendering instead.
+- Flag elements with reduced opacity (`opacity-*`, `text-*/N` modifiers) applied to colors that depend on CSS inheritance — low opacity amplifies visibility problems when the inherited color is wrong for the current theme.
+- Flag hardcoded light-only or dark-only color values (e.g., `fill="#000"`, `fill="white"`) in themed contexts — these become invisible in the opposite theme.
+- Flag global CSS color overrides on common elements (`a`, `button`) without documenting cascade side effects — these silently affect nested SVG `fill="currentColor"`, child component colors, and opacity-based visibility.
+
 ## Healthcare-Specific
 - Provider credentials without structured data (`schema.org/MedicalBusiness`)
 - Missing trust signals on conversion pages (certifications, testimonials, insurance logos)
