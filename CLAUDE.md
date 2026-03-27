@@ -147,24 +147,28 @@ Dispatch `reviewer` sub-agent to validate implementation.
 - Can run security + quality reviewers in parallel
 - For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
-### Phase 5: Evaluate (optional)
+### Phase 5: Evaluate (recommended when success criteria exist)
 Dispatch `product-tactician` sub-agent to assess outcomes against success criteria.
 - Run after implementation is shipped and has had time to produce results
 - Output: evaluation addendum to `product-brief.md`
 - Skip for refactors, infra work, or tasks without user-facing outcomes
+- If `product-brief.md` defines success criteria, evaluation is expected — don't silently skip it
 
 ### Session Startup (every session)
 Before dispatching agents or doing work, the orchestrator runs:
 1. `git branch --show-current` — verify not on main
 2. Read `claude-progress.md` if present — understand where last session left off
-3. `git log --oneline -10` — review recent changes
-4. Run smoke test (build/test) — confirm nothing is broken
-5. Review plan.md or task list — identify next priority
-6. Only then: dispatch agents or begin work
+3. Read `docs/AGENT_LEARNINGS.md` — check for relevant failure patterns and workflow insights from prior PRs
+4. `git log --oneline -10` — review recent changes
+5. Run smoke test (build/test) — confirm nothing is broken
+6. Review plan.md or task list — identify next priority
+7. Only then: dispatch agents or begin work
 
 ### Orchestration Rules
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
+- **Decision log**: Write `claude-decisions.md` at task start with classification, agent dispatch rationale, and scope decisions. Update when decisions change. This enables post-mortem tracing when features fail.
+- **Artifact visibility**: After each phase completes, update the Artifacts table in `claude-progress.md` so every agent knows what exists and who should read it (see implementer.md for table format).
 - Persistent artifacts (research.md, plan.md, claude-progress.md) survive context compaction
 - Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
 - Product agents are advisory — orchestrator reviews briefs and can override scope/priority decisions
@@ -174,6 +178,7 @@ Before dispatching agents or doing work, the orchestrator runs:
 - **Multiplier behavior**: Guide agents through questions and annotation cycles before overriding their work. The orchestrator's output is the team's output — amplify agents rather than replace them.
 - Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
+- **End-of-session evaluation check**: If the session produced a shipped feature with success criteria (from `product-brief.md`), prompt: "Phase 5 evaluation is due — dispatch product-tactician to assess outcomes?" Don't silently skip evaluation.
 
 ### Effort Scaling
 | Complexity | Agents | Tool calls/agent | Example |
@@ -190,8 +195,9 @@ After every PR merge, orchestrator must:
 1. **Remove worktrees**: `git worktree remove <path>` for all worktrees created during the task
 2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
 3. **Prune remote refs**: `git remote prune origin`
-4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`
-5. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
+4. **Extract learnings**: Before deleting `claude-progress.md`, review its "Failed approaches" section. Append non-obvious findings to `docs/AGENT_LEARNINGS.md` with the PR number. Skip trivial or project-specific failures.
+5. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`, `claude-decisions.md`
+6. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
 
 Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.
 

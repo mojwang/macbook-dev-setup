@@ -93,6 +93,11 @@ Reviewer runs lightweight design checks. For deep design QA, the orchestrator di
 - **Cognitive load**: Does understanding this change require holding more than 3 unrelated concepts simultaneously? Flag changes that span multiple domains without clear separation.
 - **Reversibility**: Can this change be safely rolled back? Flag irreversible changes (schema migrations, data format changes, external API contracts, deleted data) as requiring extra scrutiny and explicit rollback plans.
 
+### Test-First Discipline (if plan.md has Test Specifications)
+- Verify commit order: test commits should precede implementation commits for each task
+- Run `git log --oneline` and check that test files appear in earlier commits than the code they test
+- Flag violations as NEEDS_REVISION — test-first is a process guarantee, not just a suggestion
+
 ### Completion Criteria (if plan.md defines them)
 - Verify each task's "done" conditions from plan.md
 - Run the specific commands listed as proof-of-completion
