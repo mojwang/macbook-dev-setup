@@ -173,6 +173,16 @@ Before dispatching agents or doing work, the orchestrator runs:
 - Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 
+### Effort Scaling
+| Complexity | Agents | Tool calls/agent | Example |
+|-----------|--------|-----------------|---------|
+| Simple | 1 | 3-10 | Find a function, check a config |
+| Medium | 2-4 in parallel | 10-15 | Compare implementations, multi-file research |
+| Complex | 5+ subagents | 15-30 | Architecture analysis, cross-repo investigation |
+| Massive | Agent teams | Unlimited | Full feature implementation, major refactor |
+
+Start with the minimum. Only scale up when the simpler approach demonstrably fails.
+
 ### Post-Merge Cleanup (ENFORCED)
 After every PR merge, orchestrator must:
 1. **Remove worktrees**: `git worktree remove <path>` for all worktrees created during the task

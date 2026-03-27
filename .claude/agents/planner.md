@@ -33,6 +33,14 @@ Synthesis of design and engineering tradeoffs:
 - Token and component choices justified by both design intent and implementation feasibility
 - Accessibility requirements from design-spec mapped to specific implementation tasks
 
+### Completion Criteria
+For each task, define verifiable "done" conditions:
+- What test(s) must pass?
+- What user-visible behavior changes?
+- What command proves it works? (e.g., `npm run build`, `curl localhost:3000/api/...`)
+
+The reviewer will verify these exact conditions. Vague criteria like "works correctly" are not acceptable.
+
 ### Testing Strategy
 How to verify the implementation works.
 
