@@ -138,10 +138,12 @@ Dispatch implementers with the approved plan. Choose mode based on task:
 - Monitor via tmux split panes — redirect approaches that aren't working
 - Lead waits for teammates to finish before synthesizing
 
-### Phase 4: Verify
+### Phase 4: Verify (iterative)
 Dispatch `reviewer` sub-agent to validate implementation.
 - Must pass before creating PR
+- If NEEDS_REVISION: send review feedback to implementer → implementer fixes and re-commits → re-dispatch reviewer (max 3 rounds, then escalate to user)
 - For design-system projects, dispatch `designer` alongside reviewer for parallel QA
+- For web projects: reviewer uses Playwright MCP for browser-based verification
 - Can run security + quality reviewers in parallel
 - For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
@@ -151,10 +153,19 @@ Dispatch `product-tactician` sub-agent to assess outcomes against success criter
 - Output: evaluation addendum to `product-brief.md`
 - Skip for refactors, infra work, or tasks without user-facing outcomes
 
+### Session Startup (every session)
+Before dispatching agents or doing work, the orchestrator runs:
+1. `git branch --show-current` — verify not on main
+2. Read `claude-progress.md` if present — understand where last session left off
+3. `git log --oneline -10` — review recent changes
+4. Run smoke test (build/test) — confirm nothing is broken
+5. Review plan.md or task list — identify next priority
+6. Only then: dispatch agents or begin work
+
 ### Orchestration Rules
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
 - Subagents cannot spawn other subagents — all coordination flows through orchestrator
-- Persistent artifacts (research.md, plan.md) survive context compaction
+- Persistent artifacts (research.md, plan.md, claude-progress.md) survive context compaction
 - Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
 - Product agents are advisory — orchestrator reviews briefs and can override scope/priority decisions
 - Product-strategist artifacts (`product-lab/`) are persistent; product-tactician artifacts (`product-brief.md`) are ephemeral
@@ -164,12 +175,22 @@ Dispatch `product-tactician` sub-agent to assess outcomes against success criter
 - Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 
+### Effort Scaling
+| Complexity | Agents | Tool calls/agent | Example |
+|-----------|--------|-----------------|---------|
+| Simple | 1 | 3-10 | Find a function, check a config |
+| Medium | 2-4 in parallel | 10-15 | Compare implementations, multi-file research |
+| Complex | 5+ subagents | 15-30 | Architecture analysis, cross-repo investigation |
+| Massive | Agent teams | Unlimited | Full feature implementation, major refactor |
+
+Start with the minimum. Only scale up when the simpler approach demonstrably fails.
+
 ### Post-Merge Cleanup (ENFORCED)
 After every PR merge, orchestrator must:
 1. **Remove worktrees**: `git worktree remove <path>` for all worktrees created during the task
 2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
 3. **Prune remote refs**: `git remote prune origin`
-4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`
+4. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`
 5. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
 
 Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.
@@ -234,6 +255,25 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 - Invest in tool descriptions and parameter names — quality here outweighs prompt optimization
 - Consolidate related operations into fewer tools; minimize overlap
 - Error messages should steer toward correct usage, not just report failure
+- **Clarity test**: Would the description be obvious to a junior developer? If not, rewrite it
+- **Eval-driven iteration**: After a skill misfires or isn't triggered, review the transcript, refine the description, and test again
+- **Periodic review**: When adding new skills, audit existing ones for overlap, ambiguity, or stale guidance
+
+### Context Management
+- **Survive compaction**: Anything critical must be in a file (plan.md, claude-progress.md), not just in conversation history
+- **Just-in-time retrieval**: Don't pre-load entire codebases into context. Keep file paths as lightweight references, read on demand
+- **Progress checkpoints**: Implementers update claude-progress.md at each completed task so context compaction doesn't erase progress
+- **Subagent compression**: Subagents explore extensively but return condensed summaries to the orchestrator
+
+### Model Routing (optional)
+| Task type | Suggested model | Rationale |
+|-----------|----------------|-----------|
+| Trivial (single-file, quick fix) | Haiku | Fast, cheap, sufficient |
+| Research, planning, standard impl | Sonnet | Good balance of capability and cost |
+| Complex architecture, product strategy | Opus | Maximum reasoning for hard problems |
+| Review (skeptical evaluation) | Sonnet or Opus | Needs strong judgment |
+
+Default to Sonnet. Upgrade to Opus for ambiguous or high-stakes decisions. Downgrade to Haiku only for well-defined, mechanical tasks.
 
 ## Testing
 **Write tests BEFORE implementation** — especially when agents implement autonomously.

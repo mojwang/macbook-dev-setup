@@ -30,6 +30,15 @@ TODO:WEB_TECH_STACK -->
 ## Agentic Workflow (Default)
 Main session = orchestrator. Dispatches sub-agents, never implements complex tasks directly.
 
+### Session Startup (every session)
+Before dispatching agents or doing work:
+1. `git branch --show-current` — verify not on main
+2. Read `claude-progress.md` if present — understand where last session left off
+3. `git log --oneline -10` — review recent changes
+4. Run smoke test (build/test) — confirm nothing is broken
+5. Review plan.md or task list — identify next priority
+6. Only then: dispatch agents or begin work
+
 ### Task Classification
 - **Trivial**: Single-file edits → implement directly
 - **Standard**: Multi-file changes → Research → Plan → Implement → Review

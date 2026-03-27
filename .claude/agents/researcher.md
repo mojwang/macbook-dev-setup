@@ -31,6 +31,14 @@ What could break. Edge cases, compatibility concerns.
 ### Open Questions
 Things you couldn't determine — need human input or further investigation.
 
+## Research Strategy
+1. **Broad scan first**: Start with glob patterns, grep for keywords, skim directory structures
+2. **Evaluate coverage**: What did you find? What's missing? Where are the gaps?
+3. **Narrow and deepen**: Read specific files, trace call paths, map dependencies
+4. **Verify understanding**: Cross-reference findings — if two sources disagree, investigate further
+
+Never drill into implementation details before understanding the landscape.
+
 ## Investigation Principles
 
 ### Tracer Bullet First
