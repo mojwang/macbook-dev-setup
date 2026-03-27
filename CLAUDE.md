@@ -138,10 +138,12 @@ Dispatch implementers with the approved plan. Choose mode based on task:
 - Monitor via tmux split panes — redirect approaches that aren't working
 - Lead waits for teammates to finish before synthesizing
 
-### Phase 4: Verify
+### Phase 4: Verify (iterative)
 Dispatch `reviewer` sub-agent to validate implementation.
 - Must pass before creating PR
+- If NEEDS_REVISION: send review feedback to implementer → implementer fixes and re-commits → re-dispatch reviewer (max 3 rounds, then escalate to user)
 - For design-system projects, dispatch `designer` alongside reviewer for parallel QA
+- For web projects: reviewer uses Playwright MCP for browser-based verification
 - Can run security + quality reviewers in parallel
 - For agent teams: use `TaskCompleted` hooks to enforce quality gates
 
