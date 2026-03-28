@@ -653,6 +653,17 @@ EOF
         done
     fi
 
+    # Deploy netlify-ignore.sh for web projects (only if not present)
+    if [[ "$project_type" == "web" ]] && [[ -f "$TEMPLATE_DIR/web/netlify-ignore.sh" ]]; then
+        mkdir -p "$target_dir/scripts"
+        local ni_dest="$target_dir/scripts/netlify-ignore.sh"
+        if [[ ! -f "$ni_dest" ]]; then
+            cp "$TEMPLATE_DIR/web/netlify-ignore.sh" "$ni_dest"
+            chmod +x "$ni_dest"
+            print_success "Created scripts/netlify-ignore.sh"
+        fi
+    fi
+
     # Fill in web-specific CLAUDE.md sections for web projects
     if [[ "$project_type" == "web" ]] && [[ -f "$claude_md" ]]; then
         # Replace TODO:WEB_TECH_STACK markers with actual content (remove comment wrappers)
