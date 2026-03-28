@@ -30,7 +30,7 @@ setup_cleanup "cleanup_agentic"
 
 # Configuration
 EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
-TEMPLATE_VERSION="2.2.0"
+TEMPLATE_VERSION="2.3.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
