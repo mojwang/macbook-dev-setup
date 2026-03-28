@@ -269,6 +269,22 @@ gw main
 gt submit --stack  # Submit your stack
 ```
 
+## Deploy Efficiency
+
+### Smart deploy skipping
+Both repos use `scripts/netlify-ignore.sh` to skip Netlify builds for non-visual changes (docs, tests, CI configs) in both preview and production contexts. `CACHED_COMMIT_REF` is the last *deployed* commit, so diffs accumulate correctly — the next build with visual changes sees the full diff since the last deploy.
+
+### Credit math
+| Change type | Preview builds | Prod builds |
+|-------------|---------------|-------------|
+| Docs/tests/CI only | 0 | 0 |
+| Visual changes | 1 | 1 (on merge) |
+| Stacked visual PRs (3) | 3 | 3 (each merge) |
+
+### When to stack vs. separate
+- **Stack**: Related changes (types → API → UI), refactor chains
+- **Separate**: Independent fixes, security patches, unrelated features
+
 ## Conventional Commits
 
 ### Quick Reference
