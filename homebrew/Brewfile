@@ -41,7 +41,6 @@ brew "shellcheck"            # Shell script linter
 brew "jq"                    # JSON processor
 brew "yq"                    # YAML processor
 brew "wget"
-brew "curl"
 brew "git-gui"
 brew "diff-so-fancy"
 brew "commitizen"
@@ -94,10 +93,8 @@ brew "mkcert"              # Local HTTPS certificates
 
 # Performance monitoring
 brew "htop"                 # Process viewer
-brew "btop"                 # Better process viewer
 brew "ncdu"                 # Disk usage analyzer
 brew "duf"                  # Better df
-brew "procs"               # Modern ps replacement
 
 # Media processing
 brew "ffmpeg"

@@ -30,7 +30,7 @@ setup_cleanup "cleanup_agentic"
 
 # Configuration
 EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
-TEMPLATE_VERSION="2.2.0"
+TEMPLATE_VERSION="2.3.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
@@ -651,6 +651,17 @@ EOF
                 print_success "Created $wf"
             fi
         done
+    fi
+
+    # Deploy netlify-ignore.sh for web projects (only if not present)
+    if [[ "$project_type" == "web" ]] && [[ -f "$TEMPLATE_DIR/web/netlify-ignore.sh" ]]; then
+        mkdir -p "$target_dir/scripts"
+        local ni_dest="$target_dir/scripts/netlify-ignore.sh"
+        if [[ ! -f "$ni_dest" ]]; then
+            cp "$TEMPLATE_DIR/web/netlify-ignore.sh" "$ni_dest"
+            chmod +x "$ni_dest"
+            print_success "Created scripts/netlify-ignore.sh"
+        fi
     fi
 
     # Fill in web-specific CLAUDE.md sections for web projects
