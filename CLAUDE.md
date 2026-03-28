@@ -196,7 +196,7 @@ After every PR merge, orchestrator must:
 2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
 3. **Prune remote refs**: `git remote prune origin`
 4. **Extract learnings**: Before deleting `claude-progress.md`, review its "Failed approaches" section. Append non-obvious findings to `docs/AGENT_LEARNINGS.md` with the PR number. Skip trivial or project-specific failures.
-5. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`, `claude-decisions.md`
+5. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`, `claude-decisions.md`. Do NOT delete persistent artifacts (`docs/design/decisions.md`, `docs/AGENT_LEARNINGS.md`, audit reports in `docs/design/`).
 6. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
 
 Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.

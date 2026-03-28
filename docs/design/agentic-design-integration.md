@@ -29,15 +29,16 @@ Key principle: **agents are execution roles, skills are deployment units**. The 
 
 ## Artifact Contract
 
-| Artifact | Producer | Consumers | Location |
-|----------|----------|-----------|----------|
-| `design-spec.md` | Designer | Planner, Implementer | Working directory |
-| Design review | Designer | Orchestrator | Inline (pass/fail) |
-| Audit reports | Designer | Team (reference) | `docs/design/` |
-| `research.md` | Researcher | Planner, Designer | Working directory |
-| `plan.md` | Planner | Implementer | Working directory |
+| Artifact | Producer | Consumers | Location | Lifecycle |
+|----------|----------|-----------|----------|-----------|
+| `design-spec.md` | Designer | Planner, Implementer | Working directory | Ephemeral |
+| `docs/design/decisions.md` | Designer | Designer (future specs) | `docs/design/` | Persistent |
+| Design review | Designer | Orchestrator | Inline (pass/fail) | Ephemeral |
+| Audit reports | Designer | Team (reference) | `docs/design/` | Persistent |
+| `research.md` | Researcher | Planner, Designer | Working directory | Ephemeral |
+| `plan.md` | Planner | Implementer | Working directory | Ephemeral |
 
-All working-directory artifacts are ephemeral — cleaned up after PR merge.
+Ephemeral artifacts are cleaned up after PR merge. Persistent artifacts accumulate across features — they are the project's design memory.
 
 ## Workflow Diagram
 

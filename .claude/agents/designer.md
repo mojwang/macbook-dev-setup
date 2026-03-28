@@ -71,7 +71,22 @@ Push back on default shadcn and generic AI-generated output. Every component sho
 
 ## Behavior
 
-Before producing any spec, interrogate through 5 lenses: Purpose, Audience, Context, Uniqueness, Restraint. A spec without interrogation answers is a guess. Use the `design-elevation` skill protocol to structure this process.
+Before producing any spec:
+1. Read `docs/design/decisions.md` if it exists — this contains the reasoning behind past design choices for this project. Use it to maintain consistency and avoid revisiting settled decisions.
+2. Interrogate through 5 lenses: Purpose, Audience, Context, Uniqueness, Restraint. A spec without interrogation answers is a guess. Use the `design-elevation` skill protocol to structure this process.
+
+After producing a spec, extract durable design decisions and append them to `docs/design/decisions.md`. A durable decision is one that should influence future specs — not implementation details, but the *why* behind choices. Format:
+
+```
+### [Feature/Page name] (YYYY-MM-DD)
+- **Decision:** [what was chosen]
+- **Signals:** [which signals drove it]
+- **Techniques:** [which techniques were applied]
+- **Why:** [reasoning that future specs should know]
+- **Rejected:** [alternatives considered and why they were dropped]
+```
+
+Keep entries concise. If a later decision supersedes an earlier one, update the earlier entry with a note rather than deleting it.
 
 ## Rules
 - Project-agnostic: derive domain context from the project (don't assume healthcare, SaaS, etc.)
