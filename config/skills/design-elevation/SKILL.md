@@ -30,11 +30,17 @@ Before producing any spec, answer these 5 lenses. Each must have a concrete answ
 - **Uniqueness**: What makes this different from every other [healthcare site / SaaS landing page / etc.]? What would be lost if this were swapped with a competitor's version?
 - **Restraint**: What is this page/component deliberately NOT doing? What was considered and rejected?
 
+After answering all 5 lenses, classify **2-4 signals** from `SIGNALS.md` that match the findings. Each signal must trace to a specific interrogation answer — don't classify signals that aren't supported by the answers.
+
 ### 3. Select Techniques
-From `TECHNIQUES.md`, pick 2-3 techniques that directly address interrogation findings. For each:
-- Name the technique
-- Cite which interrogation answer it serves
-- Describe how it will be applied specifically (not generically)
+Use the classified signals to build a technique shortlist:
+1. Collect the recommended techniques from each classified signal in `SIGNALS.md`
+2. Techniques recommended by **multiple signals** are strongest candidates
+3. Pick 2-3 from the shortlist. For each:
+   - Name the technique
+   - Cite which signal(s) recommended it
+   - Cite which interrogation answer the signal traces to
+   - Describe how it will be applied specifically (not generically)
 
 More than 3 techniques signals lack of focus. Apply fewer techniques strongly rather than many weakly.
 
