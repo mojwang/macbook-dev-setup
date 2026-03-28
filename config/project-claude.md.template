@@ -98,6 +98,7 @@ npm test
 <!-- TODO:WEB_GOTCHAS
 - Metadata routes (`robots.ts`, `sitemap.ts`) need `export const dynamic = "force-static"`
 - `next start` doesn't work with static export — use `npx serve out` for local preview
+- Playwright `webServer` must use `npx serve out -l 3000` (not `npm start`) for `output: "export"` projects
 - `headers()` in `next.config.ts` is incompatible with `output: "export"` — use `netlify.toml` instead
 - `NODE_ENV=production` must be set in the build command — static prerendering breaks otherwise
 - Build output is `out/` not `.next/` — CI artifacts and size reports must reference `out/`
