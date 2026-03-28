@@ -252,7 +252,7 @@ Skills in `.claude/skills/` with YAML frontmatter for invocation control:
 
 **Web auto-invoked** (deployed with `--type web`):
 - **design-review** — token compliance, component consistency, visual hierarchy, typography/spacing rhythm, animation quality, cross-page consistency, healthcare UX (activates on component/style changes)
-- **design-elevation** — interrogation framework (5 lenses), technique selection (~83 techniques), reference library (19 exemplars). Auto-invoked when designer produces `design-spec.md`. Includes TECHNIQUES.md and REFERENCES.md companion files.
+- **design-elevation** — interrogation framework (5 lenses), signal classification (~20 signals), technique selection (~83 techniques), reference library (19 exemplars). Auto-invoked when designer produces `design-spec.md`. Includes SIGNALS.md, TECHNIQUES.md, and REFERENCES.md companion files.
 - **typescript-conventions** — strict types, React/Next.js patterns, error handling, async patterns, state management, testing (activates on .ts/.tsx edits)
 - **web-review** — accessibility, SEO, Core Web Vitals, structured data, mobile/viewport, social sharing (activates on page/component changes)
 
