@@ -1,6 +1,7 @@
 [build]
   command = "npm run build"
   publish = "out"
+  ignore = "bash scripts/netlify-ignore.sh"
 
 [[headers]]
   for = "/*"
