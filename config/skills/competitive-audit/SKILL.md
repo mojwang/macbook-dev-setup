@@ -1,6 +1,6 @@
 ---
 name: competitive-audit
-description: Structured competitive website audit framework for any vertical.
+description: Run when starting a new project or evaluating competitive landscape. User-invoked via /competitive-audit [vertical]. Produces audit report in docs/design/.
 disable-model-invocation: true
 argument-hint: "[industry/vertical] [--sites site1.com,site2.com]"
 allowed-tools: Bash, Read, Write
