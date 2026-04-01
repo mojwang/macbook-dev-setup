@@ -103,6 +103,11 @@ npm test
 - `NODE_ENV=production` must be set in the build command — static prerendering breaks otherwise
 - Build output is `out/` not `.next/` — CI artifacts and size reports must reference `out/`
 - ESLint flat config requires `@eslint/eslintrc` as a devDependency for Next.js 15 compat
+- Tailwind v4: avoid global `* { border-radius: 0 }` — it fights the design system. Use component-level rounding (`rounded-lg`) instead.
+- `next-mdx-remote/rsc` is server-only. For client-side MDX (interactive features), use `serialize()` + non-RSC `MDXRemote` with lazy loading to avoid SSR errors.
+- Netlify Forms: static export sites need a hidden HTML form in `public/` for Netlify to detect at build time. JS-rendered forms submit via fetch with `form-name` in the body.
+- Email obfuscation: never put email addresses in static HTML. Build mailto href at runtime in a client component.
+- Auto-merge gotcha: always check PR state (`gh pr view --json state`) before pushing additional commits — squash-merge can silently lose late commits.
 TODO:WEB_GOTCHAS -->
 
 ## Important
