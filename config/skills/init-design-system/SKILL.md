@@ -1,6 +1,6 @@
 ---
 name: init-design-system
-description: Bootstrap shadcn/ui with domain-appropriate customizations.
+description: Run once when bootstrapping a new web project's design system. User-invoked via /init-design-system. Installs shadcn/ui, maps tokens, defines typography and spacing scales, creates documentation.
 disable-model-invocation: true
 argument-hint: "[target-directory] [--domain healthcare|saas|ecommerce]"
 allowed-tools: Bash, Read, Write

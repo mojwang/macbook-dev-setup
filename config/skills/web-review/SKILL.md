@@ -1,6 +1,6 @@
 ---
 name: web-review
-description: Web-specific review for accessibility, SEO, performance, and content accuracy. Activates on component/page changes.
+description: Run when changes affect page files (src/app/), components, or content. Checks accessibility (alt text, headings, focus), SEO (metadata, structured data), performance (next/image, lazy loading), and Core Web Vitals.
 user-invocable: false
 allowed-tools: Read, Grep, Glob, Bash, LSP
 ---

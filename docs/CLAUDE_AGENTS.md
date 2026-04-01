@@ -1,6 +1,6 @@
 # Claude Sub-Agents
 
-Orchestrator pattern with 7 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. See `CLAUDE.md` for the authoritative workflow reference (Phase -1 through Phase 5).
+Orchestrator pattern with 7 native sub-agents. The main Claude session dispatches agents — it never implements complex tasks directly. This file is the authoritative workflow reference (Phase -1 through Phase 5).
 
 ## Native Sub-Agents
 
@@ -72,27 +72,98 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 - **Key behavior**: Peer to engineering agents. Never writes implementation code. Artifacts consumed by planner and implementer.
 - **Design principles**: visual hierarchy, progressive disclosure, affordances, composition levels
 
-## Orchestration Pattern
+## Orchestration Detail
 
-### Task Classification (decide first)
-- **Trivial** (single-file edits, quick fixes): Skip workflow, implement directly
-- **Async/autonomous** (prototyping, tests, refactors): Full agent workflow
-- **Sync/supervised** (core logic, security-sensitive): Work interactively
+### Phase -1: Strategy (optional)
+Dispatch `product-strategist` sub-agent when the question is "should we build this" — not "what to build."
+- Use for new product ideas, market validation, or when product-market fit is uncertain
+- Orchestrator dispatches directly as sub-agent, or conductor invokes via `/product-lab [mode]`
+- Pass mode as part of the prompt when dispatching (e.g., "evaluate hyper-personalized-product-design")
+- Output: persistent artifacts in `product-lab/` (evaluation, discovery, MVP scope, positioning, etc.)
+- These artifacts are NOT ephemeral — they persist across sessions and feed downstream agents
+- `product-lab/positioning.md` → designer (audience, tone); `product-lab/discovery.md` → product-tactician (evidence); `product-lab/mvp-scope.md` → planner (boundaries)
 
-### Phase Flow
--1. **Strategy** (optional) → Dispatch product-strategist for "should we build this?" questions. Output: `product-lab/` artifacts.
-0. **Define** (optional) → Dispatch product-tactician for per-feature scoping.
-1. **Research** → Dispatch researcher + designer (parallel for UI tasks).
-2. **Plan** → Dispatch planner (reads `research.md` + `design-spec.md` + `product-brief.md`).
-3. **Implement** → Dispatch implementer(s) in worktree isolation. Parallel for independent tasks.
-4. **Verify** → Dispatch reviewer + designer (parallel for design-system projects).
-5. **Evaluate** (optional) → Dispatch product-tactician to assess outcomes.
+### Phase 0: Define (optional)
+Dispatch `product-tactician` sub-agent to frame the problem and scope the solution for a specific feature.
+- Use for new features, competing priorities, or when "what to build" is unclear
+- Skip for bug fixes, refactors, or well-defined tasks
+- Consumes `product-lab/` artifacts (if present) for strategic context
+- Output: `product-brief.md` with problem, scope, success criteria
+- Orchestrator reviews brief before proceeding. Annotation cycle: add `NOTE:` or `Q:` inline → re-run product-tactician
 
-### Key Rules
-- Orchestrator never implements complex tasks itself
-- Subagents cannot spawn other subagents — all coordination through orchestrator
-- Slot machine rule: if an implementer goes off track, revert and restart fresh
-- Every implementer runs in its own worktree (no exceptions)
+### Phase 1: Research
+Dispatch `researcher` sub-agent to explore affected code areas.
+- Researcher reads `product-brief.md` (if present) to focus exploration
+- Run multiple researchers in parallel for independent areas
+- For UI tasks, dispatch `designer` in parallel with researcher for competitive/pattern research
+- Output: `research.md` with findings (+ `design-spec.md` from designer if applicable)
+- Skip for trivial tasks or well-understood areas
+
+### Phase 2: Plan
+Dispatch `planner` sub-agent to create `plan.md` from research.
+- Planner reads `product-brief.md` (if present) for scope boundaries
+- Planner reads both `research.md` and `design-spec.md` (if present)
+- Annotation cycle: user adds `NOTE:` or `Q:` inline → re-run planner to address
+- Iterate 1-3 rounds until plan is approved
+- Each task in the plan should be scoped for a single implementer
+- Size tasks appropriately: self-contained units with clear deliverables
+
+### Phase 3: Implement
+Dispatch implementers with the approved plan. Choose mode based on task:
+
+**Subagent implementers** (worktree-isolated):
+- Each works in worktree isolation on its own branch
+- Self-sufficient loops: run tests after every change
+- Checkpoint commits after each completed task (enables rollback)
+- Slot machine rule: if off track, revert and restart fresh
+
+**Agent team implementers** (for complex parallel work):
+- Split independent tasks so each teammate owns different files (avoid conflicts)
+- Require plan approval before implementation for risky changes
+- Monitor via tmux split panes — redirect approaches that aren't working
+- Lead waits for teammates to finish before synthesizing
+
+### Phase 4: Verify (iterative)
+Dispatch `reviewer` sub-agent to validate implementation.
+- Must pass before creating PR
+- If NEEDS_REVISION: send review feedback to implementer → implementer fixes and re-commits → re-dispatch reviewer (max 3 rounds, then escalate to user)
+- For design-system projects, dispatch `designer` alongside reviewer for parallel QA
+- For web projects: reviewer uses Playwright MCP for browser-based verification
+- Can run security + quality reviewers in parallel
+- For agent teams: use `TaskCompleted` hooks to enforce quality gates
+
+### Phase 5: Evaluate (recommended when success criteria exist)
+Dispatch `product-tactician` sub-agent to assess outcomes against success criteria.
+- Run after implementation is shipped and has had time to produce results
+- Output: evaluation addendum to `product-brief.md`
+- Skip for refactors, infra work, or tasks without user-facing outcomes
+- If `product-brief.md` defines success criteria, evaluation is expected — don't silently skip it
+
+### Session Startup (every session)
+Before dispatching agents or doing work, the orchestrator runs:
+1. `git branch --show-current` — verify not on main
+2. Read `claude-progress.md` if present — understand where last session left off
+3. Read `docs/AGENT_LEARNINGS.md` — check for relevant failure patterns and workflow insights from prior PRs
+4. `git log --oneline -10` — review recent changes
+5. Run smoke test (build/test) — confirm nothing is broken
+6. Review plan.md or task list — identify next priority
+7. Only then: dispatch agents or begin work
+
+### Orchestration Rules
+- Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
+- Subagents cannot spawn other subagents — all coordination flows through orchestrator
+- **Decision log**: Write `claude-decisions.md` at task start with classification, agent dispatch rationale, and scope decisions. Update when decisions change. This enables post-mortem tracing when features fail.
+- **Artifact visibility**: After each phase completes, update the Artifacts table in `claude-progress.md` so every agent knows what exists and who should read it (see implementer.md for table format).
+- Persistent artifacts (research.md, plan.md, claude-progress.md) survive context compaction
+- Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
+- Product agents are advisory — orchestrator reviews briefs and can override scope/priority decisions
+- Product-strategist artifacts (`product-lab/`) are persistent; product-tactician artifacts (`product-brief.md`) are ephemeral
+- **Constraint focus**: Before dispatching agents in parallel, identify which phase is the current bottleneck. The system's throughput equals the bottleneck's throughput — invest orchestrator attention there, not on phases that are already flowing.
+- **WIP discipline**: Never dispatch more parallel agents than can be synthesized in one pass. Unfinished artifacts from prior phases (unapproved `product-brief.md`, unreviewed `research.md`) block new dispatches.
+- **Multiplier behavior**: Guide agents through questions and annotation cycles before overriding their work. The orchestrator's output is the team's output — amplify agents rather than replace them.
+- Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge. Do NOT delete persistent artifacts (`docs/design/decisions.md`, `docs/AGENT_LEARNINGS.md`, audit reports in `docs/design/`).
+- **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
+- **End-of-session evaluation check**: If the session produced a shipped feature with success criteria (from `product-brief.md`), prompt: "Phase 5 evaluation is due — dispatch product-tactician to assess outcomes?" Don't silently skip evaluation.
 
 ## Artifacts
 

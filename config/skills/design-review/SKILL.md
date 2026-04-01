@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: Design system compliance, visual hierarchy, and healthcare UX checks. Activates on component/style changes.
+description: Run when changes affect component files (src/components/), style files (globals.css, tailwind config), or layout structure. Checks token compliance, visual hierarchy, responsive design, dark mode, and domain-specific UX patterns.
 user-invocable: false
 allowed-tools: Read, Grep, Glob, Bash, LSP
 ---

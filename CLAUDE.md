@@ -89,96 +89,7 @@ Two modes available depending on coordination needs:
 - Require plan approval for risky teammates before they implement
 - 3-5 teammates max, 5-6 tasks per teammate
 
-### Phase -1: Strategy (optional)
-Dispatch `product-strategist` sub-agent when the question is "should we build this" — not "what to build."
-- Use for new product ideas, market validation, or when product-market fit is uncertain
-- Orchestrator dispatches directly as sub-agent, or conductor invokes via `/product-lab [mode]`
-- Pass mode as part of the prompt when dispatching (e.g., "evaluate hyper-personalized-product-design")
-- Output: persistent artifacts in `product-lab/` (evaluation, discovery, MVP scope, positioning, etc.)
-- These artifacts are NOT ephemeral — they persist across sessions and feed downstream agents
-- `product-lab/positioning.md` → designer (audience, tone); `product-lab/discovery.md` → product-tactician (evidence); `product-lab/mvp-scope.md` → planner (boundaries)
-
-### Phase 0: Define (optional)
-Dispatch `product-tactician` sub-agent to frame the problem and scope the solution for a specific feature.
-- Use for new features, competing priorities, or when "what to build" is unclear
-- Skip for bug fixes, refactors, or well-defined tasks
-- Consumes `product-lab/` artifacts (if present) for strategic context
-- Output: `product-brief.md` with problem, scope, success criteria
-- Orchestrator reviews brief before proceeding. Annotation cycle: add `NOTE:` or `Q:` inline → re-run product-tactician
-
-### Phase 1: Research
-Dispatch `researcher` sub-agent to explore affected code areas.
-- Researcher reads `product-brief.md` (if present) to focus exploration
-- Run multiple researchers in parallel for independent areas
-- For UI tasks, dispatch `designer` in parallel with researcher for competitive/pattern research
-- Output: `research.md` with findings (+ `design-spec.md` from designer if applicable)
-- Skip for trivial tasks or well-understood areas
-
-### Phase 2: Plan
-Dispatch `planner` sub-agent to create `plan.md` from research.
-- Planner reads `product-brief.md` (if present) for scope boundaries
-- Planner reads both `research.md` and `design-spec.md` (if present)
-- Annotation cycle: user adds `NOTE:` or `Q:` inline → re-run planner to address
-- Iterate 1-3 rounds until plan is approved
-- Each task in the plan should be scoped for a single implementer
-- Size tasks appropriately: self-contained units with clear deliverables
-
-### Phase 3: Implement
-Dispatch implementers with the approved plan. Choose mode based on task:
-
-**Subagent implementers** (worktree-isolated):
-- Each works in worktree isolation on its own branch
-- Self-sufficient loops: run tests after every change
-- Checkpoint commits after each completed task (enables rollback)
-- Slot machine rule: if off track, revert and restart fresh
-
-**Agent team implementers** (for complex parallel work):
-- Split independent tasks so each teammate owns different files (avoid conflicts)
-- Require plan approval before implementation for risky changes
-- Monitor via tmux split panes — redirect approaches that aren't working
-- Lead waits for teammates to finish before synthesizing
-
-### Phase 4: Verify (iterative)
-Dispatch `reviewer` sub-agent to validate implementation.
-- Must pass before creating PR
-- If NEEDS_REVISION: send review feedback to implementer → implementer fixes and re-commits → re-dispatch reviewer (max 3 rounds, then escalate to user)
-- For design-system projects, dispatch `designer` alongside reviewer for parallel QA
-- For web projects: reviewer uses Playwright MCP for browser-based verification
-- Can run security + quality reviewers in parallel
-- For agent teams: use `TaskCompleted` hooks to enforce quality gates
-
-### Phase 5: Evaluate (recommended when success criteria exist)
-Dispatch `product-tactician` sub-agent to assess outcomes against success criteria.
-- Run after implementation is shipped and has had time to produce results
-- Output: evaluation addendum to `product-brief.md`
-- Skip for refactors, infra work, or tasks without user-facing outcomes
-- If `product-brief.md` defines success criteria, evaluation is expected — don't silently skip it
-
-### Session Startup (every session)
-Before dispatching agents or doing work, the orchestrator runs:
-1. `git branch --show-current` — verify not on main
-2. Read `claude-progress.md` if present — understand where last session left off
-3. Read `docs/AGENT_LEARNINGS.md` — check for relevant failure patterns and workflow insights from prior PRs
-4. `git log --oneline -10` — review recent changes
-5. Run smoke test (build/test) — confirm nothing is broken
-6. Review plan.md or task list — identify next priority
-7. Only then: dispatch agents or begin work
-
-### Orchestration Rules
-- Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
-- Subagents cannot spawn other subagents — all coordination flows through orchestrator
-- **Decision log**: Write `claude-decisions.md` at task start with classification, agent dispatch rationale, and scope decisions. Update when decisions change. This enables post-mortem tracing when features fail.
-- **Artifact visibility**: After each phase completes, update the Artifacts table in `claude-progress.md` so every agent knows what exists and who should read it (see implementer.md for table format).
-- Persistent artifacts (research.md, plan.md, claude-progress.md) survive context compaction
-- Designer agent is a peer, not a subordinate. It produces specs and reviews; implementer produces code.
-- Product agents are advisory — orchestrator reviews briefs and can override scope/priority decisions
-- Product-strategist artifacts (`product-lab/`) are persistent; product-tactician artifacts (`product-brief.md`) are ephemeral
-- **Constraint focus**: Before dispatching agents in parallel, identify which phase is the current bottleneck. The system's throughput equals the bottleneck's throughput — invest orchestrator attention there, not on phases that are already flowing.
-- **WIP discipline**: Never dispatch more parallel agents than can be synthesized in one pass. Unfinished artifacts from prior phases (unapproved `product-brief.md`, unreviewed `research.md`) block new dispatches.
-- **Multiplier behavior**: Guide agents through questions and annotation cycles before overriding their work. The orchestrator's output is the team's output — amplify agents rather than replace them.
-- Design artifacts (`design-spec.md`) are ephemeral like `research.md`/`plan.md` — cleaned up after PR merge.
-- **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
-- **End-of-session evaluation check**: If the session produced a shipped feature with success criteria (from `product-brief.md`), prompt: "Phase 5 evaluation is due — dispatch product-tactician to assess outcomes?" Don't silently skip evaluation.
+See `docs/CLAUDE_AGENTS.md` for the full agentic workflow: phases (-1 through 5), session startup checklist, orchestration rules, and agent definitions.
 
 ### Effort Scaling
 | Complexity | Agents | Tool calls/agent | Example |
@@ -236,25 +147,22 @@ Configured in `.claude/settings.json`:
 - Supports self-sufficient loops — implementer agents get immediate lint feedback
 
 ## Skills
-Skills in `.claude/skills/` with YAML frontmatter for invocation control:
+Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/init-project --type web`). Each skill's `description` frontmatter specifies WHEN it activates.
 
-**Auto-invoked** (Claude loads when relevant, `user-invocable: false`):
-- **security-review** — shell injection, secrets, OWASP checks (activates on code review/PRs)
-- **shell-conventions** — enforces shebang, set -e, timeouts, quoting (activates on .sh edits)
-- **commit-review** — conventional commits, <200 LOC, branch checks (activates on commits/PRs)
+**Core** (always available):
+- security-review, shell-conventions, commit-review — auto-invoked
+- /init-project, /deep-research, /init-design-system, /competitive-audit, /product-lab — user-invoked
 
-**User-invocable** (manual `/command` only):
-- **/init-project [dir] [--type shell|web]** — bootstrap agentic workflow with type-specific skills (`disable-model-invocation: true`)
-- **/deep-research [topic]** — forked explorer agent for codebase research (`context: fork`, `agent: researcher`)
-- **/init-design-system [dir] [--domain healthcare|saas|ecommerce]** — bootstrap shadcn/ui with domain customizations (`disable-model-invocation: true`)
-- **/competitive-audit [vertical] [--sites ...]** — structured competitive website audit framework (`disable-model-invocation: true`)
-- **/product-lab [mode] [idea-name]** — Product lifecycle co-pilot: evaluate ideas, run discovery, scope MVPs, assess PMF (`agent: product-strategist`)
+**Web** (deployed to web projects):
+- design-review, design-elevation, typescript-conventions, web-review — auto-invoked
 
-**Web auto-invoked** (deployed with `--type web`):
-- **design-review** — token compliance, component consistency, visual hierarchy, typography/spacing rhythm, animation quality, cross-page consistency, healthcare UX (activates on component/style changes)
-- **design-elevation** — interrogation framework (5 lenses), signal classification (~20 signals), technique selection (~83 techniques), reference library (19 exemplars). Auto-invoked when designer produces `design-spec.md`. Includes SIGNALS.md, TECHNIQUES.md, and REFERENCES.md companion files.
-- **typescript-conventions** — strict types, React/Next.js patterns, error handling, async patterns, state management, testing (activates on .ts/.tsx edits)
-- **web-review** — accessibility, SEO, Core Web Vitals, structured data, mobile/viewport, social sharing (activates on page/component changes)
+## Skill Triggers
+- If changes affect `src/components/` or style files → design-review
+- If changes affect `src/app/` pages or content → web-review
+- If changes affect `.ts` or `.tsx` files → typescript-conventions
+- If designer produces `design-spec.md` → design-elevation
+- If changes affect `.sh` files → shell-conventions
+- If creating a commit or PR → commit-review
 
 
 ### Skill & Tool Quality

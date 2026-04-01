@@ -1,6 +1,6 @@
 ---
 name: design-elevation
-description: Structured interrogation and technique selection to elevate design specs beyond defaults.
+description: Run when the designer agent produces a design-spec.md. Interrogates intent through 5 lenses, classifies signals, selects techniques, and verifies restraint. Includes SIGNALS.md, TECHNIQUES.md, REFERENCES.md companions.
 user-invocable: false
 allowed-tools: Read, Grep, Glob, Bash
 ---

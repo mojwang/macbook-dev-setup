@@ -1,6 +1,6 @@
 ---
 name: typescript-conventions
-description: TypeScript and React conventions for Next.js App Router projects. Enforces strict types, component patterns, and Tailwind usage. Activates on .ts/.tsx file edits.
+description: Run when .ts or .tsx files are created or modified. Enforces strict TypeScript (no any), React component patterns, async/error handling, state management, and Tailwind CSS conventions for Next.js App Router projects.
 user-invocable: false
 allowed-tools: Read, Grep, Glob, Bash, LSP
 ---
