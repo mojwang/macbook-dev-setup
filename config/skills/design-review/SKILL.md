@@ -59,6 +59,17 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Flag hardcoded light-only or dark-only color values (e.g., `fill="#000"`, `fill="white"`) in themed contexts — these become invisible in the opposite theme.
 - Flag global CSS color overrides on common elements (`a`, `button`) without documenting cascade side effects — these silently affect nested SVG `fill="currentColor"`, child component colors, and opacity-based visibility.
 
+## Global CSS Overrides
+- Flag global `*` selectors that override design system properties (`border-radius`, `box-shadow`, `outline`) — these fight component libraries and create constant override battles
+- Flag `!important` on design token values — tokens should win through cascade, not force
+- Global resets should set sensible defaults (box-sizing, margin) — not strip component library styling
+
+## Content Page Consistency
+- Flag inner pages missing a consistent header treatment (hero zone, breadcrumb, etc.) when sibling pages have one
+- Flag inconsistent `max-width` across pages serving the same role
+- Flag email addresses rendered in static HTML — should be obfuscated (runtime-assembled in client component) or behind a form
+- Flag `target="_blank"` on `mailto:` links — mailto should open in the same context, not a new tab
+
 ## Healthcare-Specific
 - Provider credentials without structured data (`schema.org/MedicalBusiness`)
 - Missing trust signals on conversion pages (certifications, testimonials, insurance logos)
