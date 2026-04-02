@@ -147,7 +147,8 @@ Before dispatching agents or doing work, the orchestrator runs:
 4. `git log --oneline -10` — review recent changes
 5. Run smoke test (build/test) — confirm nothing is broken
 6. Review plan.md or task list — identify next priority
-7. Only then: dispatch agents or begin work
+7. Check skill staleness: run `scripts/skill-tracker.sh check` — if any critical skill exceeds its threshold, prompt: "It's been [N days] since the last [skill] run. Want to run it now?"
+8. Only then: dispatch agents or begin work
 
 ### Orchestration Rules
 - Main session = orchestrator. Dispatches agents, never implements complex tasks itself.
@@ -167,7 +168,8 @@ Before dispatching agents or doing work, the orchestrator runs:
 
 ## Artifacts
 
-- **`research.md`**, **`plan.md`**, **`design-spec.md`**, and **`product-brief.md`**: Ephemeral, gitignored. Created per-task, cleaned up after PR merge.
+- **`research.md`**, **`design-spec.md`**, and **`product-brief.md`**: Ephemeral, gitignored. Cleaned up after PR merge.
+- **`plan.md`**: Ephemeral during work, but versioned after merge — move to `docs/exec-plans/completed/[feature-name].md` with an Outcome section. See `docs/exec-plans/README.md`.
 - **`product-lab/`**: Persistent artifacts from product-strategist. NOT cleaned up after PR merge — they represent ongoing product strategy state across sessions.
 - Survive context compaction — persistent reference for orchestrator and agents.
 - Annotation cycles: user adds `NOTE:`/`Q:` to `plan.md`, re-runs planner to address.

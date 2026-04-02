@@ -77,6 +77,9 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Medical disclaimers missing on health content pages
 - Appointment CTAs not prominent on service pages
 
+## Remediation Reference
+When flagging an issue, include a concrete fix. Reference `config/lint/eslint-agent-rules.md` for standard remediations (token replacements, spacing rhythm, Tailwind conflicts).
+
 ## Output Format
 When issues found:
 ```
