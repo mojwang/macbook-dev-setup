@@ -69,6 +69,16 @@ EOF
 
 [[ "$*" =~ --help ]] && help
 
+# Convert long options to short equivalents (e.g., alias passes --tree)
+args=()
+for arg in "$@"; do
+  case "$arg" in
+    --tree) args+=(-T) ;;
+    *) args+=("$arg") ;;
+  esac
+done
+set -- "${args[@]}"
+
 exa_opts=()
 
 while getopts ':aAtuUSI:rkhnsXL:MNg1lFGRdDiTx@' arg; do
