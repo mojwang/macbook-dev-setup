@@ -67,3 +67,6 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Mock only external boundaries (API calls, browser APIs) — never mock internal modules
 - Data files: test that exports match expected schema and constraints
 - Pages: test that key content renders, links work, metadata is correct
+
+## Remediation Reference
+When flagging lint errors, include concrete fixes. Reference `config/lint/eslint-agent-rules.md` for standard remediations (no-explicit-any, hooks deps, Next.js patterns, Tailwind conflicts).

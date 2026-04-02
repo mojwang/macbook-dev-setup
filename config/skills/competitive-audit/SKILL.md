@@ -10,6 +10,12 @@ allowed-tools: Bash, Read, Write
 
 Structured framework for auditing competitor websites and synthesizing actionable design recommendations.
 
+## Scripts
+Run mechanical checks before interpretation:
+- `scripts/validate-sites.sh [sites...]` — HTTP 200 checks before auditing
+- `scripts/capture-screenshots.sh <url> <output-dir>` — Playwright screenshots at 1440px, 768px, 390px
+- `scripts/run-lighthouse.sh <output-dir> [urls...]` — Lighthouse a11y/perf scores
+
 ## Phase 1: Site Selection
 
 ### If sites provided via `--sites`:

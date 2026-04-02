@@ -10,6 +10,13 @@ allowed-tools: Bash, Read, Write
 
 Bootstrap a design system using shadcn/ui with domain-specific customizations.
 
+## Scripts
+Use scripts for deterministic steps, model for interpretation:
+- `scripts/detect-project.sh [dir]` — verify prerequisites (package.json, tailwind)
+- `scripts/init-shadcn.sh [dir]` — run shadcn init with standard settings
+- `scripts/install-components.sh [dir]` — install baseline component set
+- `scripts/verify-build.sh [dir]` — confirm build and lint pass after changes
+
 ## Steps
 
 ### 1. Detect Project Setup

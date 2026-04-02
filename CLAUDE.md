@@ -107,7 +107,7 @@ After every PR merge, orchestrator must:
 2. **Delete local branches**: `git branch -D <branch>` for branches whose PRs are merged
 3. **Prune remote refs**: `git remote prune origin`
 4. **Extract learnings**: Before deleting `claude-progress.md`, review its "Failed approaches" section. Append non-obvious findings to `docs/AGENT_LEARNINGS.md` with the PR number. Skip trivial or project-specific failures.
-5. **Delete ephemeral artifacts**: `research.md`, `plan.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`, `claude-decisions.md`. Do NOT delete persistent artifacts (`docs/design/decisions.md`, `docs/AGENT_LEARNINGS.md`, audit reports in `docs/design/`).
+5. **Version plans**: Move `plan.md` to `docs/exec-plans/completed/[feature-name].md` (add Outcome section). Delete other ephemeral artifacts: `research.md`, `design-spec.md`, `product-brief.md`, `claude-progress.md`, `claude-decisions.md`. Do NOT delete persistent artifacts (`docs/design/decisions.md`, `docs/AGENT_LEARNINGS.md`, audit reports in `docs/design/`).
 6. **For agent teams**: Lead shuts down teammates first, then cleans up all worktrees
 
 Shortcut: `gclean` handles steps 2-3 for branches with deleted remotes.
@@ -151,10 +151,10 @@ Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/ini
 
 **Core** (always available):
 - security-review, shell-conventions, commit-review — auto-invoked
-- /init-project, /deep-research, /init-design-system, /competitive-audit, /product-lab — user-invoked
+- /init-project, /deep-research, /init-design-system, /competitive-audit, /product-lab, /entropy-scan — user-invoked
 
 **Web** (deployed to web projects):
-- design-review, design-elevation, typescript-conventions, web-review — auto-invoked
+- design-review, design-elevation, typescript-conventions, web-review, doc-garden — auto-invoked
 
 ## Skill Triggers
 - If changes affect `src/components/` or style files → design-review
@@ -163,6 +163,7 @@ Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/ini
 - If designer produces `design-spec.md` → design-elevation
 - If changes affect `.sh` files → shell-conventions
 - If creating a commit or PR → commit-review
+- If changes affect `docs/`, `CLAUDE.md`, or `*.md` in skill directories → doc-garden
 
 
 ### Skill & Tool Quality

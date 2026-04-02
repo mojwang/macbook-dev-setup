@@ -7,6 +7,11 @@ allowed-tools: Read, Grep, Glob, Bash
 
 # Commit Review Skill
 
+## Scripts
+Run mechanical checks before review:
+- `scripts/verify-branch.sh` — reject commits on protected branches (main, master, etc.)
+- `scripts/check-staged-files.sh` — detect secrets, credentials, and large binaries in staged files
+
 ## Checks
 
 ### Conventional Commit Format
