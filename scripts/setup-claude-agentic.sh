@@ -30,7 +30,7 @@ setup_cleanup "cleanup_agentic"
 
 # Configuration
 EXTENSIONS_DIR="${EXTENSIONS_DIR:-$HOME/.config/macbook-dev-setup.d}"
-TEMPLATE_VERSION="2.3.0"
+TEMPLATE_VERSION="2.4.0"
 TEMPLATE_DIR="$HOME/.claude/templates/agentic"
 VERSION_FILE="$TEMPLATE_DIR/.version"
 REPO_DIR="$ROOT_DIR"
@@ -214,6 +214,11 @@ deploy_templates() {
         if [[ -f "$skill_src/$skill_name/SKILL.md" ]]; then
             mkdir -p "$TEMPLATE_DIR/skills/base/$skill_name"
             cp "$skill_src/$skill_name/SKILL.md" "$TEMPLATE_DIR/skills/base/$skill_name/"
+            # Copy scripts/ subdirectory if it exists
+            if [[ -d "$skill_src/$skill_name/scripts" ]]; then
+                mkdir -p "$TEMPLATE_DIR/skills/base/$skill_name/scripts"
+                cp "$skill_src/$skill_name/scripts/"* "$TEMPLATE_DIR/skills/base/$skill_name/scripts/"
+            fi
         fi
     done
 
@@ -228,13 +233,32 @@ deploy_templates() {
 
     # Copy web-specific skills from config/skills/
     local web_skill_src="$REPO_DIR/config/skills"
-    local web_skills=("typescript-conventions" "web-review" "design-review" "design-elevation" "init-design-system" "competitive-audit")
+    local web_skills=("typescript-conventions" "web-review" "design-review" "design-elevation" "init-design-system" "competitive-audit" "entropy-scan" "doc-garden")
     for skill_name in "${web_skills[@]}"; do
         if [[ -f "$web_skill_src/$skill_name/SKILL.md" ]]; then
             mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name"
             cp "$web_skill_src/$skill_name/"*.md "$TEMPLATE_DIR/skills/web/$skill_name/"
+            # Copy scripts/ subdirectory if it exists
+            if [[ -d "$web_skill_src/$skill_name/scripts" ]]; then
+                mkdir -p "$TEMPLATE_DIR/skills/web/$skill_name/scripts"
+                cp "$web_skill_src/$skill_name/scripts/"* "$TEMPLATE_DIR/skills/web/$skill_name/scripts/"
+            fi
         fi
     done
+
+    # Copy lint remediation docs
+    local lint_src="$REPO_DIR/config/lint"
+    if [[ -d "$lint_src" ]]; then
+        mkdir -p "$TEMPLATE_DIR/lint"
+        cp "$lint_src/"*.md "$TEMPLATE_DIR/lint/"
+        print_success "Deployed lint agent rules"
+    fi
+
+    # Copy skill tracker script
+    if [[ -f "$REPO_DIR/scripts/skill-tracker.sh" ]]; then
+        cp "$REPO_DIR/scripts/skill-tracker.sh" "$TEMPLATE_DIR/skill-tracker.sh"
+        print_success "Deployed skill tracker"
+    fi
 
     print_success "Deployed skill templates (base + shell + web)"
 
@@ -467,6 +491,7 @@ EOF
             local skill_name
             skill_name=$(basename "$skill_dir")
             mkdir -p "$claude_dir/skills/$skill_name"
+            # Deploy markdown files
             for src_file in "$skill_dir"*.md; do
                 [[ -f "$src_file" ]] || continue
                 local file_name
@@ -486,6 +511,17 @@ EOF
                     cp "$src_file" "$dest"
                 fi
             done
+            # Deploy scripts/ subdirectory if it exists
+            if [[ -d "$skill_dir/scripts" ]]; then
+                mkdir -p "$claude_dir/skills/$skill_name/scripts"
+                for src_script in "$skill_dir/scripts/"*; do
+                    [[ -f "$src_script" ]] || continue
+                    local script_name
+                    script_name=$(basename "$src_script")
+                    cp "$src_script" "$claude_dir/skills/$skill_name/scripts/$script_name"
+                    chmod +x "$claude_dir/skills/$skill_name/scripts/$script_name"
+                done
+            fi
         done
     done
 
@@ -623,6 +659,27 @@ EOF
         mkdir -p "$target_dir/.github"
         cp "$TEMPLATE_DIR/github/pull_request_template.md" "$pr_template_dest"
         print_success "Created .github/pull_request_template.md"
+    fi
+
+    # Deploy lint agent rules for web projects
+    if [[ "$project_type" == "web" ]] && [[ -d "$TEMPLATE_DIR/lint" ]]; then
+        mkdir -p "$target_dir/config/lint"
+        for lint_file in "$TEMPLATE_DIR/lint/"*.md; do
+            [[ -f "$lint_file" ]] || continue
+            cp "$lint_file" "$target_dir/config/lint/"
+        done
+        print_success "Deployed lint agent rules"
+    fi
+
+    # Deploy skill tracker script
+    if [[ -f "$TEMPLATE_DIR/skill-tracker.sh" ]]; then
+        mkdir -p "$target_dir/scripts"
+        local tracker_dest="$target_dir/scripts/skill-tracker.sh"
+        if [[ ! -f "$tracker_dest" ]]; then
+            cp "$TEMPLATE_DIR/skill-tracker.sh" "$tracker_dest"
+            chmod +x "$tracker_dest"
+            print_success "Deployed skill tracker"
+        fi
     fi
 
     # Deploy .editorconfig (only if not present)
