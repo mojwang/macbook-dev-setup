@@ -40,6 +40,15 @@ Automated macOS dev environment setup for Apple Silicon.
   - `feat(agents): evolve TaskMaster into Product Manager with discovery workflows`
   - `fix(git): enforce feature branch workflow for all commits`
 
+## Output Formatting (Executive Brief Style)
+- Plain text for synthesized answers — no blockquote prefix, 2-3 sentences max
+- Emoji section labels: 📌 Sources/Findings, 🔗 Patterns/Recommendations, ⚠️ Tensions/Blocking, 🕳️ Gaps, 🎯 Active
+- Sources/findings as indented **bold-dash pairs** (no bullets)
+- Patterns/Tensions/Gaps as emoji label + bullet points
+- **Bold titles** for references in conversation (not `[[wikilinks]]`)
+- Tables only for 4+ items across 3+ columns (Scope, Assumptions tables are fine)
+- Horizontal rules between major sections
+
 ## Boundaries
 
 **Always** (do without asking):

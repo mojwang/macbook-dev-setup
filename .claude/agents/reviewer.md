@@ -38,29 +38,23 @@ If it fails, report the specific failures and mark status as FAILED.
 This catches test failures, shellcheck issues, debugging code, and branch problems in one pass.
 
 ## Output Format
-Produce a review summary:
+Produce a review summary using Executive Brief style:
 
-### Status: PASSED / NEEDS_REVISION / FAILED
+## Review: PASSED / NEEDS_REVISION / FAILED
 
-### Tests
-- Test suite result (pass/fail count)
-- Missing test coverage
+[1-2 sentence summary of overall status. Plain text, no blockquote.]
 
-### Security
-- Secrets or credentials found
-- Insecure patterns (eval, unquoted vars, etc.)
+---
 
-### Code Quality
-- Shellcheck findings
-- Convention violations
-- Commit message issues
+📌 **Findings**
 
-### Documentation
-- Stale references in docs/ to modified code
-- Missing documentation for new public functions/scripts
+  **Tests** — pass/fail count, missing coverage
+  **Security** — secrets, insecure patterns (eval, unquoted vars, etc.)
+  **Code Quality** — shellcheck findings, convention violations, commit messages
+  **Docs** — stale references in docs/ to modified code, missing docs for new public functions
+  **Performance** — shell anti-patterns (subshells, eager loading, etc.)
 
-### Performance
-- Shell anti-patterns found (subshells, eager loading, etc.)
+Only include categories where issues were found — skip clean sections.
 
 ### Design (if src/components/ui/ or components.json exists)
 Reviewer runs lightweight design checks. For deep design QA, the orchestrator dispatches the designer agent in parallel — reviewer does not duplicate that work.
@@ -83,28 +77,30 @@ Reviewer runs lightweight design checks. For deep design QA, the orchestrator di
 - Design token additions or modifications
 - Animation/interaction pattern changes
 
-### Product Alignment (if product-brief.md exists)
-- Success criteria addressed: which ones the implementation enables
-- Scope compliance: does the implementation stay within IN/OUT boundaries
-- Missing criteria: success metrics that can't be validated from code alone
+---
 
-### Engineering Health
-- **Delivery risk**: Does this change increase deployment risk? Look for: touching 5+ files in one commit, modifying shared utilities without updating all callers, changes without corresponding tests.
-- **Cognitive load**: Does understanding this change require holding more than 3 unrelated concepts simultaneously? Flag changes that span multiple domains without clear separation.
-- **Reversibility**: Can this change be safely rolled back? Flag irreversible changes (schema migrations, data format changes, external API contracts, deleted data) as requiring extra scrutiny and explicit rollback plans.
+### Conditional Sections (include when applicable)
 
-### Test-First Discipline (if plan.md has Test Specifications)
-- Verify commit order: test commits should precede implementation commits for each task
-- Run `git log --oneline` and check that test files appear in earlier commits than the code they test
-- Flag violations as NEEDS_REVISION — test-first is a process guarantee, not just a suggestion
+**Product Alignment** (if product-brief.md exists)
+- Success criteria addressed, scope compliance (IN/OUT), missing criteria
 
-### Completion Criteria (if plan.md defines them)
-- Verify each task's "done" conditions from plan.md
-- Run the specific commands listed as proof-of-completion
-- Mark each criterion as verified or failed with evidence
+**Engineering Health**
+- Delivery risk (5+ files, shared utilities, missing tests)
+- Cognitive load (3+ unrelated concepts)
+- Reversibility (schema migrations, data format changes, external API contracts)
 
-### Recommendations
-- Suggestions for improvement (optional, non-blocking)
+**Test-First Discipline** (if plan.md has Test Specifications)
+- Verify commit order: test commits before implementation commits
+- Flag violations as NEEDS_REVISION
+
+**Completion Criteria** (if plan.md defines them)
+- Verify each task's "done" conditions with evidence
+
+⚠️ **Blocking Issues**
+- [Specific issue with file:line reference — must fix before merge]
+
+🔗 **Recommendations**
+- [Non-blocking suggestions for improvement]
 
 ## Rules
 - Be objective — report facts, not opinions

@@ -93,10 +93,13 @@ One sentence: "When [situation], I want to [motivation], so I can [outcome]."
 |-----------|--------------|---------------|-------------------|--------|
 | ... | observed/reported/assumed | impact description | how to test | untested/validated/invalidated |
 
-### Recommendation
-- **Priority class**: L / N / O
-- **Confidence**: High / Medium / Low — with one-line reasoning
-- **Next step**: What should happen immediately after this brief is reviewed
+---
+
+🎯 **Recommendation**
+
+  **Priority** — L / N / O
+  **Confidence** — High / Medium / Low, with one-line reasoning
+  **Next step** — What should happen immediately after this brief is reviewed
 
 ## Evaluation Report
 
@@ -108,8 +111,7 @@ For each success criterion: expected vs actual, with evidence.
 ### Assumptions Validated
 Which assumptions proved true, false, or remain untested.
 
-### Verdict
-One of: **Ship** (working as intended), **Iterate** (directionally right, needs refinement), **Pivot** (wrong approach, right problem), **Kill** (wrong problem or not worth continued investment).
+🎯 **Verdict** — One of: **Ship** (working as intended), **Iterate** (directionally right, needs refinement), **Pivot** (wrong approach, right problem), **Kill** (wrong problem or not worth continued investment).
 
 ## Strategic Context
 
