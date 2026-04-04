@@ -1,6 +1,7 @@
 ---
 name: product-strategist
 description: Full-lifecycle product strategist. Guides founders through idea validation, discovery, MVP, launch, PMF, positioning, and growth.
+model: opus
 tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 

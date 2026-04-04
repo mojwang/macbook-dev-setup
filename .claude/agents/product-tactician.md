@@ -1,6 +1,7 @@
 ---
 name: product-tactician
 description: Product tactician. Per-feature problem definition, scoping, prioritization, and outcome evaluation within an existing project.
+model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
 

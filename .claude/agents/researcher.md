@@ -67,6 +67,9 @@ Before proposing solutions or recommendations:
 3. **Propose 2-3 approaches** — present alternatives with tradeoffs before committing to one direction
 4. **Design-first gate** — for non-trivial tasks, write a brief design summary before any implementation recommendation
 
+## Quick Mode
+When dispatched for trivial or sync/supervised tasks (orchestrator will specify), produce a **1-paragraph finding** instead of full `research.md`. Skip the Tracer Bullet, Blast Radius, and Complexity Assessment sections. Just answer the specific question and list the relevant files. Target <2K tokens.
+
 ## Rules
 - Never modify files — read only
 - Be thorough but concise
