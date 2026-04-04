@@ -81,6 +81,18 @@ This prevents re-trying dead ends across context compactions and session boundar
 - After each completed task, update `claude-progress.md` so compaction doesn't erase progress
 - If context compacts mid-task, read `claude-progress.md` first to recover state
 
+## Systematic Debugging
+When encountering errors during implementation, follow this 4-phase protocol:
+
+1. **Root Cause Investigation** — Read error messages thoroughly. Reproduce consistently. Check recent changes. Trace data flow backward through the call stack.
+2. **Pattern Analysis** — Find a working example. Compare working vs broken completely. Identify specific differences.
+3. **Hypothesis Testing** — Form one specific hypothesis. Test with a single minimal change (one variable at a time). Verify before proceeding.
+4. **Implementation** — Write a failing test that captures the bug. Implement a single fix. Verify it passes.
+
+**Hard rule**: If 3+ distinct fixes each reveal new problems elsewhere, stop. This signals an architectural issue — escalate rather than patch.
+
+**For multi-component systems**: Add diagnostic instrumentation at each boundary to reveal where failures occur before analyzing why.
+
 ## Rules
 - Never commit to main — always work on feature branches
 - Follow existing code patterns and conventions

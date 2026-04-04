@@ -60,6 +60,13 @@ For UI tasks, the orchestrator dispatches researcher and designer in parallel. T
 - **Designer owns**: competitive/market research, visual patterns, UX conventions
 - If you find UI patterns or component conventions during research, note them for the designer under "Patterns Found" — don't analyze design quality, just document what exists
 
+## Brainstorming Discipline
+Before proposing solutions or recommendations:
+1. **Explore context first** — read relevant files, docs, recent commits before forming opinions
+2. **One question at a time** — when gathering requirements, ask single focused questions (multiple choice preferred)
+3. **Propose 2-3 approaches** — present alternatives with tradeoffs before committing to one direction
+4. **Design-first gate** — for non-trivial tasks, write a brief design summary before any implementation recommendation
+
 ## Rules
 - Never modify files — read only
 - Be thorough but concise
