@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 MACBOOK="$SCRIPT_DIR"
 
 # Shared agents (canonical source: .claude/agents/)
-SHARED_AGENTS=(researcher planner implementer reviewer product-strategist product-tactician designer)
+SHARED_AGENTS=(researcher planner implementer reviewer product-strategist product-tactician designer writing-coach)
 
 # Core skills (canonical source: .claude/skills/)
 CORE_SKILLS=(commit-review product-lab deep-research security-review shell-conventions)
@@ -44,8 +44,8 @@ Options:
   --type workspace  Core + web skills + shared commands
 
 Examples:
-  $(basename "$0") ~/ai/workspace/claude --type workspace
-  $(basename "$0") ~/ai/workspace/claude/repos/personal/ihw --type web
+  $(basename "$0") \$SECOND_BRAIN_HOME --type workspace
+  $(basename "$0") \$SECOND_BRAIN_HOME/repos/personal/ihw --type web
   $(basename "$0") --verify
 EOF
   exit 1
@@ -212,10 +212,18 @@ verify_target() {
 }
 
 verify_all() {
-  local ws="$HOME/ai/workspace/claude"
+  local ws="${SECOND_BRAIN_HOME:-$HOME/ai/workspace/claude}"
+  local targets=("$ws")
   local all_ok=0
 
-  for target in "$ws" "$ws/repos/personal/ihw" "$ws/repos/personal/mojwang.tech"; do
+  # Auto-discover: any repo with a .claude/ dir is a managed project
+  for d in "$ws/repos"/*/*/; do
+    [[ -d "$d/.claude" ]] && targets+=("${d%/}")
+  done
+
+  for target in "${targets[@]}"; do
+    # Skip the canonical source — its agents are regular files by design
+    [[ "$(cd "$target" 2>/dev/null && pwd)" == "$(cd "$MACBOOK" 2>/dev/null && pwd)" ]] && continue
     if [[ -d "$target/.claude" ]]; then
       verify_target "$target" || all_ok=1
     fi

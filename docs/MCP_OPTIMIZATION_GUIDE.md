@@ -56,8 +56,8 @@ MCP filesystem server likely watches entire `$HOME` directory (~500k files).
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/mojwang/repos",
-        "/Users/mojwang/.config"
+        "$HOME/repos",
+        "$HOME/.config"
       ]
     }
   }
@@ -73,7 +73,7 @@ MCP filesystem server likely watches entire `$HOME` directory (~500k files).
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/mojwang/repos/personal/macbook-dev-setup"
+        "$HOME/repos/personal/macbook-dev-setup"
       ]
     }
   }
