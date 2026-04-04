@@ -166,9 +166,38 @@ Before dispatching agents or doing work, the orchestrator runs:
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 - **End-of-session evaluation check**: If the session produced a shipped feature with success criteria (from `product-brief.md`), prompt: "Phase 5 evaluation is due — dispatch product-tactician to assess outcomes?" Don't silently skip evaluation.
 
+## Cost Awareness
+
+Model routing is enforced via agent frontmatter. Each agent has a `model:` field specifying haiku, sonnet, or opus. The orchestrator uses the specified model unless explicitly overriding with a stated reason.
+
+**Cost hierarchy**: Haiku (cheapest, exploration) → Sonnet (default, most tasks) → Opus (expensive, strategic reasoning).
+
+**Override protocol**: State the reason in conversation before dispatching with a different model. Examples: "Upgrading researcher to Sonnet — this requires cross-repo analysis, not just file scanning." This creates an audit trail for cost decisions.
+
+## Phase Skipping
+
+Not every task needs every phase. The orchestrator classifies the task first, then follows the dispatch table in CLAUDE.md.
+
+**Examples**:
+- **Typo fix** → Trivial → implement directly, no agents dispatched
+- **Bug fix in 1 file** → Sync → researcher checks context, implementer fixes, reviewer verifies
+- **New feature (5 files)** → Async → full research → plan → implement → review pipeline
+- **New page with API** → Cross-layer → plan produces `api-contract.md`, implementers reference it
+- **"Should we build X?"** → Strategy-first → product-strategist evaluates before any engineering
+
+**Researcher Quick Mode**: For sync tasks, the orchestrator tells the researcher to produce a 1-paragraph finding instead of full `research.md`. This reduces researcher overhead from ~10K tokens to ~2K.
+
+## Cross-Layer Contracts
+
+When a task touches frontend + API + database, the planner produces `api-contract.md` alongside `plan.md`. This prevents the failure mode where parallel implementers in isolated worktrees diverge on API shape.
+
+**Contract contents**: Endpoint table (method, path, request/response), schema changes (table, column, migration), auth requirements (endpoint, auth type, roles).
+
+**Enforcement**: Implementers MUST match the contract. Reviewers validate against it. Deviations are blocking issues that return to the orchestrator, not silent fixes.
+
 ## Artifacts
 
-- **`research.md`**, **`design-spec.md`**, and **`product-brief.md`**: Ephemeral, gitignored. Cleaned up after PR merge.
+- **`research.md`**, **`design-spec.md`**, **`product-brief.md`**, and **`api-contract.md`**: Ephemeral, gitignored. Cleaned up after PR merge.
 - **`plan.md`**: Ephemeral during work, but versioned after merge — move to `docs/exec-plans/completed/[feature-name].md` with an Outcome section. See `docs/exec-plans/README.md`.
 - **`product-lab/`**: Persistent artifacts from product-strategist. NOT cleaned up after PR merge — they represent ongoing product strategy state across sessions.
 - Survive context compaction — persistent reference for orchestrator and agents.

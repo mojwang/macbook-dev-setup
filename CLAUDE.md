@@ -74,13 +74,18 @@ Automated macOS dev environment setup for Apple Silicon.
 ## Agentic Workflow (Default)
 The main Claude session acts as orchestrator. It never implements directly for complex tasks — it dispatches sub-agents from `.claude/agents/` and synthesizes results.
 
-### Task Classification (decide first)
-- **Async/autonomous**: Peripheral features, prototyping, tests, refactors → full agent workflow, let it run
-- **Sync/supervised**: Core logic, critical fixes, security-sensitive → work interactively, supervise closely
-- **Trivial**: Single-file edits, quick fixes → skip workflow, implement directly
-- **Design-aware**: Tasks touching UI components, styles, pages, or layouts → dispatch designer in Phase 1 (parallel with researcher) and Phase 4 (parallel with reviewer). Designer produces `design-spec.md` which planner and implementer consume as required input.
-- **Product-first**: New features, competing priorities, unclear scope → dispatch product-tactician agent before research
-- **Strategy-first**: "Should we build this?" questions, new product ideas, market validation → dispatch product-strategist (directly or via `/product-lab`) before any other phase
+### Task Classification + Phase Dispatch (ENFORCED)
+Classify first, then follow the dispatch table. Do not run phases the task doesn't need.
+
+| Classification | Phases | Skip | Rationale |
+|---------------|--------|------|-----------|
+| **Trivial** | Implement only | All others | Single-file, obvious fix |
+| **Sync/supervised** | Research → Implement → Review | Plan, Product | Core logic, needs human eyes |
+| **Async/autonomous** | Research → Plan → Implement → Review | Product | Standard feature work (3+ files) |
+| **Design-aware** | Research + Designer → Plan → Implement → Review + Designer | Product | UI/UX changes |
+| **Product-first** | Tactician → Research → Plan → Implement → Review | — | Unclear scope, competing priorities |
+| **Strategy-first** | Strategist → Tactician → Full pipeline | — | "Should we build this?" |
+| **Cross-layer** | Research → Plan (+ api-contract.md) → Implement → Review | — | Frontend + API + DB changes |
 
 ### Execution Modes
 Two modes available depending on coordination needs:
@@ -189,15 +194,24 @@ Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/ini
 - **Progress checkpoints**: Implementers update claude-progress.md at each completed task so context compaction doesn't erase progress
 - **Subagent compression**: Subagents explore extensively but return condensed summaries to the orchestrator
 
-### Model Routing (optional)
-| Task type | Suggested model | Rationale |
-|-----------|----------------|-----------|
-| Trivial (single-file, quick fix) | Haiku | Fast, cheap, sufficient |
-| Research, planning, standard impl | Sonnet | Good balance of capability and cost |
-| Complex architecture, product strategy | Opus | Maximum reasoning for hard problems |
-| Review (skeptical evaluation) | Sonnet or Opus | Needs strong judgment |
+### Model Routing (ENFORCED)
+Agent frontmatter specifies the model. The orchestrator MUST use the specified model unless explicitly overriding for a stated reason.
 
-Default to Sonnet. Upgrade to Opus for ambiguous or high-stakes decisions. Downgrade to Haiku only for well-defined, mechanical tasks.
+| Agent | Model | Rationale |
+|-------|-------|-----------|
+| researcher | Haiku | Broad scans, cheap exploration |
+| planner | Sonnet | Structured reasoning, good balance |
+| implementer | Sonnet | Code generation, standard tasks |
+| reviewer | Sonnet | Skeptical evaluation |
+| designer | Sonnet | Design reasoning |
+| product-strategist | Opus | Market analysis needs strongest reasoning |
+| product-tactician | Sonnet | Feature scoping |
+| writing-coach | Sonnet | Writing quality |
+
+**Override examples** (state the reason when overriding):
+- Researcher hitting complex analysis → upgrade to Sonnet
+- Simple code review → downgrade reviewer to Haiku
+- Architecture-critical planning → upgrade planner to Opus
 
 ## Testing
 **Write tests BEFORE implementation** — especially when agents implement autonomously.

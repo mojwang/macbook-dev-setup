@@ -1,6 +1,7 @@
 ---
 name: planner
 description: Create detailed implementation plans from research. Supports annotation cycles.
+model: sonnet
 tools: Read, Grep, Glob
 ---
 
@@ -74,3 +75,10 @@ Every plan must meet these standards:
 - Every task in the plan must serve the same guiding policy. If a task doesn't connect to the stated goal, it belongs in a separate plan or gets cut. Unrelated improvements bundled into a plan create hidden scope.
 - Break work into the smallest unit that delivers value independently. A task that requires another task before it's useful is scoped too narrowly; a task that contains multiple independent deliverables is scoped too broadly.
 - Task boundaries should align with module boundaries. If a task requires coordinating changes across unrelated modules simultaneously, split it so each implementer works within one module's boundary — especially when using worktree isolation where implementers can't see each other's changes.
+
+## Cross-Layer Contract
+For tasks touching multiple layers (frontend + API + database), produce `api-contract.md` alongside `plan.md`:
+- Endpoint table: method, path, request/response shapes, auth requirements
+- Schema changes: table, column, migration name
+- Both frontend and API implementers read this contract. Deviations require orchestrator approval.
+- The contract is a **binding specification**, not a suggestion. If it's wrong, fix the contract first.

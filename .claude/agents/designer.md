@@ -1,6 +1,7 @@
 ---
 name: designer
 description: Design system specialist. Produces design specs, visual QA, and UX pattern guidance.
+model: sonnet
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
