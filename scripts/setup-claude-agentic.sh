@@ -767,7 +767,36 @@ update_templates() {
 }
 
 bootstrap_second_brain() {
-    local ws="${SECOND_BRAIN_HOME:-$HOME/ai/workspace/claude}"
+    local default_ws="$HOME/ai/workspace/claude"
+    local ws="${SECOND_BRAIN_HOME:-}"
+    local global_settings="$HOME/.claude/settings.json"
+
+    # If SECOND_BRAIN_HOME not set, check global settings or prompt
+    if [[ -z "$ws" ]]; then
+        # Try to read from global Claude settings
+        if [[ -f "$global_settings" ]]; then
+            ws=$(jq -r '.env.SECOND_BRAIN_HOME // empty' "$global_settings" 2>/dev/null)
+        fi
+    fi
+
+    if [[ -z "$ws" ]]; then
+        print_info "Where should the second brain workspace live?"
+        read -p "Path [$default_ws]: " user_path
+        ws="${user_path:-$default_ws}"
+        ws="${ws/#\~/$HOME}"  # Expand tilde
+    fi
+
+    # Persist SECOND_BRAIN_HOME to global Claude settings (applies to all projects)
+    if [[ -f "$global_settings" ]]; then
+        local current
+        current=$(jq -r '.env.SECOND_BRAIN_HOME // empty' "$global_settings" 2>/dev/null)
+        if [[ "$current" != "$ws" ]]; then
+            local tmp
+            tmp=$(mktemp)
+            jq --arg path "$ws" '.env = (.env // {}) + {SECOND_BRAIN_HOME: $path}' "$global_settings" > "$tmp" && mv "$tmp" "$global_settings"
+            print_info "Set SECOND_BRAIN_HOME=$ws in global Claude settings"
+        fi
+    fi
 
     if [[ -d "$ws/.claude" ]]; then
         print_info "Second brain workspace found at $ws"
@@ -775,7 +804,6 @@ bootstrap_second_brain() {
         "$REPO_DIR/scripts/sync-agentic.sh" "$ws" --type workspace
         print_success "Second brain agentic sync complete"
     elif command -v gh &>/dev/null; then
-        print_info "Second brain not found at $ws"
         read -p "Clone mojwang/second-brain to $ws? [y/N] " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
