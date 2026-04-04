@@ -766,6 +766,30 @@ update_templates() {
     fi
 }
 
+bootstrap_second_brain() {
+    local ws="${SECOND_BRAIN_HOME:-$HOME/ai/workspace/claude}"
+
+    if [[ -d "$ws/.claude" ]]; then
+        print_info "Second brain workspace found at $ws"
+        print_step "Syncing agentic infrastructure to second brain..."
+        "$REPO_DIR/scripts/sync-agentic.sh" "$ws" --type workspace
+        print_success "Second brain agentic sync complete"
+    elif command -v gh &>/dev/null; then
+        print_info "Second brain not found at $ws"
+        read -p "Clone mojwang/second-brain to $ws? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            mkdir -p "$(dirname "$ws")"
+            gh repo clone mojwang/second-brain "$ws"
+            "$REPO_DIR/scripts/sync-agentic.sh" "$ws" --type workspace
+            print_success "Second brain cloned and synced"
+            print_info "Next: symlink _inbox/ to Google Drive for cross-device capture"
+        fi
+    else
+        print_warning "Second brain not found and gh CLI not available — skipping"
+    fi
+}
+
 show_help() {
     cat << 'EOF'
 Usage: setup-claude-agentic.sh [OPTIONS]
@@ -856,6 +880,7 @@ case "${1:-}" in
         deploy_templates
         create_symlink
         create_scaffold_symlink
+        bootstrap_second_brain
         print_success "Claude agentic workflow setup complete!"
         ;;
 esac

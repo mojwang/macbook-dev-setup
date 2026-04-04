@@ -1,6 +1,7 @@
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "SECOND_BRAIN_HOME": "/Users/mojwang/ai/workspace/claude"
   },
   "hooks": {
     "SessionStart": [
@@ -50,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'filepath=$(jq -r \".tool_input.file_path\" 2>/dev/null); if echo \"$filepath\" | grep -qE \"/.claude/agents/|/.claude/skills/|/config/skills/\"; then S=\"$HOME/ai/workspace/claude/repos/personal/macbook-dev-setup/scripts/sync-agentic.sh\"; \"$S\" \"$HOME/ai/workspace/claude\" --type workspace >/dev/null 2>&1; \"$S\" \"$HOME/ai/workspace/claude/repos/personal/ihw\" --type web >/dev/null 2>&1; \"$S\" \"$HOME/ai/workspace/claude/repos/personal/mojwang.tech\" --type web >/dev/null 2>&1; echo \"Synced agentic symlinks to all projects\"; fi'",
+            "command": "bash -c 'filepath=$(jq -r \".tool_input.file_path\" 2>/dev/null); if echo \"$filepath\" | grep -qE \"/.claude/agents/|/.claude/skills/|/config/skills/\"; then S=\"$SECOND_BRAIN_HOME/repos/personal/macbook-dev-setup/scripts/sync-agentic.sh\"; \"$S\" \"$SECOND_BRAIN_HOME\" --type workspace >/dev/null 2>&1; for d in \"$SECOND_BRAIN_HOME/repos\"/*/*/; do [ -d \"$d/.claude\" ] && \"$S\" \"${d%/}\" --type web >/dev/null 2>&1; done; echo \"Synced agentic symlinks to all projects\"; fi'",
             "statusMessage": "Syncing agentic infrastructure..."
           }
         ]
