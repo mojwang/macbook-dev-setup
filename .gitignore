@@ -60,6 +60,7 @@ tests/test_syntax_error.sh
 # Personal configurations that shouldn't be shared
 personal/
 private/
+.personal/
 
 # Homebrew lockfile (can be sensitive)
 homebrew/Brewfile.lock.json

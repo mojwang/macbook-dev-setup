@@ -41,7 +41,7 @@ Examples:
 
 ### PR Checklist
 When creating a PR, remind to:
-- Add reviewer: `mojwang`
+- Add reviewer (repo owner or REVIEWER from `.personal/config.sh`)
 - Add Copilot reviewer via GitHub UI
 - Include test plan in PR description
 - Reference related issues if applicable

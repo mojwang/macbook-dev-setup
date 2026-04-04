@@ -56,7 +56,7 @@ Git worktrees allow you to have multiple branches checked out simultaneously in 
 Keep worktrees as siblings in the same parent directory for easy navigation:
 
 ```bash
-~/repos/personal/
+$SECOND_BRAIN_HOME/repos/<your-org>/
 ├── macbook-dev-setup/          # Main working copy
 ├── macbook-dev-setup.review/   # Worktree for PR reviews
 ├── macbook-dev-setup.hotfix/   # Worktree for urgent fixes
@@ -225,7 +225,7 @@ gt submit --stack  # Updates all affected PRs
 ### Advanced Workflow Example
 ```bash
 # Main development in primary worktree
-cd ~/repos/personal/macbook-dev-setup
+cd macbook-dev-setup
 gt create -m "feat: add docker support"
 # Working on your stacked PRs...
 
@@ -247,7 +247,7 @@ gw main  # Or: cd ../macbook-dev-setup
 ### Real Example with This Project
 ```bash
 # Setup worktrees first
-cd ~/repos/personal/macbook-dev-setup
+cd macbook-dev-setup
 setup_worktrees
 
 # Main: Working on new feature with stacked PRs

@@ -6,7 +6,7 @@ Automated setup for a modern macOS development environment on Apple Silicon.
 
 ```bash
 # Clone and run
-git clone https://github.com/mojwang/macbook-dev-setup.git
+git clone https://github.com/YOUR_USERNAME/macbook-dev-setup.git
 cd macbook-dev-setup
 
 # Preview what will be installed

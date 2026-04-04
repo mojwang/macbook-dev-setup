@@ -24,7 +24,7 @@ This provides essential development tools including git, make, gcc, and more.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/mojwang/macbook-dev-setup.git
+git clone https://github.com/YOUR_USERNAME/macbook-dev-setup.git
 cd macbook-dev-setup
 ```
 
