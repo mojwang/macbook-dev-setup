@@ -1,0 +1,4 @@
+{
+  "type": "web",
+  "description": "Project type determines which skills are synced. Options: shell (core only), web (core + web), workspace (core + web + commands)"
+}

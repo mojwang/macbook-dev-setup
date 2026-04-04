@@ -110,7 +110,7 @@ PROFILEEOF
 cat > "$TARGET_DIR/CLAUDE.md" <<CLAUDEEOF
 # macbook-dev-setup-ext ($NAME)
 
-Extension pack for [macbook-dev-setup](https://github.com/mojwang/macbook-dev-setup). Adds $NAME-specific tooling, dotfiles, and profile configuration on top of the base setup.
+Extension pack for macbook-dev-setup. Adds $NAME-specific tooling, dotfiles, and profile configuration on top of the base setup.
 
 ## How It Works
 This repo is symlinked into \`~/.config/macbook-dev-setup.d/$NAME/\` by \`install.sh\`. When \`macbook-dev-setup/setup.sh\` runs, it auto-discovers extension packs in that directory and:

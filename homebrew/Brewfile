@@ -113,7 +113,7 @@ cask "claude"
 cask "figma"
 cask "google-drive"
 cask "notion"
-cask "obsidian"
+# cask "obsidian"  # Uncomment if using Obsidian for your second brain vault
 cask "raycast"
 cask "rectangle"
 cask "slack"

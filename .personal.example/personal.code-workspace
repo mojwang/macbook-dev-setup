@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "macbook-dev-setup",
+      "path": "."
+    }
+    // Add your projects here:
+    // {
+    //   "name": "my-web-app",
+    //   "path": "../my-web-app"
+    // }
+  ],
+  "settings": {
+    "terminal.integrated.cwd": "${workspaceFolder:macbook-dev-setup}"
+  }
+}

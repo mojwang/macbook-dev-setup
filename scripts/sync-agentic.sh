@@ -6,6 +6,10 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 MACBOOK="$SCRIPT_DIR"
 
+# Source personal config if available
+# shellcheck disable=SC1091
+source "$MACBOOK/.personal/config.sh" 2>/dev/null || true
+
 # Shared agents (canonical source: .claude/agents/)
 SHARED_AGENTS=(researcher planner implementer reviewer product-strategist product-tactician designer writing-coach)
 
@@ -49,6 +53,15 @@ Examples:
   $(basename "$0") --verify
 EOF
   exit 1
+}
+
+detect_type() {
+  local target="$1"
+  if [[ -f "$target/.claude/project.json" ]]; then
+    jq -r '.type // "shell"' "$target/.claude/project.json" 2>/dev/null || echo "shell"
+  else
+    echo "shell"
+  fi
 }
 
 create_symlinks() {
@@ -212,14 +225,20 @@ verify_target() {
 }
 
 verify_all() {
-  local ws="${SECOND_BRAIN_HOME:-$HOME/ai/workspace/claude}"
-  local targets=("$ws")
+  local ws="${SECOND_BRAIN_HOME:-}"
   local all_ok=0
 
-  # Auto-discover: any repo with a .claude/ dir is a managed project
-  for d in "$ws/repos"/*/*/; do
-    [[ -d "$d/.claude" ]] && targets+=("${d%/}")
-  done
+  if [[ -z "$ws" ]]; then
+    fail "SECOND_BRAIN_HOME not set. Run setup-claude-agentic.sh or set it in .personal/config.sh"
+    return 1
+  fi
+
+  local targets=("$ws")
+
+  # Auto-discover: any repo with a .claude/ dir under repos/, any depth
+  while IFS= read -r d; do
+    targets+=("$d")
+  done < <(find "$ws/repos" -name ".claude" -type d -exec dirname {} \; 2>/dev/null)
 
   for target in "${targets[@]}"; do
     # Skip the canonical source — its agents are regular files by design
