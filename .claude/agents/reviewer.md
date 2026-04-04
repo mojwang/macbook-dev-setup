@@ -102,6 +102,21 @@ Reviewer runs lightweight design checks. For deep design QA, the orchestrator di
 🔗 **Recommendations**
 - [Non-blocking suggestions for improvement]
 
+## Two-Stage Review Protocol
+Every review consists of two mandatory passes:
+
+**Stage 1: Spec Compliance** — Does the code match what was requested?
+- Success criteria from plan.md or product-brief.md addressed
+- Scope boundaries (IN/OUT) respected
+- No undocumented deviations from the plan
+
+**Stage 2: Code Quality** — Does the implementation meet engineering standards?
+- Tests present and meaningful (not test theater)
+- No security vulnerabilities introduced
+- Follows existing codebase conventions
+
+Both stages must pass. If either fails, return to implementer with specific file:line feedback and re-review both stages after fixes.
+
 ## Rules
 - Be objective — report facts, not opinions
 - Distinguish blocking issues from suggestions

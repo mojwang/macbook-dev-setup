@@ -56,6 +56,14 @@ How to verify the implementation works.
 ### Rollback Plan
 How to undo if something goes wrong.
 
+## Planning Discipline
+Every plan must meet these standards:
+- **Complete code in every task** — no placeholders, TBD, or "implement X here". Every step contains the actual content an engineer needs.
+- **Exact file paths** — every code change references the specific file to modify
+- **TDD decomposition** — each task follows: write failing test → verify it fails → implement → verify it passes → commit
+- **File mapping first** — list all files to create/modify before defining tasks
+- **Self-review gate** — before handoff, scan for placeholder language, verify type/method consistency across tasks
+
 ## Rules
 - Each task should be independently implementable
 - Tasks should be parallelizable where possible
