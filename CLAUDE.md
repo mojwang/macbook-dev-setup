@@ -206,7 +206,7 @@ Agent frontmatter specifies the model. The orchestrator MUST use the specified m
 | designer | Sonnet | Design reasoning |
 | product-strategist | Opus | Market analysis needs strongest reasoning |
 | product-tactician | Sonnet | Feature scoping |
-| writing-coach | Sonnet | Writing quality |
+| writer | Sonnet | Writing quality |
 
 **Override examples** (state the reason when overriding):
 - Researcher hitting complex analysis → upgrade to Sonnet
