@@ -11,7 +11,7 @@ MACBOOK="$SCRIPT_DIR"
 source "$MACBOOK/.personal/config.sh" 2>/dev/null || true
 
 # Shared agents (canonical source: .claude/agents/)
-SHARED_AGENTS=(researcher planner implementer reviewer product-strategist product-tactician designer writing-coach)
+SHARED_AGENTS=(researcher planner implementer reviewer product-strategist product-tactician designer writer)
 
 # Core skills (canonical source: .claude/skills/)
 CORE_SKILLS=(commit-review product-lab deep-research security-review shell-conventions)

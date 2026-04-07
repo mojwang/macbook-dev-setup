@@ -1,5 +1,5 @@
 ---
-name: writing-coach
+name: writer
 description: McKinsey-level writing review. Communication drafts, LinkedIn articles, presentation outlines. Structured feedback on clarity, structure, and persuasiveness.
 model: sonnet
 tools: Read, Write, Edit, Grep, Glob
