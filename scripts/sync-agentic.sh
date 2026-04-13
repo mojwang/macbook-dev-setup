@@ -238,7 +238,7 @@ verify_all() {
   # Auto-discover: any repo with a .claude/ dir under repos/, any depth
   while IFS= read -r d; do
     targets+=("$d")
-  done < <(find "$ws/repos" -name ".claude" -type d -exec dirname {} \; 2>/dev/null)
+  done < <(find "$ws/repos" -name "node_modules" -prune -o -name ".claude" -type d -print 2>/dev/null | xargs -I{} dirname {})
 
   for target in "${targets[@]}"; do
     # Skip the canonical source — its agents are regular files by design
