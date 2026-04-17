@@ -34,6 +34,12 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - CLS: no layout shifts from images without dimensions, fonts without `font-display`, or dynamically injected content
 - INP: interactive elements respond within 200ms (check for heavy `onClick` handlers, synchronous operations)
 
+## Animation Performance
+- Flag CSS animations/transitions on properties other than `transform` and `opacity` — layout-triggering properties (`width`, `height`, `top`, `left`, `margin`) cause expensive repaints
+- Flag `"use client"` components containing animations that could be isolated into smaller Client Components — keeps the animated subtree narrow and prevents parent re-renders
+- Flag animations without `prefers-reduced-motion` fallback
+- Flag `will-change` used preemptively on many elements — use sparingly, only when jank is observed on specific elements
+
 ## Structured Data
 - Healthcare sites: `schema.org/MedicalBusiness` on layout, `schema.org/Physician` on provider pages
 - JSON-LD preferred over microdata

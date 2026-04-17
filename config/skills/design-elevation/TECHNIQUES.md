@@ -142,6 +142,33 @@ Skeleton screens, shimmer effects, or meaningful progress indicators instead of 
 Use: Any async content, page transitions, form submissions.
 Avoid: Instantaneous operations, static content.
 
+## Motion & Choreography
+
+**Entrance Choreography**
+Staggered element entrance with 20-50ms delays between sequential items, total sequence under 500ms. Content loads in priority order: chrome → static content → dynamic data → interactive elements → decorative.
+Use: Page loads, route transitions, accordion/tab reveals, card grid population.
+Avoid: Already-visible content repositioning (use standard easing instead), instant state changes, dashboards where data should appear immediately.
+
+**Spring-Physics Interaction**
+Physics-based animation using stiffness/damping/mass parameters for gesture-driven elements. Springs incorporate velocity from user input, creating momentum-aware responses that fixed curves cannot replicate. See `MOTION-SYSTEM.md` for spring configurations.
+Use: Drag interactions, swipe gestures, pull-to-refresh, playful consumer products (MOTION_INTENSITY 6+), layout animations responding to content changes.
+Avoid: Healthcare, finance, enterprise task UIs (unless brand explicitly supports it). Micro-interactions that need to be invisible. Any context where overshoot could trigger vestibular discomfort.
+
+**Productive Micro-Motion**
+Fast, nearly invisible transitions (70-150ms) for interactive state feedback. Toggle, checkbox, button press, focus ring, hover color shift. The user shouldn't consciously register the animation — they should just feel the interface is responsive.
+Use: Every interactive element. Non-negotiable for design maturity Level 3+.
+Avoid: Never avoid this. Absence of micro-motion makes interfaces feel broken or cheap.
+
+**Scroll-Triggered Reveal**
+Elements animate into view on scroll using Intersection Observer. Short fade + translate (20-30px vertical). Single animation per element — no repeat on re-entry. Fire once, then the element stays visible.
+Use: Long-form content pages, feature showcases, landing page sections, marketing sites.
+Avoid: Dashboard UIs, data-heavy pages where content should be immediately scannable, pages where users scroll fast to find specific information.
+
+**Page Transition Continuity**
+Shared element transitions between routes using View Transitions API or layout animations. The departing and arriving pages share a visual element (image, card, header) that morphs between states, maintaining spatial context during navigation.
+Use: App-like experiences, detail views (list → detail), media galleries, portfolio sites.
+Avoid: Document-style sites where instant navigation is expected, content-heavy pages, contexts where transition delay would frustrate task completion.
+
 ## Differentiate
 
 **Asymmetric Layout**
