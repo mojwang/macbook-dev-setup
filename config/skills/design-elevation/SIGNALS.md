@@ -4,6 +4,13 @@ Signals are recurring patterns that emerge from interrogation answers. After ans
 
 Signals are organized by the lens they most commonly emerge from, but any signal can surface from any lens.
 
+## Baseline Techniques (always apply, regardless of signals)
+These are not strategic choices — they're design hygiene. Apply them at design maturity Level 3+:
+- **Type Scale Consistency** — modular scale, no random font sizes
+- **Spacing Rhythm** — base unit + multiples, no arbitrary values
+- **Productive Micro-Motion** — 70-150ms feedback on every interactive element
+- **Icon Coherence** — one icon set, one weight, one size per context
+
 ## Audience Signals
 
 **anxious-audience**
@@ -30,6 +37,10 @@ Techniques: Conversational Headings, Timeline Layout, Humanized Scale, Narrative
 The viewer is researching on behalf of someone else — a caretaker, a buyer for their team, a family member.
 Techniques: Credential Hierarchy, Pricing Table with Feature Matrix, Progressive Disclosure Accordion, Anchor Navigation
 
+**embodied-interaction**
+The audience expects playful, gesture-heavy interactions with tactile feedback. They value exploratory interaction and animations that mirror real-world physics — dragging, swiping, flinging. The interaction model is embodied (physicality matters) rather than purely task-oriented.
+Techniques: Spring-Physics Interaction, Micro-animations on Interaction, Distinctive Interaction Patterns
+
 ## Purpose Signals
 
 **drive-conversion**
@@ -50,7 +61,11 @@ Techniques: Asymmetric Layout, Editorial Photography, Branded Color Blocking, Di
 
 **retain-engage**
 The page exists to keep existing users active and returning.
-Techniques: Micro-animations on Interaction, Loading State Design, Progressive Data Disclosure, Card Grid Dashboard
+Techniques: Micro-animations on Interaction, Loading State Design, Progressive Data Disclosure, Card Grid Dashboard, Scroll-Triggered Reveal
+
+**precision-transparency**
+The audience needs to verify exact numbers alongside visual patterns — financial contexts, regulatory reporting, high-stakes decisions where trust in the data matters as much as trend visibility. Tables alone lack momentum; charts alone lack precision. Combine both.
+Techniques: Highlight Table, Slopegraph, Waterfall Chart, Contextual Benchmark, Magnitude Formatting
 
 ## Context Signals
 
@@ -69,6 +84,14 @@ Techniques: Pricing Table with Feature Matrix, Anchoring, Social Proof Proximity
 **data-heavy-context**
 The content is primarily quantitative. The viewer needs to extract meaning from numbers.
 Techniques: Maximize Data-Ink Ratio, Direct Labeling, Gray + One Accent, Reference Lines and Bands, KPI Header Strip, The 3-Second Rule
+
+**presentation-context**
+Content is designed for live, speaker-led presentations (keynotes, board decks, pitch meetings) rather than interactive exploration. The audience cannot control pacing — motion must guide them through a predetermined narrative. Sequential reveal, one insight per view, simplified visuals.
+Techniques: Build-Up Reveal, Chart Simplification for Slides, Single-Stat Slide, Insight Title, Entrance Choreography
+
+**scroll-narrative**
+Users navigate long-form content where scroll position controls the reveal of information. Visual elements respond to scrolling to manage cognitive load, create spatial continuity, and maintain narrative pacing. The act of scrolling itself becomes part of the experience.
+Techniques: Scroll-Triggered Reveal, Page Transition Continuity, Entrance Choreography, Progressive Data Disclosure
 
 ## Constraint Signals
 
@@ -91,3 +114,7 @@ Techniques: Timeline Layout, Conversational Headings, Humanized Scale, Progressi
 **premium-positioning**
 The offering is priced above alternatives. The design must justify quality through craft and restraint.
 Techniques: Generous White Space, Type Scale Consistency, Spacing Rhythm, Icon Coherence, Editorial Photography
+
+**ai-generic-output**
+The design resembles default AI-generated output — recognizable aesthetic tells, no distinctive choices, patterns from the AI Anti-Pattern catalog (`design-review/AI-ANTIPATTERNS.md`).
+Techniques: Typographic Personality, Asymmetric Layout, Branded Color Blocking, Distinctive Interaction Patterns, Editorial Photography

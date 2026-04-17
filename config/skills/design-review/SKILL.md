@@ -7,6 +7,9 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 
 # Design Review Skill
 
+## Companion Files
+- `AI-ANTIPATTERNS.md` — AI aesthetic anti-pattern detection catalog with P0-P3 severity
+
 ## Token Compliance
 - Flag hardcoded hex/rgb colors in classNames or inline styles (should use design tokens or CSS variables)
 - Flag hardcoded spacing values where design tokens exist
@@ -34,6 +37,13 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Flag stock-feeling visual treatments: identical card grids, centered-text-over-hero patterns, evenly-spaced three-column layouts with no hierarchy
 - Flag components that lack a clear "why this treatment" justification
 
+## AI Aesthetic Detection
+Cross-reference `AI-ANTIPATTERNS.md` when reviewing components and pages:
+- **P0 patterns are blocking** — must fix before shipping (e.g., emojis as icons in production)
+- **P1 patterns are warnings** — fix unless intentional and documented (e.g., three equal-height card grids, default Inter font, center-aligned everything, gradient text)
+- **P2/P3 are informational** — mention only when pattern density is high (3+ P2/P3 patterns on the same page signals systemic defaulting)
+- If a flagged pattern IS intentional, the component or page should include a comment or design decision documenting the reasoning
+
 ## Typography & Spacing Rhythm
 - Flag text sizes not matching the project type scale (random `text-sm`, `text-lg` without scale reference)
 - Flag spacing values off the established rhythm (e.g., `py-7` or `mt-5` when the rhythm is 4/8/12/16/24/32)
@@ -45,6 +55,12 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Flag missing `prefers-reduced-motion` respect on animations
 - Flag inconsistent transition timing across similar elements (e.g., cards hover at 200ms but buttons at 400ms)
 - Flag jarring state changes without transitions (hover, focus, open/close)
+- Flag animations on properties other than `transform` and `opacity` — these trigger layout/paint and are not GPU-composited
+- Flag perpetual or scroll-triggered animations not isolated in their own Client Component (prevents unnecessary re-renders of parent trees)
+- Flag hardcoded animation durations that don't match the project's motion token scale (if one is defined in design-spec.md or DESIGN.md)
+- Flag mixed easing functions across similar elements (e.g., buttons using `ease-in-out` while cards use `ease` — pick one curve per element type)
+- Flag animation sequences exceeding 500ms total for user-initiated UI choreography
+- Flag spring animations (overshoot/bounce) in productive or serious contexts (healthcare, finance) without a documented design decision justifying the choice
 
 ## Cross-Page Consistency
 - Flag inconsistent section padding across pages (e.g., `py-16` on homepage but `py-12` on about)
@@ -77,12 +93,22 @@ allowed-tools: Read, Grep, Glob, Bash, LSP
 - Medical disclaimers missing on health content pages
 - Appointment CTAs not prominent on service pages
 
+## Design Health Score
+After completing the review, assign a health score based on overall design intentionality:
+- **18-20**: Distinctive, intentional design. No AI tells detected. Every choice traceable to a design decision.
+- **14-17**: Solid with minor defaults surviving. 1-2 P2 patterns present but overall intentional.
+- **10-13**: Functional but generic. P1 patterns present — the design could belong to any website in this vertical.
+- **6-9**: Significant AI-aesthetic leakage. Multiple P1 or P0 patterns. Needs design pass before shipping.
+- **0-5**: Unreviewed defaults shipped as-is. Immediate design intervention required.
+
 ## Remediation Reference
 When flagging an issue, include a concrete fix. Reference `config/lint/eslint-agent-rules.md` for standard remediations (token replacements, spacing rhythm, Tailwind conflicts).
 
 ## Output Format
 When issues found:
 ```
+Design Health: [score]/20 — [one-line characterization]
+
 ⚠ DESIGN: [category] in file:line
   Issue: description
   Fix: suggested remediation

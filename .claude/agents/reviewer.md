@@ -66,12 +66,15 @@ Reviewer runs lightweight design checks. For deep design QA, the orchestrator di
 - Component consistency: raw HTML where ui primitives exist
 - Image optimization: missing dimensions, unoptimized formats
 - CTA hierarchy: competing calls-to-action, unclear primary action
+- AI anti-pattern detection: scan for P0/P1 patterns from `design-review/AI-ANTIPATTERNS.md` (gradient text, neon palettes, three-card grids, default Inter font). Check context adjustments for domain-appropriate severity. Report as warnings; escalate to designer for full assessment
+- Design system consistency: when a new component or variant is introduced, check if it follows the patterns established by existing components (same prop API conventions, same variant naming, same spacing/radius tokens). Flag className overrides that bypass the variant system — these indicate a missing variant, not a styling choice.
 
 **Design-spec compliance (if design-spec.md exists):**
 - Token usage matches spec recommendations
 - Component variants used as specified (not ad-hoc className overrides)
 - Layout follows specified grid/spacing rhythm
 - Accessibility requirements from spec are implemented
+- Motion specifications use concrete values from MOTION-SYSTEM.md (not "add animation")
 
 **Escalation to designer:** Flag for orchestrator to dispatch designer when:
 - New components introduced without design-spec coverage
