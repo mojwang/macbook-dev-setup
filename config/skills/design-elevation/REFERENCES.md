@@ -46,6 +46,16 @@ Does well: Analytics dashboard that makes web performance data immediately actio
 Borrow: Design for the user's workflow, not data completeness. Show what's actionable, hide what's just informational.
 Avoid: Developer-centric patterns that assume technical literacy.
 
+**Raycast**
+Does well: Command palette UX, density without clutter, keyboard-first interaction. Speed as design value.
+Borrow: Tight component reuse, performance-conscious rendering, clean contextual menus.
+Avoid: Power-user density alienates casual users. Keyboard-first assumptions don't translate to touch.
+
+**Supabase**
+Does well: Developer docs as product, dark mode as primary context, clean data table presentation.
+Borrow: Technical content made scannable through consistent component patterns and clear hierarchy.
+Avoid: Dark-first aesthetic doesn't suit all audiences. Developer-centric patterns assume technical literacy.
+
 ## Consumer & Media
 
 **Apple Health**
@@ -101,6 +111,23 @@ Avoid: Too much flexibility leads to inconsistency. Provide strong defaults.
 Does well: Unbiased data presentation. Progressive disclosure: overview first, breakdown on interaction. Source attribution on every visualization.
 Borrow: Source attribution builds trust. "Simple first, detail upon interaction."
 Avoid: Deliberately neutral stance can feel dry. Not for contexts that need to persuade.
+
+**Airbnb**
+Does well: Warm photography + functional search, trust through real content, responsive grid mastery. Content-first layout where imagery serves information, not decoration.
+Borrow: Real photography over illustration. Grid systems that adapt content density per viewport. Location-aware personalization.
+Avoid: Photography dependency — needs a pipeline of high-quality assets. Heavy imagery without fast CDN creates performance problems.
+
+## Design System References
+
+**Stripe Design System**
+Does well: Token structure as gold standard. Monochrome + one accent color. Whitespace as structural element. Technical density made beautiful through restraint.
+Borrow: Token naming conventions, spacing rhythm discipline, how they make dense information feel calm.
+Avoid: Information density assumes high user sophistication. Too sparse for non-technical or first-time audiences.
+
+**Linear Design System**
+Does well: Performance IS design. Keyboard-first, dark aesthetic, extreme component consistency. Render speed communicates quality.
+Borrow: Component reuse discipline — every variant is considered, not ad-hoc. Speed of interaction as a design decision.
+Avoid: Opinionated dark mode won't work for all audiences. Density requires training that casual users won't invest in.
 
 ## Anti-References (What to Avoid)
 
