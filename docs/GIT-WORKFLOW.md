@@ -155,6 +155,8 @@ Create a workspace file to see all worktrees at once:
 
 ## Graphite CLI (Stacked PRs)
 
+**See also**: [`STACKED_PRS.md`](./STACKED_PRS.md) for the strategic view — when to stack, manual retarget fallback when `gt` isn't available, repo hygiene defaults, and the 2026-04-18 incident post-mortem.
+
 ### What is Graphite?
 Graphite enables "stacked pull requests" - breaking large changes into small, reviewable pieces that depend on each other.
 
