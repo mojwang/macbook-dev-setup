@@ -22,6 +22,14 @@
             "statusMessage": "Running environment health check..."
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'log=\"./scripts/.session-cost.log\"; [ -f \"$log\" ] || exit 0; n=$(awk -F\"|\" \"{ gsub(/^[ \\t]+|[ \\t]+$/, \\\"\\\", \\$5); if (\\$5 == \\\"\\\") c++ } END { print c+0 }\" \"$log\"); if [ \"$n\" -ge 3 ]; then echo \"$n ungraded sessions in .session-cost.log — run /grade-session to backfill.\"; fi'"
+          }
+        ]
       }
     ],
     "PreToolUse": [
