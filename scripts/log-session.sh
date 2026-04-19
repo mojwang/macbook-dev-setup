@@ -42,12 +42,26 @@ Fields:
 EOF
 }
 
+# Defense against `--flag` passed with no value (e.g. last arg of the
+# line) or with another flag as its value. Without these guards, `set -u`
+# aborts on `$2` with "unbound variable" — opaque for the user. The
+# short-circuit `$# -lt 2` keeps `$2` from being evaluated when there's
+# only one arg left.
+_require_value() {
+    local flag="$1"; shift
+    if [[ $# -lt 1 || "$1" == -* ]]; then
+        echo "Error: $flag requires a value" >&2
+        usage >&2
+        exit 2
+    fi
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --topic)      TOPIC="$2"; shift 2 ;;
-        --dispatches) DISPATCHES="$2"; shift 2 ;;
-        --models)     MODELS="$2"; shift 2 ;;
-        --outcome)    OUTCOME="$2"; OUTCOME_SET=1; shift 2 ;;
+        --topic)      _require_value "$1" "${@:2:1}"; TOPIC="$2"; shift 2 ;;
+        --dispatches) _require_value "$1" "${@:2:1}"; DISPATCHES="$2"; shift 2 ;;
+        --models)     _require_value "$1" "${@:2:1}"; MODELS="$2"; shift 2 ;;
+        --outcome)    _require_value "$1" "${@:2:1}"; OUTCOME="$2"; OUTCOME_SET=1; shift 2 ;;
         -h|--help)    usage; exit 0 ;;
         *)            echo "Unknown arg: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -77,10 +91,15 @@ case "$OUTCOME" in
         ;;
 esac
 
-# Guard against pipe characters in fields — they'd break the format.
-# Replace with ' ; ' as a deliberately-ugly sentinel that will show up
-# in any weekly-review listing and prompt a manual fix.
-sanitize() { printf '%s' "$1" | tr '|' ';' | tr '\n' ' '; }
+# Guard against pipe characters in fields — they'd break the pipe-
+# delimited format. Replace with ' ; ' (with spaces) as a deliberately
+# visible sentinel so sanitized rows stand out in any weekly-review
+# listing and prompt a manual cleanup.
+sanitize() {
+    local value="${1//|/ ; }"
+    value="${value//$'\n'/ }"
+    printf '%s' "$value"
+}
 TOPIC=$(sanitize "$TOPIC")
 DISPATCHES=$(sanitize "$DISPATCHES")
 MODELS=$(sanitize "$MODELS")

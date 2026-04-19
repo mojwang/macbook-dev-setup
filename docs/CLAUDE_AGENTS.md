@@ -186,9 +186,9 @@ Fields (pipe-separated, six total):
 - **timestamp**: ISO 8601 local time (auto-captured). Use timestamps, not just date — multiple sessions per day are common.
 - **session_topic**: one-line summary ("/mind aspects Phase 6 B-C-D"). User-supplied.
 - **dispatches**: agent count × tier, e.g. `Explore×3, Plan×1, impl×5` or `—` for direct work. User-supplied.
-- **models_used**: comma-separated, deduped — `haiku,sonnet` / `sonnet,opus`. User-supplied.
+- **models_used**: comma-separated, user-supplied as-is (e.g. `haiku,sonnet` / `sonnet,opus`). No dedup — the order and count the user types is what gets logged.
 - **outcome**: one of `shipped | partial | reverted | blocked | plan-only`. User-supplied at session end; empty is valid and means "grade later" (fill in retroactively via `/grade-session`).
-- **agent_sha**: short SHA of `.claude/agents/` at session start (auto-captured). Ties a row to a specific agent-prompt version so later analysis can correlate outcomes with prompt changes.
+- **agent_sha**: short SHA of the most recent commit that touched `.claude/agents/` as of logging time (auto-captured via `git log -1`). Ties a row to a specific agent-prompt version so later analysis can correlate outcomes with prompt changes. Caveat: if agents are edited mid-session, this SHA reflects end-of-session state, not start.
 
 Usage:
 ```

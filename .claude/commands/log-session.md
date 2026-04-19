@@ -31,9 +31,9 @@ Example:
 
 - **topic**: one-line session summary
 - **dispatches**: agent count × tier (e.g. `Explore x3, Plan x1` or `—` for direct work)
-- **models**: comma-separated, deduped (e.g. `haiku,sonnet`)
+- **models**: comma-separated as provided (e.g. `haiku,sonnet`) — logged as-is, no dedup
 - **outcome**: one of `shipped | partial | reverted | blocked | plan-only` — or empty to grade later
 
 Captured automatically:
 - **timestamp**: ISO 8601 local time
-- **agent_sha**: short SHA of `.claude/agents/` at session start (correlates outcomes with prompt versions)
+- **agent_sha**: short SHA of the most recent commit that touched `.claude/agents/` as of logging time (correlates outcomes with prompt versions; reflects end-of-session state if agents were edited mid-session)
