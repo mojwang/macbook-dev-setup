@@ -1,6 +1,6 @@
 # Copilot instructions
 
-Canonical `.github/copilot-instructions.md` — applies to Copilot code review, Chat, and inline generation in this repo. Synced to sibling repos via `scripts/sync-copilot-instructions.sh`. Single source of truth; edit here, re-sync downstream.
+Applies to Copilot code review, Chat, and inline generation. Canonical: `macbook-dev-setup/.github/copilot-instructions.md`; synced to sibling repos via `macbook-dev-setup/scripts/sync-copilot-instructions.sh`. Edit the canonical, then re-sync downstream — the `## Canonical source` section below has the full rationale.
 
 ## Project context
 
