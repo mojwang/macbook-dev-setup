@@ -1,6 +1,6 @@
 # Copilot instructions
 
-Canonical `.github/copilot-instructions.md` — applies to Copilot code review, Chat, and inline generation in this repo. Synced to sibling repos via `scripts/sync-copilot-instructions.sh`. Single source of truth; edit here, re-sync downstream.
+Applies to Copilot code review, Chat, and inline generation. Canonical: `macbook-dev-setup/.github/copilot-instructions.md`; synced to sibling repos via `macbook-dev-setup/scripts/sync-copilot-instructions.sh`. Edit the canonical, then re-sync downstream — the `## Canonical source` section below has the full rationale.
 
 ## Project context
 
@@ -44,7 +44,7 @@ When reviewing a PR, prioritize these concerns in roughly this order.
 ### Security + safety
 - Secrets or API keys in client-bundled code, committed `.env` files, or agent frontmatter.
 - `Bash` commands that touch paid services (Stripe, x402, Browserbase, parallel.ai, tempo) without the `CLAUDE_ALLOW_PAYMENTS=1` escape valve — the payment-safety hook exists for a reason.
-- Admin DB creds (`DATABASE_URL_ADMIN`) in `.env.local` — they belong in `.env.sync-vault.local`.
+- Secrets (API keys, DB admin creds) in committed `.env.local` or any checked-in env file. Repo-specific env-file conventions live in that repo's CLAUDE.md.
 
 ## Universal discipline (applies to every repo this file is synced to)
 
@@ -63,7 +63,7 @@ This file does not prescribe voice. Each repo owns its own tone:
 
 ## Skip (don't suggest these)
 
-- **AI Gateway migration** (Tier 2.1). Direct `openai` imports in `src/db/queries/related.ts`, `scripts/sync-vault.ts` are known and deferred — stop flagging them as a recommendation.
+- **Known, repo-specific deferrals** (e.g., "migrate to X", "adopt Y provider"). If a repo has an active deferral, it lives in that repo's CLAUDE.md or a TODO file — do not re-flag it here from a general stance.
 - **Generic "consider adding tests"** without naming the specific behavior gap the new test would close.
 - **Style-only nits** in files the PR didn't change.
 - **Renaming for taste** unless it prevents a future conflict or bug.
