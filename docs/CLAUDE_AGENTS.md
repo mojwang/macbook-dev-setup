@@ -176,20 +176,28 @@ Model routing is enforced via agent frontmatter. Each agent has a `model:` field
 
 ### Session cost log
 
-At session end, append a single line to `scripts/.session-cost.log` (append-only, gitignored, reviewed at weekly review):
+At session end, append a single line to `scripts/.session-cost.log` (append-only, gitignored, reviewed at weekly review). Populated via the `/log-session` slash command, which runs `scripts/log-session.sh`:
 
 ```
-YYYY-MM-DD | <session_topic> | <dispatches> | <models_used> | <outcome>
+YYYY-MM-DDTHH:MM:SS | <session_topic> | <dispatches> | <models_used> | <outcome> | <agent_sha>
 ```
 
-Fields:
-- **date**: ISO date
-- **session_topic**: one-line summary ("/mind aspects Phase 6 B-C-D")
-- **dispatches**: agent count × tier, e.g. `Explore×3, Plan×1, impl×5` or `—` for direct work
-- **models_used**: comma-separated, deduped — `haiku,sonnet` / `sonnet,opus`
-- **outcome**: one-word rollup — `shipped`, `blocked`, `partial`, `plan-only`
+Fields (pipe-separated, six total):
+- **timestamp**: ISO 8601 local time (auto-captured). Use timestamps, not just date — multiple sessions per day are common.
+- **session_topic**: one-line summary ("/mind aspects Phase 6 B-C-D"). User-supplied.
+- **dispatches**: agent count × tier, e.g. `Explore×3, Plan×1, impl×5` or `—` for direct work. User-supplied.
+- **models_used**: comma-separated, deduped — `haiku,sonnet` / `sonnet,opus`. User-supplied.
+- **outcome**: one of `shipped | partial | reverted | blocked | plan-only`. User-supplied at session end; empty is valid and means "grade later" (fill in retroactively via `/grade-session`).
+- **agent_sha**: short SHA of `.claude/agents/` at session start (auto-captured). Ties a row to a specific agent-prompt version so later analysis can correlate outcomes with prompt changes.
 
-Not exact token counting — Claude Code doesn't expose that. Gives directional cost awareness over time. Patterns emerge at weekly review: "research-heavy sessions cost more than implementation sessions," "sessions with >10 dispatches usually needed Graphite instead of manual stacks."
+Usage:
+```
+/log-session --topic "session summary" --dispatches "Explore×3" --models "haiku,sonnet" --outcome "shipped"
+```
+
+Missing flags are prompted interactively. `--outcome ""` explicitly marks the row ungraded.
+
+Not exact token counting — Claude Code doesn't expose that. Gives directional cost awareness over time. Patterns emerge at weekly review: "research-heavy sessions cost more than implementation sessions," "sessions with >10 dispatches usually needed Graphite instead of manual stacks," "the planner has a higher shipped-rate on SHA X than SHA Y."
 
 See [`STACKED_PRS.md`](./STACKED_PRS.md) for when manual stacking indicates missing tooling.
 
