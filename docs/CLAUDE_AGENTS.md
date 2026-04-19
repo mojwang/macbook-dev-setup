@@ -174,6 +174,25 @@ Model routing is enforced via agent frontmatter. Each agent has a `model:` field
 
 **Override protocol**: State the reason in conversation before dispatching with a different model. Examples: "Upgrading researcher to Sonnet — this requires cross-repo analysis, not just file scanning." This creates an audit trail for cost decisions.
 
+### Session cost log
+
+At session end, append a single line to `scripts/.session-cost.log` (append-only, gitignored, reviewed at weekly review):
+
+```
+YYYY-MM-DD | <session_topic> | <dispatches> | <models_used> | <outcome>
+```
+
+Fields:
+- **date**: ISO date
+- **session_topic**: one-line summary ("/mind aspects Phase 6 B-C-D")
+- **dispatches**: agent count × tier, e.g. `Explore×3, Plan×1, impl×5` or `—` for direct work
+- **models_used**: comma-separated, deduped — `haiku,sonnet` / `sonnet,opus`
+- **outcome**: one-word rollup — `shipped`, `blocked`, `partial`, `plan-only`
+
+Not exact token counting — Claude Code doesn't expose that. Gives directional cost awareness over time. Patterns emerge at weekly review: "research-heavy sessions cost more than implementation sessions," "sessions with >10 dispatches usually needed Graphite instead of manual stacks."
+
+See [`STACKED_PRS.md`](./STACKED_PRS.md) for when manual stacking indicates missing tooling.
+
 ## Phase Skipping
 
 Not every task needs every phase. The orchestrator classifies the task first, then follows the dispatch table in CLAUDE.md.
