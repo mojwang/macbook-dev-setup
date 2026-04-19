@@ -21,6 +21,28 @@ print_success() {
     echo -e "${GREEN}✅ $1${NC}"
 }
 
+# Parallel installation settings
+PARALLEL_FORMULAE="${SETUP_PARALLEL_FORMULAE:-4}"
+PARALLEL_CASKS="${SETUP_PARALLEL_CASKS:-2}"
+
+# Install a single formula, logging result to a temp dir
+# Usage: _install_one_formula <formula> <results_dir>
+_install_one_formula() {
+    local formula="$1"
+    local results_dir="$2"
+
+    if HOMEBREW_NO_AUTO_UPDATE=1 brew install "$formula" &>/dev/null; then
+        echo "$formula" >> "$results_dir/installed.txt"
+        echo -e "${GREEN}✅ $formula${NC}"
+    else
+        echo "$formula" >> "$results_dir/failed.txt"
+        echo -e "${YELLOW}⚠️  Failed: $formula${NC}"
+    fi
+}
+export -f _install_one_formula
+# Export colors for subshells
+export GREEN YELLOW RED NC
+
 # Check if Homebrew is installed
 if ! command -v brew &> /dev/null; then
     print_error "Homebrew is not installed. Please run install-homebrew.sh first."
@@ -58,29 +80,41 @@ install_packages() {
         fi
     done < "$BREWFILE"
     
-    # Process formulae
+    # Process formulae — collect what needs installing, then install in parallel
+    local formulae_to_install=()
     while IFS= read -r line; do
         if [[ "$line" =~ ^brew[[:space:]]+"(.+)" ]]; then
             local formula="${BASH_REMATCH[1]}"
             if brew list --formula "$formula" &>/dev/null; then
                 echo "Formula $formula already installed, skipping..."
             else
-                echo "Installing formula: $formula"
-                if ! HOMEBREW_NO_AUTO_UPDATE=1 brew install "$formula" 2>/dev/null; then
-                    # Check if it might be a cask instead
-                    if brew info --cask "$formula" &>/dev/null; then
-                        print_warning "$formula appears to be a cask, not a formula. Consider updating Brewfile."
-                        failed_packages+=("brew \"$formula\" # Should be: cask \"$formula\"")
-                    else
-                        print_warning "Failed to install formula: $formula"
-                        failed_packages+=("brew \"$formula\"")
-                    fi
-                fi
+                formulae_to_install+=("$formula")
             fi
         fi
     done < "$BREWFILE"
+
+    if [[ ${#formulae_to_install[@]} -gt 0 ]]; then
+        echo "Installing ${#formulae_to_install[@]} formulae (${PARALLEL_FORMULAE} parallel)..."
+        local results_dir
+        results_dir=$(mktemp -d)
+        touch "$results_dir/installed.txt" "$results_dir/failed.txt"
+
+        printf '%s\n' "${formulae_to_install[@]}" | \
+            xargs -P "$PARALLEL_FORMULAE" -I{} bash -c '_install_one_formula "$@"' _ {} "$results_dir"
+
+        # Collect failures
+        while IFS= read -r pkg; do
+            [[ -n "$pkg" ]] && failed_packages+=("brew \"$pkg\"")
+        done < "$results_dir/failed.txt"
+
+        local installed_count
+        installed_count=$(wc -l < "$results_dir/installed.txt" | tr -d ' ')
+        echo "Installed $installed_count formulae"
+        rm -rf "$results_dir"
+    fi
     
-    # Process casks
+    # Process casks — collect what needs installing, then install in parallel
+    local casks_to_install=()
     while IFS= read -r line; do
         if [[ "$line" =~ ^cask[[:space:]]+"(.+)" ]]; then
             local cask="${BASH_REMATCH[1]}"
@@ -91,8 +125,7 @@ install_packages() {
                     skipped_fonts+=("$cask")
                     continue
                 fi
-                
-                # Check if font files exist even if not installed via Homebrew
+
                 local font_pattern=""
                 case "$cask" in
                     "font-anonymice-nerd-font")
@@ -102,10 +135,9 @@ install_packages() {
                         font_pattern="SymbolsNerdFont"
                         ;;
                 esac
-                
+
                 if [[ -n "$font_pattern" ]] && ls ~/Library/Fonts/*${font_pattern}* &>/dev/null 2>&1; then
                     print_warning "Font files for $cask already exist in ~/Library/Fonts/"
-                    print_info "Skipping to avoid conflicts. To reinstall, remove existing font files first."
                     skipped_fonts+=("$cask (existing files)")
                     continue
                 fi
@@ -113,14 +145,42 @@ install_packages() {
                 echo "Cask $cask already installed, skipping..."
                 continue
             fi
-            
-            echo "Installing cask: $cask"
-            if ! HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask "$cask" 2>/dev/null; then
-                print_warning "Failed to install cask: $cask"
-                failed_packages+=("cask \"$cask\"")
-            fi
+            casks_to_install+=("$cask")
         fi
     done < "$BREWFILE"
+
+    if [[ ${#casks_to_install[@]} -gt 0 ]]; then
+        echo "Installing ${#casks_to_install[@]} casks (${PARALLEL_CASKS} parallel)..."
+        local cask_results_dir
+        cask_results_dir=$(mktemp -d)
+        touch "$cask_results_dir/installed.txt" "$cask_results_dir/failed.txt"
+
+        # Helper for cask installation
+        _install_one_cask() {
+            local cask="$1"
+            local results_dir="$2"
+            if HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask "$cask" &>/dev/null; then
+                echo "$cask" >> "$results_dir/installed.txt"
+                echo -e "${GREEN}✅ $cask${NC}"
+            else
+                echo "$cask" >> "$results_dir/failed.txt"
+                echo -e "${YELLOW}⚠️  Failed: $cask${NC}"
+            fi
+        }
+        export -f _install_one_cask
+
+        printf '%s\n' "${casks_to_install[@]}" | \
+            xargs -P "$PARALLEL_CASKS" -I{} bash -c '_install_one_cask "$@"' _ {} "$cask_results_dir"
+
+        while IFS= read -r pkg; do
+            [[ -n "$pkg" ]] && failed_packages+=("cask \"$pkg\"")
+        done < "$cask_results_dir/failed.txt"
+
+        local cask_installed_count
+        cask_installed_count=$(wc -l < "$cask_results_dir/installed.txt" | tr -d ' ')
+        echo "Installed $cask_installed_count casks"
+        rm -rf "$cask_results_dir"
+    fi
     
     # Report results
     if [[ ${#skipped_fonts[@]} -gt 0 ]]; then
