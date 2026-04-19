@@ -90,3 +90,6 @@ product-brief.md
 
 # Claude Code worktree metadata
 .claude/worktrees/
+
+# Session cost log (populated by /log-session at end of each session)
+scripts/.session-cost.log
