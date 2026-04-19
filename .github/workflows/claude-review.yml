@@ -3,8 +3,6 @@ name: Claude Review
 on:
   pull_request:
     types: [opened, synchronize]
-    paths-ignore:
-      - ".github/workflows/**"
   pull_request_review:
     types: [submitted]
 
