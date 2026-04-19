@@ -32,6 +32,40 @@ if [[ ! -f "$CANONICAL" ]]; then
     exit 1
 fi
 
+# Repo-leak lint: the canonical is synced to sibling repos, so any
+# repo-specific path referenced here will appear — and confuse — in
+# every sibling. Copilot caught this on mojwang/ihw#33 when the
+# canonical referenced '.env.sync-vault.local' (a mojwang.tech-only
+# convention) and 'src/db/queries/related.ts' (a mojwang.tech-only
+# file). Fail fast before syncing if any such pattern leaks back in.
+#
+# Patterns intentionally narrow — they target known mojwang.tech
+# project paths that showed up historically. Extend if new leaks
+# surface during review.
+LEAK_PATTERNS=(
+    '\.env\.sync-vault'
+    'src/db/queries/'
+    'scripts/sync-vault\.'
+)
+leak_hits=""
+for pattern in "${LEAK_PATTERNS[@]}"; do
+    if hits=$(grep -nE "$pattern" "$CANONICAL" 2>/dev/null); then
+        leak_hits+="  pattern: ${pattern}"$'\n'"${hits}"$'\n'
+    fi
+done
+if [[ -n "$leak_hits" ]]; then
+    {
+        echo -e "${RED}Repo-specific paths detected in canonical — refusing to sync.${NC}"
+        echo "These paths don't exist in sibling repos and will confuse Copilot on their PRs."
+        echo "Canonical: $CANONICAL"
+        echo ""
+        echo "Matches:"
+        echo "$leak_hits"
+        echo "Fix: replace with repo-generic wording (e.g. 'secrets in committed .env.* files — repo-specific conventions live in that repo's CLAUDE.md')."
+    } >&2
+    exit 1
+fi
+
 # Allow override of the sibling-discovery root. Defaults match the same
 # env var sync-agentic.sh uses, so both scripts share one config point.
 # shellcheck disable=SC1091

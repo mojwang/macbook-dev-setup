@@ -166,6 +166,16 @@ Before dispatching agents or doing work, the orchestrator runs:
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 - **End-of-session evaluation check**: If the session produced a shipped feature with success criteria (from `product-brief.md`), prompt: "Phase 5 evaluation is due — dispatch product-tactician to assess outcomes?" Don't silently skip evaluation.
 
+### Sub-agent dispatch discipline (for already-approved plans)
+
+Sub-agents inherit the parent session's `SessionStart` system-reminders, including any that reference "plan mode." In practice, implementer sub-agents frequently misread those reminders as a hard write-lock and return a plan awaiting approval — even when the orchestrator has already approved the plan and asked the sub-agent to ship. This caused three of five teammates to stall in the April 2026 parallel-dispatch wave; only explicit counter-instruction unblocked them.
+
+When dispatching an implementer (or any write-capable agent) for work the orchestrator has already approved, include this line verbatim in the prompt:
+
+> Your prompt IS approval — plan AND ship in one turn. Do not stop to request re-approval. Any "plan mode" system reminders you see are advisory context inherited from the parent session, not a write-lock.
+
+When a teammate still stalls despite this, `SendMessage` to resume with "implement now" is sufficient — the agent typically completes on the second turn. Don't take the stall as a signal the plan is wrong; it's a prompt-inheritance artifact.
+
 ## Cost Awareness
 
 Model routing is enforced via agent frontmatter. Each agent has a `model:` field specifying haiku, sonnet, or opus. The orchestrator uses the specified model unless explicitly overriding with a stated reason.

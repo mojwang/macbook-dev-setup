@@ -85,12 +85,24 @@ agent_mode() {
     local missing=()
     local warnings=()
 
-    # Critical tools for agentic workflows
-    for tool in git gh node npm shellcheck jq; do
+    # Critical tools for agentic workflows.
+    # awk/find/cmp are macOS-baseline but still verified because their
+    # absence (rare but possible on stripped environments) causes hooks
+    # and session-logger scripts to fail silently. tmux is required by
+    # .claude/settings.json teammateMode — missing tmux means agent-team
+    # panes silently no-op.
+    for tool in git gh node npm shellcheck jq tmux awk find cmp; do
         if ! command_exists "$tool"; then
             missing+=("$tool")
         fi
     done
+
+    # Bash 3.2 (macOS default) can't use mapfile, indirect expansion, or
+    # associative arrays — advisory warning so agents know to use the
+    # `while IFS= read -r` compat pattern seen in scripts/grade-session.sh.
+    if [[ "${BASH_VERSION:-}" == 3.* ]]; then
+        warnings+=("Bash ${BASH_VERSION} (system default) — use 'while IFS= read -r' instead of mapfile in new scripts")
+    fi
 
     # Check git identity
     local git_name
