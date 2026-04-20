@@ -49,3 +49,17 @@ Unlike ephemeral artifacts, this file lives in the repo permanently and is read 
 
 ## Model Routing Outcomes
 <!-- Format: - [Task type]: [Model used] → [Result: sufficient/insufficient] (PR #XX) -->
+
+## Deferred Design Decisions
+
+### P2.1 — Agent-frontmatter `provider:` field deferred (2026-04-19)
+
+**What:** Roadmap P2.1 originally planned to add `provider: local-gemma4` (or similar) to agent frontmatter so `vault-curator`, `inbox-processor`, `writer` etc. could route through a local MLX server instead of Anthropic.
+
+**Why deferred:** Claude Code CLI's agent dispatch reads `name`, `description`, `model`, `tools` from frontmatter. Unknown fields (like a hypothetical `provider:`) are silently ignored — the dispatch always hits Anthropic regardless. A `provider:` field today would be no-op.
+
+**What shipped instead:** Command-level integration. `/ask-gemma` as an escape hatch plus `--provider=local|claude|compare` flag added to `/vault-ask`, `/process-inbox`, `/graduate-notes`, `/vault-brief`. Each is additive and flag-gated; Claude defaults preserve existing behavior.
+
+**Unblocker:** When Claude Code CLI supports provider routing (or when we add a dispatch shim that reads agent md ourselves and routes externally), the existing skill-level `--provider` plumbing extracts cleanly into an agent-level field.
+
+**Router as shared utility — also deferred:** Each of the 5 integrations duplicates ~15 lines of provider-routing logic. Tempting to extract into `scripts/model-route.sh` immediately. Deliberately NOT done — we want a week of per-integration usage data first to know which integrations are reached for and which routing patterns stabilize. Premature abstraction is the risk; 5 concrete integrations are cheap to maintain short-term.
