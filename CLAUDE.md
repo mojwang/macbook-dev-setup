@@ -213,6 +213,30 @@ Agent frontmatter specifies the model. The orchestrator MUST use the specified m
 - Simple code review → downgrade reviewer to Haiku
 - Architecture-critical planning → upgrade planner to Opus
 
+### Local tier (Gemma 4 31B IT via MLX)
+
+Free local inference on the M4 Max for cost-insensitive, sovereignty-sensitive, or throughput-heavy work. Model: `mlx-community/gemma-4-31b-it-4bit` (~18GB resident RAM, ~40–80 tok/s, ~2–5s first-token).
+
+**Surfaces today:**
+- `/ask-gemma "<prompt>"` — escape hatch for ad-hoc queries. Flags: `--file <path>`, `--system "..."`, `--max-tokens N`. See `.claude/commands/ask-gemma.md`.
+- Critical-path integrations in workspace commands (`/vault-ask`, `/process-inbox`, `/graduate-notes`, `/vault-brief`) via `--provider=local|claude|compare` flag. Claude-preserving defaults — opt-in for local/compare.
+
+**Reach-for-it cases:**
+- Short ad-hoc queries (rephrasing, classification, quick lookups)
+- Summaries of private/vault content (sovereignty — nothing leaves the machine)
+- Bulk repetitive work (tagging, scoring, first-pass classification)
+- Second opinion on Claude's answer via `/vault-ask --provider=compare`
+- Anthropic rate-limited or unavailable
+
+**Operational:**
+- Server starts automatically on login via the `com.mojwang.mlx-server` LaunchAgent (`config/launchd/com.mojwang.mlx-server.plist`).
+- Manual start: `./scripts/mlx-server-start.sh`
+- Verify: `./scripts/local-model-check.sh` — fast-fails with actionable error if unreachable.
+- Logs: `~/Library/Logs/mlx-server.log`
+
+**NOT yet supported:**
+- `provider: local` on agent frontmatter. Claude Code CLI doesn't honor that field today, so agent dispatches still route through Anthropic regardless. Command-level integration (above) is the current surface. Shared router (`scripts/model-route.sh`) is a future roadmap item — extract once a week of per-integration usage data tells us which integrations are reached for.
+
 ## Testing
 **Write tests BEFORE implementation** — especially when agents implement autonomously.
 Red-green-refactor: failing test first, minimal code to pass, then clean up.
