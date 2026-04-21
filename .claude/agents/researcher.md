@@ -1,7 +1,7 @@
 ---
 name: researcher
-description: Deep codebase exploration before planning. Use for any task touching 3+ files.
-model: haiku
+description: Deep codebase exploration before planning. Use for any task touching 3+ files. Research is the highest-leverage step — a bad line of research compounds into bad plans and bad code. Default Sonnet; downgrade to Haiku only for explicitly broad keyword sweeps or low-stakes glob-heavy scans where breadth matters more than depth.
+model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
 

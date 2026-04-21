@@ -29,7 +29,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 
 ### Researcher (`.claude/agents/researcher.md`)
 - **Purpose**: Deep codebase exploration before planning
-- **Model**: haiku | **Tools**: Read, Grep, Glob, Bash
+- **Model**: sonnet (default — research is highest-leverage; downgrade to haiku for broad scans) | **Tools**: Read, Grep, Glob, Bash
 - **When**: Any task touching 3+ files, or unfamiliar code areas
 - **Input**: Task description from orchestrator
 - **Output**: `research.md` — current state, patterns, dependencies, risks, open questions
@@ -182,7 +182,7 @@ Model routing is enforced via agent frontmatter. Each agent has a `model:` field
 
 **Cost hierarchy**: Haiku (cheapest, exploration) → Sonnet (default, most tasks) → Opus (expensive, strategic reasoning).
 
-**Override protocol**: State the reason in conversation before dispatching with a different model. Examples: "Upgrading researcher to Sonnet — this requires cross-repo analysis, not just file scanning." This creates an audit trail for cost decisions.
+**Override protocol**: State the reason in conversation before dispatching with a different model. Examples: "Downgrading researcher to Haiku — this is a broad keyword sweep across dozens of files; breadth matters more than depth here." This creates an audit trail for cost decisions.
 
 ### Session cost log
 

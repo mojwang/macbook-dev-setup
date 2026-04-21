@@ -199,7 +199,7 @@ Agent frontmatter specifies the model. The orchestrator MUST use the specified m
 
 | Agent | Model | Rationale |
 |-------|-------|-----------|
-| researcher | Haiku | Broad scans, cheap exploration |
+| researcher | Sonnet | Research is the highest-leverage step; compounds into plan and code quality. Haiku is an explicit override for broad scans. |
 | planner | Sonnet | Structured reasoning, good balance |
 | implementer | Sonnet | Code generation, standard tasks |
 | reviewer | Sonnet | Skeptical evaluation |
@@ -209,7 +209,7 @@ Agent frontmatter specifies the model. The orchestrator MUST use the specified m
 | writer | Sonnet | Writing quality |
 
 **Override examples** (state the reason when overriding):
-- Researcher hitting complex analysis → upgrade to Sonnet
+- Researcher doing broad keyword sweep across dozens of files → downgrade to Haiku (breadth > depth)
 - Simple code review → downgrade reviewer to Haiku
 - Architecture-critical planning → upgrade planner to Opus
 
