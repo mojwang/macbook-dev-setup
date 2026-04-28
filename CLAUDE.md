@@ -257,6 +257,10 @@ Red-green-refactor: failing test first, minimal code to pass, then clean up.
 2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `product-tactician` and `product-strategist` agents.
 3. **Exa**: General web research (fallback for non-code queries)
 
+## Decision Capture
+
+When a non-trivial decision ships in this repo (build-vs-buy, scope-cut, technical-direction-change, agentic-infra trade-off), capture it to the workspace inbox per the full protocol in `~/ai/workspace/claude/CLAUDE.md` § Cross-repo decision capture. Drop `_inbox/notes/decision-YYYYMMDD-<slug>.md` using the decision-record template; the inbox-processor fast lane routes it priority-7 on next `/process-inbox`. Keeps decisions and their outcomes accumulating into the vault rather than scattered across commits.
+
 ## Important
 - Do only what's asked; nothing more
 - Check CI before merging: requires passing tests
