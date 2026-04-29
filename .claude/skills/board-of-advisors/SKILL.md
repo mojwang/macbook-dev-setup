@@ -28,26 +28,22 @@ Parse arguments: `<mode> <topic> [--live | --synth] [--custom]`
 
 ## Action
 
-Dispatch the **boardroom** agent via the Task tool with this prompt template:
+The boardroom is **interactive by design** — the orchestrator (you) facilitates the dialogue directly, not via subagent dispatch. Read `repos/personal/macbook-dev-setup/.claude/agents/boardroom.md` to internalize the role for this session.
 
-```
-Mode: <mode>
-Topic: <topic>
-Synthesis: <--synth | --live>
-Custom roster: <true|false>
+**Phase 1 — Council proposal (orchestrator, inline)**:
+1. Read `repos/personal/macbook-dev-setup/.claude/skills/decision-lab/COUNCIL.md`
+2. Load 2-3 most relevant vault notes for the topic (via `VAULT_MANIFEST.md`)
+3. Propose a per-session council per the Council Selection logic — one-line reasoning per pick, named tension pair
+4. Surface to user for approval / swap / custom
+5. Wait for user response
 
-Run the boardroom protocol:
-1. Read decision-lab/COUNCIL.md
-2. Load relevant vault context for the topic
-3. Propose a per-session council (with reasoning per pick + named tension pair)
-4. Await user approval / swap / custom
-5. Run the session in <mode> mode
-6. Persist session log to decision-lab/board-of-advisors/
-7. Offer grading
-8. Draft decision-record if applicable
-```
+**Phase 2 — Dialogue session (orchestrator-facilitated)**:
+After approval, open Round 1: each advisor asks ONE pointed question to the CEO. Wait for the CEO to answer. Then channel Round 2 reactions based on what they said. Iterate 3-5 rounds until the kernel + recommendation are stable, or until the CEO signals done. See agent definition § Dialogue Pattern for round mechanics.
 
-The boardroom agent owns the rest of the lifecycle.
+The dialogue IS the session. The orchestrator does not dispatch a subagent for this phase — it would break the closed feedback loop.
+
+**Phase 3 — Synthesis + persistence (orchestrator)**:
+When dialogue concludes, write the session log to `decision-lab/board-of-advisors/YYYY-MM-DD-<slug>-<mode>.md` per the schema in `decision-lab/board-of-advisors/README.md`. Capture the full dialogue transcript with **Bezos** / **Naval** / **Cagan** turn markers + **You** for CEO turns. Then synthesize, recommend, and offer optional grading + commit.
 
 ## Notes
 
