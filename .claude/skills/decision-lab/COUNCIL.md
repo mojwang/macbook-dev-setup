@@ -517,7 +517,7 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
   status: candidate
   value-add: Sharpest writer on SaaS metrics, board management, and CFO/CEO dynamics
 
-# === Candidates: marketing-distribution-growth ===
+# === Candidates: marketing-growth ===
 - id: permission-marketing-tribes
   source: Seth Godin
   category: marketing-growth
