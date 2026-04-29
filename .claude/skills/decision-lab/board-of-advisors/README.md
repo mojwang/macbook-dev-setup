@@ -61,7 +61,17 @@ grades:
 
 ## Voice attribution rule
 
-Within session logs, advisors are referenced by **id** (e.g., `operator-execution`), not by source thinker name. This preserves the IP firewall and keeps the synthesis-as-Marvin's-voice principle intact.
+Within session logs and live boardroom output, advisors are introduced by their **source thinker name** (e.g. **Bezos**, **Naval**, **Cagan**) as the conversational marker — it's how Marvin recognizes who's speaking and grades the session. The advisor `id` still anchors structured metadata: frontmatter `council:` block, `track-record:` updates in COUNCIL.md, `natural-tensions:` cross-references.
+
+```markdown
+### Turn 1
+**Bezos**: Write the press release. Headline, sub-head, customer quote. Who is the customer in that quote?
+
+### Turn 2
+**Naval**: Slow down. The press-release frame assumes you already know the product...
+```
+
+The no-brand-attribution rule still binds when session insights are graduated to vault notes or published externally. At that point the synthesis becomes Marvin's voice — the boardroom output is the working draft, not the final artifact.
 
 ## Track-record updates
 
