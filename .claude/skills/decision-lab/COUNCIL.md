@@ -306,6 +306,365 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     last-summoned: null
     avg-grade: null
     notable-sessions: []
+
+# === Candidates: operators ===
+- id: high-output-operating-system
+  source: Andy Grove
+  category: operators
+  status: candidate
+  value-add: Foundational operating system (OKRs, high-output management) every modern operator borrows from
+- id: flat-org-mission-as-boss
+  source: Jensen Huang
+  category: operators
+  status: candidate
+  value-add: Most interesting org design of the AI era — flat structure, mission-as-boss, asynchronous decision-making
+- id: cultural-rewiring
+  source: Satya Nadella
+  category: operators
+  status: candidate
+  value-add: Masterclass in cultural and strategic rewiring of a giant; operationalizes growth mindset at scale
+- id: product-taste-and-focus
+  source: Steve Jobs
+  category: operators
+  status: candidate
+  value-add: The canonical case study on product taste and ruthless focus; saying no to almost everything
+- id: design-led-founder-mode
+  source: Brian Chesky
+  category: operators
+  status: candidate
+  value-add: Design-led product development at scale; recently re-emergent founder-mode operator
+- id: first-principles-long-term
+  source: Tobi Lütke
+  category: operators
+  status: candidate
+  value-add: First-principles operating and long-term thinking from a non-Silicon-Valley vantage point
+- id: relentless-craft-and-breadth
+  source: Patrick Collison
+  category: operators
+  status: candidate
+  value-add: Relentless craft, taste, and intellectual breadth applied to API-first product
+- id: networks-and-blitzscaling
+  source: Reid Hoffman
+  category: operators
+  status: candidate
+  value-add: Networks, blitzscaling, and career strategy as deliberate practice
+- id: cost-discipline-learning-loops
+  source: Sam Walton
+  category: operators
+  status: candidate
+  value-add: Underrated operator's autobiography; relentless cost discipline and tight learning loops
+- id: founder-emotional-reality
+  source: Phil Knight
+  category: operators
+  status: candidate
+  value-add: Most honest founder memoir on the actual emotional reality of building a company
+- id: brand-from-commodity
+  source: Howard Schultz
+  category: operators
+  status: candidate
+  value-add: Brand-building and category creation from a commodity input; experience as differentiator
+- id: focus-and-prioritization
+  source: Drew Houston
+  category: operators
+  status: candidate
+  value-add: Clearest thinker among modern SaaS founders on focus and prioritization
+- id: patient-strategic-thinking
+  source: Daniel Ek
+  category: operators
+  status: candidate
+  value-add: Patient strategic thinking against entrenched incumbents (Spotify vs labels)
+- id: pivots-and-product-clarity
+  source: Stewart Butterfield
+  category: operators
+  status: candidate
+  value-add: Pivots and product clarity (the Slack and Flickr launch memos are classics)
+- id: bottom-up-gtm-non-hub
+  source: Melanie Perkins
+  category: operators
+  status: candidate
+  value-add: Bottom-up GTM and global expansion from a non-hub geography (Canva from Perth)
+
+# === Candidates: writers-analysts ===
+- id: aggregation-theory
+  source: Ben Thompson
+  category: writers-analysts
+  status: candidate
+  value-add: Most important strategy writer in tech; Aggregation Theory is essential lens for platform dynamics
+- id: disruption-jtbd
+  source: Clayton Christensen
+  category: writers-analysts
+  status: candidate
+  value-add: Disruption theory and Jobs-to-Be-Done remain foundational
+- id: status-as-a-service
+  source: Eugene Wei
+  category: writers-analysts
+  status: candidate
+  value-add: Sharpest essayist on consumer product dynamics and status games
+- id: media-gaming-streaming
+  source: Matthew Ball
+  category: writers-analysts
+  status: candidate
+  value-add: Definitive analyst on media, gaming, and streaming economics — directly relevant to DVX work
+- id: finance-meets-tech
+  source: Byrne Hobart
+  category: writers-analysts
+  status: candidate
+  value-add: Finance-meets-tech analysis with unusual depth (The Diff)
+- id: narrative-strategy
+  source: Packy McCormick
+  category: writers-analysts
+  status: candidate
+  value-add: Narrative strategy pieces that connect dots others miss (Not Boring)
+- id: how-businesses-actually-work
+  source: Patrick McKenzie
+  category: writers-analysts
+  status: candidate
+  value-add: How businesses actually work mechanically; payments, ops, regulatory mechanics
+
+# === Candidates: product-methodology ===
+- id: practical-product-design-management
+  source: Julie Zhuo
+  category: product-methodology
+  status: candidate
+  value-add: Best practical guide to product/design management
+- id: continuous-discovery
+  source: Teresa Torres
+  category: product-methodology
+  status: candidate
+  value-add: Continuous discovery as a discipline; opportunity-solution trees
+- id: product-judgment
+  source: Shreyas Doshi
+  category: product-methodology
+  status: candidate
+  value-add: Product judgment and high-leverage thinking; LNO framework
+
+# === Candidates: investors ===
+- id: market-structure-unit-economics
+  source: Bill Gurley
+  category: investors
+  status: candidate
+  value-add: Most rigorous market-structure and unit-economics thinker in VC
+- id: monopoly-and-contrarian
+  source: Peter Thiel
+  category: investors
+  status: candidate
+  value-add: Monopoly and contrarian frameworks (Zero to One)
+- id: ambition-and-leverage
+  source: Sam Altman
+  category: investors
+  status: candidate
+  value-add: Early essays on ambition, leverage, and startup mechanics
+- id: scaling-50-to-5000
+  source: Elad Gil
+  category: investors
+  status: candidate
+  value-add: Best practical reference for scaling 50 to 5000 employees
+- id: two-decades-honest-thinking
+  source: Fred Wilson
+  category: investors
+  status: candidate
+  value-add: Two decades of consistent, honest thinking on venture and startups (AVC)
+- id: software-distribution-pmf
+  source: Marc Andreessen
+  category: investors
+  status: candidate
+  value-add: Pre-2015 essays on software, distribution, and product-market fit
+- id: hard-things-and-culture
+  source: Ben Horowitz
+  category: investors
+  status: candidate
+  value-add: The Hard Thing About Hard Things and What You Do Is Who You Are on culture
+- id: clarity-of-thought
+  source: Paul Graham
+  category: investors
+  status: candidate
+  value-add: Gold standard for clarity of thought in essay form; do things that don't scale, schlep blindness
+- id: hard-tech-energy-bets
+  source: Vinod Khosla
+  category: investors
+  status: candidate
+  value-add: Contrarian bets on hard tech and energy; willingness to fund unloved sectors
+- id: coaching-and-executive-operating
+  source: Bill Campbell
+  category: investors
+  status: candidate
+  value-add: Coaching and executive operating (Trillion Dollar Coach)
+
+# === Candidates: sales-gtm ===
+- id: saas-gtm-board-dynamics
+  source: Jason Lemkin
+  category: sales-gtm
+  status: candidate
+  value-add: Most prolific operator-writer on SaaS GTM, hiring, and board dynamics
+- id: repeatable-sales-machine
+  source: Mark Roberge
+  category: sales-gtm
+  status: candidate
+  value-add: How to build a repeatable sales machine from scratch (Sales Acceleration Formula)
+- id: positioning
+  source: April Dunford
+  category: sales-gtm
+  status: candidate
+  value-add: The definitive book on positioning; Obviously Awesome
+- id: outbound-sales-playbook
+  source: Aaron Ross
+  category: sales-gtm
+  status: candidate
+  value-add: Outbound sales playbook that built Salesforce's engine (Predictable Revenue)
+- id: saas-metrics-and-cfo-ceo
+  source: Dave Kellogg
+  category: sales-gtm
+  status: candidate
+  value-add: Sharpest writer on SaaS metrics, board management, and CFO/CEO dynamics
+
+# === Candidates: marketing-distribution-growth ===
+- id: permission-marketing-tribes
+  source: Seth Godin
+  category: marketing-growth
+  status: candidate
+  value-add: Permission marketing, tribes, and the discipline of doing work that matters
+- id: behavioral-economics-marketing
+  source: Rory Sutherland
+  category: marketing-growth
+  status: candidate
+  value-add: Behavioral economics applied to marketing; counterintuitive and consistently right
+- id: evidence-based-marketing
+  source: Byron Sharp
+  category: marketing-growth
+  status: candidate
+  value-add: Evidence-based marketing that demolishes most marketing folklore (How Brands Grow)
+- id: network-effects-marketplace
+  source: Andrew Chen
+  category: marketing-growth
+  status: candidate
+  value-add: Definitive treatment of network effects and marketplace launches (Cold Start Problem)
+- id: growth-as-discipline
+  source: Brian Balfour
+  category: marketing-growth
+  status: candidate
+  value-add: Most rigorous framework-builder on growth as a discipline (Reforge)
+
+# === Candidates: bootstrappers ===
+- id: vc-counter-narrative
+  source: Jason Fried and DHH
+  category: bootstrappers
+  status: candidate
+  value-add: Most articulate counter-narrative to VC-default thinking (Basecamp, Rework, It Doesn't Have to Be Crazy at Work)
+- id: minimalist-entrepreneur
+  source: Sahil Lavingia
+  category: bootstrappers
+  status: candidate
+  value-add: Small, profitable, sustainable as a real path (Minimalist Entrepreneur)
+- id: b2b-saas-bootstrapping
+  source: Rob Walling
+  category: bootstrappers
+  status: candidate
+  value-add: Practical playbook for B2B SaaS bootstrapping (TinySeed, Stair Step Approach)
+- id: solo-fast-profitable
+  source: Pieter Levels
+  category: bootstrappers
+  status: candidate
+  value-add: Extreme version of solo, fast, profitable building in public
+- id: sustainable-capital-structures
+  source: Tyler Tringas
+  category: bootstrappers
+  status: candidate
+  value-add: Capital structures designed for sustainable businesses (Calm Company Fund)
+
+# === Candidates: holdco-acquisition (more) ===
+- id: search-fund-buy-then-build
+  source: Walker Deibel
+  category: holdco-acquisition
+  status: candidate
+  value-add: Practical entry point into search funds and acquisition entrepreneurship (Buy Then Build)
+- id: main-street-buying
+  source: Codie Sanchez
+  category: holdco-acquisition
+  status: candidate
+  value-add: Main street business buying, popularized; useful for pattern recognition
+- id: unsexy-service-businesses
+  source: Nick Huber
+  category: holdco-acquisition
+  status: candidate
+  value-add: Operator-investor on unsexy service businesses and management at scale
+
+# === Candidates: capital-allocation (more) ===
+- id: long-term-capital-allocation
+  source: Warren Buffett
+  category: capital-allocation
+  status: candidate
+  value-add: Annual letters; canonical text on long-term thinking and capital allocation
+- id: cycles-risk-second-level
+  source: Howard Marks
+  category: capital-allocation
+  status: candidate
+  value-add: Memos on cycles, risk, and second-level thinking
+- id: macro-conviction-sizing
+  source: Stan Druckenmiller
+  category: capital-allocation
+  status: candidate
+  value-add: Macro reasoning and conviction sizing; "fat pitches" thinking
+- id: patient-compounding-shared-economies
+  source: Nick Sleep
+  category: capital-allocation
+  status: candidate
+  value-add: Patient compounding and "scale economies shared" framework (Nomad letters)
+
+# === Candidates: lean-customer-development ===
+- id: customer-development-method
+  source: Steve Blank
+  category: lean-customer-development
+  status: candidate
+  value-add: Customer development methodology that underlies modern startup practice
+- id: lean-startup-mvp
+  source: Eric Ries
+  category: lean-customer-development
+  status: candidate
+  value-add: MVPs and validated learning, even if overapplied in practice (Lean Startup)
+- id: mom-test-customer-conversations
+  source: Rob Fitzpatrick
+  category: lean-customer-development
+  status: candidate
+  value-add: Highest-ROI short book on talking to customers without lying to yourself (Mom Test)
+- id: crossing-the-chasm
+  source: Geoffrey Moore
+  category: lean-customer-development
+  status: candidate
+  value-add: Still the best framework on early-market to mainstream transitions
+
+# === Candidates: scaling-operating-systems ===
+- id: rockefeller-habits
+  source: Verne Harnish
+  category: scaling-operating-systems
+  status: candidate
+  value-add: Operating cadence for $10M-$500M companies (Scaling Up, Rockefeller Habits)
+- id: eos-traction
+  source: Gino Wickman
+  category: scaling-operating-systems
+  status: candidate
+  value-add: Simpler operating system widely adopted in mid-market (Traction, EOS)
+- id: team-dynamics-applied
+  source: Patrick Lencioni
+  category: scaling-operating-systems
+  status: candidate
+  value-add: Team dynamics framework that's actually applied, not just cited (Five Dysfunctions)
+- id: flywheel-hedgehog-level-5
+  source: Jim Collins
+  category: scaling-operating-systems
+  status: candidate
+  value-add: Flywheel, hedgehog, level 5 leadership (Good to Great, Beyond Entrepreneurship 2.0)
+
+# === Candidates: pricing-monetization ===
+- id: pricing-as-product-decision
+  source: Madhavan Ramanujam
+  category: pricing-monetization
+  status: candidate
+  value-add: Pricing as a product decision, not an afterthought (Monetizing Innovation)
+- id: empirical-saas-pricing
+  source: Patrick Campbell
+  category: pricing-monetization
+  status: candidate
+  value-add: Empirical SaaS pricing research (formerly ProfitWell)
 ```
 
 ## Candidate pool
