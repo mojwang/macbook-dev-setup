@@ -3,6 +3,6 @@ description: Product development co-pilot. Full lifecycle from idea evaluation t
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
-# Product Lab
+# Decision Lab
 
-Use the Skill tool to invoke the `product-lab` skill, passing along the user's arguments: $ARGUMENTS
+Use the Skill tool to invoke the `decision-lab` skill, passing along the user's arguments: $ARGUMENTS
