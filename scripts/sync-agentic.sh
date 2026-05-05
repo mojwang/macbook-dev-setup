@@ -20,7 +20,7 @@ CORE_SKILLS=(commit-review decision-lab deep-research security-review shell-conv
 WEB_SKILLS=(doc-garden design-review design-elevation web-review typescript-conventions entropy-scan init-design-system competitive-audit)
 
 # Shared commands (canonical source: .claude/commands/)
-SHARED_COMMANDS=(deep-research decision-lab advisors)
+SHARED_COMMANDS=(deep-research decision-lab boardroom)
 
 # Colors
 RED='\033[0;31m'
