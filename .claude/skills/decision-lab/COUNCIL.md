@@ -682,6 +682,27 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
   category: pricing-monetization
   status: candidate
   value-add: Empirical SaaS pricing research (formerly ProfitWell)
+
+# === Candidates: knowledge-systems ===
+- id: tools-for-thought
+  source: Andy Matuschak
+  category: knowledge-systems
+  status: candidate
+  value-add: Personal knowledge management as engineering discipline; evergreen notes, spaced repetition, tools-for-thought design — direct match for second-brain architecture and personal-AI-tooling questions
+
+# === Candidates: engineering-craft ===
+- id: complexity-discipline
+  source: John Carmack
+  category: engineering-craft
+  status: candidate
+  value-add: Engineering elegance and complexity discipline; "code less, think more"; pure-craft tradition rare on operator-heavy boards — the right voice when "am I over-engineering my own infrastructure?" is the question
+
+# === Candidates: ai-systems ===
+- id: agentic-ai-architect
+  source: Andrej Karpathy
+  category: ai-systems
+  status: candidate
+  value-add: Agentic AI architecture; software 2.0/3.0 framing; teaches by building tools in public — direct domain match for AI-systems, agent orchestration, and dev-tools questions
 ```
 
 ## Candidate pool

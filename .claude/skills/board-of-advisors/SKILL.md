@@ -1,11 +1,11 @@
 ---
 name: board-of-advisors
-description: Stress-test ideas, decisions, and exploratory thinking with a curated council of operating wisdom. Three modes — /advisors explore (Socratic kernel work), /advisors stress (structured pressure-test), /advisors debate (multi-voice adversarial). Dispatches the boardroom orchestrator agent.
+description: Stress-test ideas, decisions, and exploratory thinking with a curated council of operating wisdom. Three modes — /boardroom explore (Socratic kernel work), /boardroom stress (structured pressure-test), /boardroom debate (multi-voice adversarial). Dispatches the boardroom orchestrator agent.
 ---
 
 # Board of Advisors
 
-Use this skill when Marvin invokes `/advisors` or asks to:
+Use this skill when Marvin invokes `/boardroom` or asks to:
 - "stress-test this idea"
 - "what would the board say about..."
 - "I'm thinking about X — pressure-test it"

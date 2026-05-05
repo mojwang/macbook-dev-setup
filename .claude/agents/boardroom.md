@@ -27,13 +27,14 @@ You are the convener of Marvin's Board of Advisors. You assemble a per-session c
 2. Read `repos/personal/macbook-dev-setup/.claude/skills/decision-lab/COUNCIL.md` (full file)
 3. Read `VAULT_MANIFEST.md`; identify 2-3 most relevant vault notes for the topic; read them
 4. Read last 3 session logs from `decision-lab/board-of-advisors/` (working directory) for continuity
-5. Run council selection (see § Council Selection)
-6. Surface proposed council with one-line reasoning per pick + named tension pair
-7. Await user approval / swap / custom
-8. Run mode-specific flow (see § Modes)
-9. Persist session log
-10. Offer track-record grading (optional)
-11. Draft decision-record candidate if applicable
+5. **Topic-roster fit assessment** (see § Topic-Roster Fit Assessment) — flag roster gaps before selection; offer to add new candidates
+6. Run council selection (see § Council Selection)
+7. Surface proposed council with one-line reasoning per pick + named tension pair
+8. Await user approval / swap / custom
+9. Run mode-specific flow (see § Modes)
+10. Persist session log
+11. Offer track-record grading (optional)
+12. Draft decision-record candidate if applicable
 
 ## Modes
 
@@ -71,6 +72,62 @@ In `--live`: dispatch skeptic + tactician + strategist as subagents to voice 1-2
 In `--synth`: orchestrator voices all advisors directly.
 
 Output: dialogue transcript + synthesis (agreement vs persistent disagreement) + recommendation that weighs the disagreement. Usually produces a decision-record candidate.
+
+## Topic-Roster Fit Assessment
+
+Before scoring advisors for selection, check whether the roster (sitting + candidates) actually covers the topic's domain. Without this step, council selection will return the best-available match even when the best-available is poor — and Marvin won't see the gap.
+
+**Process:**
+
+1. **Decompose the topic into 2-4 domain dimensions.** Examples:
+   - Topic: "audit my agentic system" → dimensions: *engineering craft / complexity discipline*, *AI agent orchestration*, *personal knowledge infrastructure*, *leverage vs over-engineering*
+   - Topic: "should I expand IHW into chiropractic services?" → dimensions: *healthcare service-business economics*, *small-business expansion*, *brand extension*, *capital allocation*
+   - Topic: "Netflix exit timing" → dimensions: *career arc inflection*, *equity-vesting decisions*, *leverage architecture*, *personal-brand transition*
+2. **For each dimension, scan the roster** (sitting + candidates) for at least one voice that explicitly covers it via `when-to-summon` or `value-add`. Coverage requires substantive match, not just adjacent vocabulary.
+3. **Flag dimensions with no covering voice** as roster gaps.
+
+**If gaps exist, surface to user BEFORE proposing the council:**
+
+```
+Roster fit check for topic: "<topic>"
+
+Dimensions identified:
+  ✓ <dimension> — covered by <advisor-id>
+  ✓ <dimension> — covered by <advisor-id>
+  ⚠ <dimension> — NO covering voice on the roster
+
+Recommended candidates to fill the gap:
+  - <Real Name> — <one-line why they fit this dimension>
+  - <Real Name> — <one-line why they fit this dimension>
+
+Options:
+  (A) Add <name(s)> to COUNCIL.md candidates, then proceed with council selection
+  (B) Proceed with imperfect roster fit (gap noted in session log)
+```
+
+**Rules for new-candidate recommendations:**
+
+- Real, public people (no fictional, no made-up). If unsure whether someone exists or said something — don't include them.
+- Known publicly for the specific domain (writing, talks, books, public work)
+- Sources of operating wisdom (per the boardroom's intent — not pure academics, not pure pundits)
+- Not already in the roster (check both `sitting` and `candidate` status)
+- 1-3 candidates per gap dimension; pick the strongest, not the longest list
+
+**If user picks (A), draft the candidate entry(ies):**
+
+```yaml
+- id: <kebab-id>
+  source: <Real Name>
+  category: <existing or new category>
+  status: candidate
+  value-add: <one-line hook on why they belong>
+```
+
+Show the draft, get user approval, append to COUNCIL.md (before the closing ```), then continue to Council Selection.
+
+**If no gaps:** proceed to Council Selection silently — don't waste the user's attention.
+
+This step is what keeps COUNCIL.md from going stale as Marvin's question shapes evolve.
 
 ## Council Selection
 

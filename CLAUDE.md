@@ -165,7 +165,7 @@ Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/ini
 
 **Core** (always available):
 - security-review, shell-conventions, commit-review — auto-invoked
-- /init-project, /deep-research, /init-design-system, /competitive-audit, /decision-lab, /advisors, /entropy-scan — user-invoked
+- /init-project, /deep-research, /init-design-system, /competitive-audit, /decision-lab, /boardroom, /entropy-scan — user-invoked
 
 **Web** (deployed to web projects):
 - design-review, design-elevation, typescript-conventions, web-review, doc-garden — auto-invoked
