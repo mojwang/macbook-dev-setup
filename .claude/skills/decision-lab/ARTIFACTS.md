@@ -1,12 +1,12 @@
 # Artifact Templates
 
-Templates for every document the product strategist produces. All artifacts are written to the `product-lab/` directory. They are persistent across sessions — not ephemeral like `research.md` or `plan.md`.
+Templates for every document the product strategist produces. All artifacts are written to the `decision-lab/` directory. They are persistent across sessions — not ephemeral like `research.md` or `plan.md`.
 
 ---
 
 ## State Tracker
 
-**Path**: `product-lab/stage.json`
+**Path**: `decision-lab/stage.json`
 
 ```json
 {
@@ -36,7 +36,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 ## Idea Evaluation
 
-**Path**: `product-lab/ideas/[name]/evaluation.md`
+**Path**: `decision-lab/ideas/[name]/evaluation.md`
 
 ```markdown
 # Idea Evaluation: [Name]
@@ -105,7 +105,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 ## Discovery Log
 
-**Path**: `product-lab/discovery.md`
+**Path**: `decision-lab/discovery.md`
 
 ```markdown
 # Discovery: [Idea Name]
@@ -166,7 +166,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 ## MVP Scope
 
-**Path**: `product-lab/mvp-scope.md`
+**Path**: `decision-lab/mvp-scope.md`
 
 ```markdown
 # MVP Scope: [Idea Name]
@@ -227,7 +227,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 ## Launch Plan
 
-**Path**: `product-lab/launch-plan.md`
+**Path**: `decision-lab/launch-plan.md`
 
 ```markdown
 # Launch Plan: [Idea Name]
@@ -273,7 +273,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 ## PMF Assessment
 
-**Path**: `product-lab/pmf-assessment.md`
+**Path**: `decision-lab/pmf-assessment.md`
 
 ```markdown
 # PMF Assessment: [Idea Name]
@@ -335,7 +335,7 @@ Update after every stage transition and at the end of meaningful interactions.
 
 ## Positioning
 
-**Path**: `product-lab/positioning.md`
+**Path**: `decision-lab/positioning.md`
 
 ```markdown
 # Positioning: [Idea Name]
@@ -389,7 +389,7 @@ Who cares most about our value:
 
 ## Growth Engine
 
-**Path**: `product-lab/growth-engine.md`
+**Path**: `decision-lab/growth-engine.md`
 
 ```markdown
 # Growth Engine: [Idea Name]
@@ -446,7 +446,7 @@ Who cares most about our value:
 
 ## Interview Guide
 
-**Path**: `product-lab/interview-guide.md`
+**Path**: `decision-lab/interview-guide.md`
 
 ```markdown
 # Interview Guide: [Idea Name]
@@ -493,7 +493,7 @@ Who cares most about our value:
 
 ## Pivot Assessment
 
-**Path**: `product-lab/pivot-assessment.md`
+**Path**: `decision-lab/pivot-assessment.md`
 
 ```markdown
 # Pivot Assessment: [Idea Name]

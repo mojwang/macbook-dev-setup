@@ -165,7 +165,7 @@ Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/ini
 
 **Core** (always available):
 - security-review, shell-conventions, commit-review — auto-invoked
-- /init-project, /deep-research, /init-design-system, /competitive-audit, /product-lab, /entropy-scan — user-invoked
+- /init-project, /deep-research, /init-design-system, /competitive-audit, /decision-lab, /boardroom, /entropy-scan — user-invoked
 
 **Web** (deployed to web projects):
 - design-review, design-elevation, typescript-conventions, web-review, doc-garden — auto-invoked
@@ -204,8 +204,9 @@ Agent frontmatter specifies the model. The orchestrator MUST use the specified m
 | implementer | Sonnet | Code generation, standard tasks |
 | reviewer | Sonnet | Skeptical evaluation |
 | designer | Sonnet | Design reasoning |
-| product-strategist | Opus | Market analysis needs strongest reasoning |
-| product-tactician | Sonnet | Feature scoping |
+| strategist | Opus | Market analysis needs strongest reasoning |
+| tactician | Sonnet | Feature scoping |
+| boardroom | Opus | Convenes curated council of operating wisdom; needs strongest reasoning for voice synthesis + dispatch |
 | writer | Sonnet | Writing quality |
 
 **Override examples** (state the reason when overriding):
@@ -254,7 +255,7 @@ Red-green-refactor: failing test first, minimal code to pass, then clean up.
 
 ## MCP Server Priority
 1. **Context7** (plugin): Library docs, code examples, API references (check first)
-2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `product-tactician` and `product-strategist` agents.
+2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `tactician` and `strategist` agents.
 3. **Exa**: General web research (fallback for non-code queries)
 
 ## Decision Capture

@@ -11,16 +11,16 @@ MACBOOK="$SCRIPT_DIR"
 source "$MACBOOK/.personal/config.sh" 2>/dev/null || true
 
 # Shared agents (canonical source: .claude/agents/)
-SHARED_AGENTS=(researcher planner implementer reviewer product-strategist product-tactician designer writer)
+SHARED_AGENTS=(researcher planner implementer reviewer strategist tactician designer writer boardroom)
 
 # Core skills (canonical source: .claude/skills/)
-CORE_SKILLS=(commit-review product-lab deep-research security-review shell-conventions)
+CORE_SKILLS=(commit-review decision-lab deep-research security-review shell-conventions board-of-advisors)
 
 # Web project skills (canonical source: config/skills/)
 WEB_SKILLS=(doc-garden design-review design-elevation web-review typescript-conventions entropy-scan init-design-system competitive-audit)
 
 # Shared commands (canonical source: .claude/commands/)
-SHARED_COMMANDS=(deep-research product-lab)
+SHARED_COMMANDS=(deep-research decision-lab advisors)
 
 # Colors
 RED='\033[0;31m'

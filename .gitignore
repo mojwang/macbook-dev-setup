@@ -82,8 +82,8 @@ plan.md
 design-spec.md
 product-brief.md
 
-# Product strategy artifacts (persistent across sessions, not committed)
-/product-lab/
+# Strategist working state (persistent across sessions, not committed; renamed from /product-lab/)
+/decision-lab/
 
 # Skill staleness tracker (local machine state)
 .skill-runs.json
