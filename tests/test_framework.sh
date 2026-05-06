@@ -40,17 +40,17 @@ assert_equals() {
     local actual="$2"
     local message="${3:-Assertion failed}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ "$expected" == "$actual" ]]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  Expected: $expected"
         echo "  Actual: $actual"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -59,16 +59,16 @@ assert_true() {
     local condition="$1"
     local message="${2:-Assertion failed}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if eval "$condition"; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  Condition failed: $condition"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -77,16 +77,16 @@ assert_false() {
     local condition="$1"
     local message="${2:-Assertion failed}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if ! eval "$condition"; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  Condition should have failed: $condition"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -96,17 +96,17 @@ assert_contains() {
     local needle="$2"
     local message="${3:-String should contain substring}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ "$haystack" == *"$needle"* ]]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  String: $haystack"
         echo "  Should contain: $needle"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -115,15 +115,15 @@ assert_file_exists() {
     local file="$1"
     local message="${2:-File should exist}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ -f "$file" ]]; then
         echo -e "${GREEN}✓${NC} $message: $file"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message: $file"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -132,15 +132,15 @@ assert_directory_exists() {
     local dir="$1"
     local message="${2:-Directory should exist}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ -d "$dir" ]]; then
         echo -e "${GREEN}✓${NC} $message: $dir"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message: $dir"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -149,15 +149,15 @@ assert_command_exists() {
     local cmd="$1"
     local message="${2:-Command should exist}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if command -v "$cmd" &>/dev/null; then
         echo -e "${GREEN}✓${NC} $message: $cmd"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message: $cmd"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -183,7 +183,7 @@ run_test_file() {
         source "$test_file"
     else
         echo -e "${RED}Test file not found: $test_file${NC}"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
     fi
 }
 
@@ -230,16 +230,16 @@ assert_empty() {
     local value="$1"
     local message="${2:-Value should be empty}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ -z "$value" ]]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  Value was not empty: $value"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -248,16 +248,16 @@ assert_not_empty() {
     local value="$1"
     local message="${2:-Value should not be empty}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ -n "$value" ]]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  Value was empty"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -267,17 +267,17 @@ assert_not_contains() {
     local needle="$2"
     local message="${3:-String should not contain substring}"
     
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
     
     if [[ "$haystack" != *"$needle"* ]]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  String: $haystack"
         echo "  Should not contain: $needle"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -303,7 +303,7 @@ assert_exit_code() {
     local message="${!#}"
     local cmd_args=("${@:1:$#-1}")
 
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
 
     local actual
     eval "${cmd_args[@]}" >/dev/null 2>&1
@@ -311,13 +311,13 @@ assert_exit_code() {
 
     if [[ "$expected" == "$actual" ]]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  Expected exit code: $expected"
         echo "  Actual exit code: $actual"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -327,24 +327,24 @@ assert_file_contains() {
     local needle="$2"
     local message="${3:-File should contain string}"
 
-    ((TEST_COUNT++))
+    : $((TEST_COUNT++))
 
     if [[ ! -f "$file" ]]; then
         echo -e "${RED}✗${NC} $message"
         echo "  File not found: $file"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 
     if grep -qF "$needle" "$file"; then
         echo -e "${GREEN}✓${NC} $message"
-        ((PASSED_COUNT++))
+        : $((PASSED_COUNT++))
         return 0
     else
         echo -e "${RED}✗${NC} $message"
         echo "  File: $file"
         echo "  Should contain: $needle"
-        ((FAILED_COUNT++))
+        : $((FAILED_COUNT++))
         return 1
     fi
 }
@@ -362,15 +362,15 @@ skip_test() {
 pass_test() {
     local message="$1"
     echo -e "${GREEN}✓${NC} $message"
-    ((PASSED_COUNT++))
-    ((TEST_COUNT++))
+    : $((PASSED_COUNT++))
+    : $((TEST_COUNT++))
 }
 
 fail_test() {
     local message="$1"
     echo -e "${RED}✗${NC} $message"
-    ((FAILED_COUNT++))
-    ((TEST_COUNT++))
+    : $((FAILED_COUNT++))
+    : $((TEST_COUNT++))
 }
 
 print_test_summary() {
