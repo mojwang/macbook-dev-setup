@@ -324,6 +324,88 @@ assert_file_contains "$results_dir/installed.txt" 'pkg`id`' \
 cleanup_mocks brew
 rm -rf "$results_dir"
 
+# ── Test: Top-level helpers + diagnostic + signal-safe temp (commit 3) ──
+
+describe "Top-Level Helpers + Diagnostic + Signal-Safe Temp"
+
+it "should expose _install_one_cask at top level (issue #3)"
+# After sourcing install-packages.sh, _install_one_cask should be defined
+# AND exported (so xargs subshells can call it). Previously it was nested
+# inside install_packages() and would silently disappear if set -e fired
+# before the nested definition was reached.
+if declare -F _install_one_cask >/dev/null; then
+    pass_test "_install_one_cask is defined at source time"
+else
+    fail_test "_install_one_cask should be defined at source time"
+fi
+
+# Confirm it's exported (visible in subshells)
+exported_in_subshell=$(bash -c 'declare -F _install_one_cask >/dev/null && echo "yes" || echo "no"')
+assert_equals "yes" "$exported_in_subshell" "_install_one_cask should be exported to subshells"
+
+it "should run cask install with same success/failure semantics as formula"
+results_dir=$(mktemp -d)
+touch "$results_dir/installed.txt" "$results_dir/failed.txt"
+
+brew() { return 0; }  # mock cask install success
+export -f brew
+
+_install_one_cask "test-cask" "$results_dir"
+assert_file_contains "$results_dir/installed.txt" "test-cask" "Successful cask install recorded"
+
+cleanup_mocks brew
+rm -rf "$results_dir"
+
+it "should fire formula-as-cask diagnostic when failed formula is actually a cask (issue #2)"
+# _warn_if_formula_is_cask runs `brew info --cask "$pkg"` and emits a
+# print_warning if it succeeds. Mock brew so `brew info --cask X` succeeds
+# (i.e., X IS a known cask), then verify the warning fires to stderr.
+brew() {
+    if [[ "$1" == "info" && "$2" == "--cask" ]]; then
+        return 0   # X is a cask
+    fi
+    return 1
+}
+export -f brew
+
+# Capture warning output
+warning_output=$(_warn_if_formula_is_cask "visual-studio-code" 2>&1)
+if [[ "$warning_output" == *"appears to be a cask"* ]]; then
+    pass_test "Diagnostic emitted when failed formula is actually a cask"
+else
+    fail_test "Expected diagnostic about cask misclassification, got: $warning_output"
+fi
+
+cleanup_mocks brew
+
+it "should NOT fire diagnostic when failed formula is genuinely just a missing formula"
+brew() { return 1; }   # neither formula nor cask works
+export -f brew
+
+quiet_output=$(_warn_if_formula_is_cask "nonexistent-pkg" 2>&1)
+if [[ -z "$quiet_output" ]]; then
+    pass_test "No diagnostic when package isn't a cask"
+else
+    fail_test "Expected no output, got: $quiet_output"
+fi
+
+cleanup_mocks brew
+
+it "should use safe_mktemp_dir when signal-safety lib is loaded (issue #4)"
+# After sourcing install-packages.sh, safe_mktemp_dir should be available
+# (sourced from lib/signal-safety.sh)
+if declare -F safe_mktemp_dir >/dev/null; then
+    pass_test "safe_mktemp_dir is available after sourcing install-packages.sh"
+else
+    fail_test "safe_mktemp_dir should be sourced via signal-safety.sh"
+fi
+
+if declare -F setup_cleanup >/dev/null; then
+    pass_test "setup_cleanup is available for trap registration"
+else
+    fail_test "setup_cleanup should be sourced via signal-safety.sh"
+fi
+
 # ── Test: Collect-then-install pattern ──
 
 describe "Collect-Then-Install Pattern"

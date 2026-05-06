@@ -12,6 +12,14 @@ else
     _INSTALL_PACKAGES_SOURCED=true
 fi
 
+# Source signal-safe temp-file helpers (safe_mktemp_dir + setup_cleanup).
+# Provides automatic temp-resource cleanup on EXIT/INT/TERM/HUP/QUIT.
+_SIGNAL_SAFETY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/signal-safety.sh"
+if [[ -f "$_SIGNAL_SAFETY_LIB" ]]; then
+    # shellcheck source=../lib/signal-safety.sh
+    source "$_SIGNAL_SAFETY_LIB"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -34,7 +42,7 @@ print_success() {
 PARALLEL_FORMULAE="${SETUP_PARALLEL_FORMULAE:-4}"
 PARALLEL_CASKS="${SETUP_PARALLEL_CASKS:-2}"
 
-# Install a single formula, logging result to a temp dir
+# Install a single formula, logging result to a temp dir.
 # Usage: _install_one_formula <formula> <results_dir>
 _install_one_formula() {
     local formula="$1"
@@ -49,6 +57,38 @@ _install_one_formula() {
     fi
 }
 export -f _install_one_formula
+
+# Install a single cask, logging result to a temp dir.
+# Defined at top level (issue #3) — was originally nested inside
+# install_packages() and `export -f`d there. If `set -e` aborted before the
+# nested definition was reached, the function would never export and all
+# parallel cask installs would silently fail with "command not found".
+# Usage: _install_one_cask <cask> <results_dir>
+_install_one_cask() {
+    local cask="$1"
+    local results_dir="$2"
+
+    if HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask "$cask" &>/dev/null; then
+        echo "$cask" >> "$results_dir/installed.txt"
+        echo -e "${GREEN}✅ $cask${NC}"
+    else
+        echo "$cask" >> "$results_dir/failed.txt"
+        echo -e "${YELLOW}⚠️  Failed: $cask${NC}"
+    fi
+}
+export -f _install_one_cask
+
+# Diagnostic: when a formula install fails, check whether the package is
+# actually a cask. If yes, emit a hint that the Brewfile may have it under
+# the wrong category. Restored from commit 03c80dc (was dropped during the
+# parallel rewrite — issue #2).
+_warn_if_formula_is_cask() {
+    local pkg="$1"
+    if brew info --cask "$pkg" &>/dev/null; then
+        print_warning "  ↳ '$pkg' appears to be a cask. Consider updating Brewfile: cask \"$pkg\""
+    fi
+}
+
 # Export colors for subshells
 export GREEN YELLOW RED NC
 
@@ -90,7 +130,14 @@ install_packages() {
     if [[ ${#formulae_to_install[@]} -gt 0 ]]; then
         echo "Installing ${#formulae_to_install[@]} formulae (${PARALLEL_FORMULAE} parallel)..."
         local results_dir
-        results_dir=$(mktemp -d)
+        # Use safe_mktemp_dir so signal-safe cleanup removes this on
+        # EXIT/INT/TERM (issue #4). Falls back to plain mktemp -d if the
+        # signal-safety lib couldn't be sourced.
+        if declare -F safe_mktemp_dir >/dev/null; then
+            results_dir=$(safe_mktemp_dir "install-packages-formulae.XXXXXX")
+        else
+            results_dir=$(mktemp -d)
+        fi
         touch "$results_dir/installed.txt" "$results_dir/failed.txt"
 
         # Safe pattern: -n1 (one input per invocation, no -I{} text-substitution
@@ -104,9 +151,14 @@ install_packages() {
                 bash -c '_install_one_formula "$2" "$1"' _ "$results_dir" \
             || true
 
-        # Collect failures from temp-file results (authoritative — not xargs exit)
+        # Collect failures from temp-file results (authoritative — not xargs exit).
+        # For each failure, run the formula-as-cask diagnostic (issue #2): some
+        # Brewfile entries land under `brew "X"` when they should be `cask "X"`.
         while IFS= read -r pkg; do
-            [[ -n "$pkg" ]] && failed_packages+=("brew \"$pkg\"")
+            if [[ -n "$pkg" ]]; then
+                failed_packages+=("brew \"$pkg\"")
+                _warn_if_formula_is_cask "$pkg"
+            fi
         done < "$results_dir/failed.txt"
 
         local installed_count
@@ -154,22 +206,14 @@ install_packages() {
     if [[ ${#casks_to_install[@]} -gt 0 ]]; then
         echo "Installing ${#casks_to_install[@]} casks (${PARALLEL_CASKS} parallel)..."
         local cask_results_dir
-        cask_results_dir=$(mktemp -d)
+        # Use signal-safe temp dir creation (issue #4). _install_one_cask is
+        # defined at top level (issue #3) so we don't redefine it here.
+        if declare -F safe_mktemp_dir >/dev/null; then
+            cask_results_dir=$(safe_mktemp_dir "install-packages-casks.XXXXXX")
+        else
+            cask_results_dir=$(mktemp -d)
+        fi
         touch "$cask_results_dir/installed.txt" "$cask_results_dir/failed.txt"
-
-        # Helper for cask installation
-        _install_one_cask() {
-            local cask="$1"
-            local results_dir="$2"
-            if HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask "$cask" &>/dev/null; then
-                echo "$cask" >> "$results_dir/installed.txt"
-                echo -e "${GREEN}✅ $cask${NC}"
-            else
-                echo "$cask" >> "$results_dir/failed.txt"
-                echo -e "${YELLOW}⚠️  Failed: $cask${NC}"
-            fi
-        }
-        export -f _install_one_cask
 
         # Safe pattern + failure-tolerant exit (see formula install above for rationale)
         printf '%s\n' "${casks_to_install[@]}" | \
@@ -217,6 +261,11 @@ if [[ "$_INSTALL_PACKAGES_SOURCED" == "false" ]]; then
     if [[ ! -f "$BREWFILE" ]]; then
         print_error "Brewfile not found at $BREWFILE"
         exit 1
+    fi
+
+    # Register signal-safe cleanup so temp dirs are removed on interrupt (issue #4)
+    if declare -F setup_cleanup >/dev/null; then
+        setup_cleanup default_cleanup
     fi
 
     echo "Installing packages from Brewfile..."
