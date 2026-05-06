@@ -50,7 +50,12 @@ jobs:
             echo "copilot_feedback=present" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: anthropics/claude-code-action@v1
+      # Pinned to v1.0.112 (2026-05-04) — v1.0.113 (released 2026-05-06)
+      # has a regression: "Internal error: directory mismatch for directory
+      # tsconfig.json" causes the action to fail at startup. Restore to @v1
+      # once Anthropic ships a fix (likely v1.0.114+).
+      # Tracking: https://github.com/anthropics/claude-code-action/issues
+      - uses: anthropics/claude-code-action@v1.0.112
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
