@@ -140,6 +140,30 @@ _preflight_taps() {
     done < "$brewfile"
 }
 
+# Default concurrency for `brew fetch` parallel-download phase (Homebrew 4.5+).
+# Higher than PARALLEL_FORMULAE because fetches are pure network I/O — no
+# shared install-state contention. Override via PREFETCH_CONCURRENCY env var.
+PREFETCH_CONCURRENCY="${PREFETCH_CONCURRENCY:-8}"
+
+# Pre-fetch bottles for a list of formulae before the parallel install pass.
+# `brew fetch` downloads but does not install, so it has zero install-state
+# contention even at high concurrency. The subsequent install phase runs
+# against a warm cache — much faster + more deterministic.
+# Optimization #6 from the parallel-install hardening plan.
+# Usage: _prefetch_bottles <formula1> <formula2> ...
+_prefetch_bottles() {
+    local count=$#
+    [[ $count -eq 0 ]] && return 0
+
+    echo "Pre-fetching $count bottles (download concurrency: ${PREFETCH_CONCURRENCY})..."
+    # Failure-tolerant: a single fetch failure shouldn't abort the install.
+    # The subsequent install phase will catch any genuinely-broken formulas.
+    HOMEBREW_NO_AUTO_UPDATE=1 \
+    HOMEBREW_DOWNLOAD_CONCURRENCY="$PREFETCH_CONCURRENCY" \
+        brew fetch --quiet --formula "$@" 2>/dev/null \
+        || print_warning "Some bottle prefetches failed (install phase will retry)"
+}
+
 # Function to check if a font cask is already installed
 is_font_installed() {
     local font_name="$1"
@@ -172,6 +196,12 @@ install_packages() {
     done < "$BREWFILE"
 
     if [[ ${#formulae_to_install[@]} -gt 0 ]]; then
+        # Bottle prefetch (optimization #6): download all bottles in parallel
+        # via `brew fetch` — no install-state contention because fetch doesn't
+        # mutate brew's install root. Subsequent install phase runs against
+        # warm cache, eliminating the per-worker download wait.
+        _prefetch_bottles "${formulae_to_install[@]}"
+
         echo "Installing ${#formulae_to_install[@]} formulae (${PARALLEL_FORMULAE} parallel)..."
         local results_dir
         # Use safe_mktemp_dir so signal-safe cleanup removes this on

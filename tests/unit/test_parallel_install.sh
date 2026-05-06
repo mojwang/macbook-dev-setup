@@ -511,6 +511,90 @@ fi
 cleanup_mocks brew
 rm -f "$INSTALL_LOG" "$LIST_LOG"
 
+# ── Test: Bottle prefetch (commit 5) ──
+
+describe "Bottle Prefetch Phase"
+
+it "should expose _prefetch_bottles + PREFETCH_CONCURRENCY"
+if declare -F _prefetch_bottles >/dev/null; then
+    pass_test "_prefetch_bottles is defined"
+else
+    fail_test "_prefetch_bottles should be defined at source time"
+fi
+
+assert_equals "8" "$PREFETCH_CONCURRENCY" "Default PREFETCH_CONCURRENCY should be 8"
+
+it "should call brew fetch with the formula list when given packages"
+FETCH_LOG=$(mktemp)
+brew() {
+    if [[ "$1" == "fetch" ]]; then
+        # Capture: subcommand, flags, package names, and the active env var
+        echo "fetch:$* CONCURRENCY=$HOMEBREW_DOWNLOAD_CONCURRENCY" >> "$FETCH_LOG"
+    fi
+    return 0
+}
+export -f brew
+
+_prefetch_bottles "git" "ripgrep" "jq" >/dev/null 2>&1
+
+# Should have invoked brew fetch exactly once with all 3 formulae
+fetch_invocations=$(wc -l < "$FETCH_LOG" | tr -d ' ')
+assert_equals "1" "$fetch_invocations" "brew fetch should be called once with all formulae"
+
+# Verify the invocation includes all 3 formulae and the concurrency env var
+fetch_line=$(cat "$FETCH_LOG")
+[[ "$fetch_line" == *"git"* ]] && [[ "$fetch_line" == *"ripgrep"* ]] && [[ "$fetch_line" == *"jq"* ]] \
+    && pass_test "All 3 formulae passed to brew fetch" \
+    || fail_test "Expected all 3 formulae in fetch call: $fetch_line"
+
+[[ "$fetch_line" == *"CONCURRENCY=8"* ]] \
+    && pass_test "HOMEBREW_DOWNLOAD_CONCURRENCY=8 set during fetch" \
+    || fail_test "Expected CONCURRENCY=8 env var during fetch: $fetch_line"
+
+cleanup_mocks brew
+rm -f "$FETCH_LOG"
+
+it "should respect PREFETCH_CONCURRENCY override"
+FETCH_LOG=$(mktemp)
+brew() {
+    if [[ "$1" == "fetch" ]]; then
+        echo "CONCURRENCY=$HOMEBREW_DOWNLOAD_CONCURRENCY" >> "$FETCH_LOG"
+    fi
+    return 0
+}
+export -f brew
+
+(
+    export PREFETCH_CONCURRENCY=16
+    # shellcheck source=../../scripts/install-packages.sh
+    source "$_PROJECT_ROOT/scripts/install-packages.sh"
+    _prefetch_bottles "git" >/dev/null 2>&1
+)
+
+fetch_line=$(cat "$FETCH_LOG")
+[[ "$fetch_line" == *"CONCURRENCY=16"* ]] \
+    && pass_test "Custom PREFETCH_CONCURRENCY=16 propagates" \
+    || fail_test "Expected CONCURRENCY=16: $fetch_line"
+
+cleanup_mocks brew
+rm -f "$FETCH_LOG"
+
+it "should noop when given no formulae"
+FETCH_LOG=$(mktemp)
+brew() {
+    [[ "$1" == "fetch" ]] && echo "should not run" >> "$FETCH_LOG"
+    return 0
+}
+export -f brew
+
+_prefetch_bottles >/dev/null 2>&1
+
+fetch_invocations=$(wc -l < "$FETCH_LOG" | tr -d ' ')
+assert_equals "0" "$fetch_invocations" "brew fetch should NOT be called with empty formula list"
+
+cleanup_mocks brew
+rm -f "$FETCH_LOG"
+
 # ── Test: Collect-then-install pattern ──
 
 describe "Collect-Then-Install Pattern"
