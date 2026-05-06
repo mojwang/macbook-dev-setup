@@ -6,22 +6,29 @@
 # Global flag to prevent multiple cleanup calls
 CLEANUP_DONE=false
 
+# Globally-scoped chosen cleanup function name. Must be global (not local
+# inside setup_cleanup) because the trap fires AFTER setup_cleanup returns —
+# at trap-fire time, any local from setup_cleanup is out of scope and
+# safe_cleanup would resolve to the empty string, silently skipping cleanup.
+_SIGNAL_SAFETY_CLEANUP_FUNC=""
+
 # Function to setup signal-safe cleanup
 # Usage: setup_cleanup "cleanup_function_name"
 setup_cleanup() {
-    local cleanup_func="${1:-cleanup}"
-    
+    _SIGNAL_SAFETY_CLEANUP_FUNC="${1:-cleanup}"
+
     # Wrapper to ensure cleanup only runs once
     safe_cleanup() {
         if [[ "$CLEANUP_DONE" == "false" ]]; then
             CLEANUP_DONE=true
-            # Call the actual cleanup function
-            if declare -F "$cleanup_func" >/dev/null; then
-                "$cleanup_func"
+            # Call the actual cleanup function (resolved at trap-fire time
+            # from the global, NOT from setup_cleanup's stack frame).
+            if declare -F "$_SIGNAL_SAFETY_CLEANUP_FUNC" >/dev/null; then
+                "$_SIGNAL_SAFETY_CLEANUP_FUNC"
             fi
         fi
     }
-    
+
     # Register for all common signals that should trigger cleanup
     # EXIT - Normal script termination
     # INT  - Interrupt signal (Ctrl+C)

@@ -212,11 +212,33 @@ is_font_installed() {
     brew list --cask 2>/dev/null | grep -q "^${font_name}$"
 }
 
+# Validate that PARALLEL_FORMULAE / PARALLEL_CASKS are positive integers.
+# Without this, an invalid value would cause `xargs -P <invalid>` to print a
+# usage error and exit non-zero — which our `|| true` would then swallow,
+# leading to a silent no-op install and an incorrect "Installed 0" success
+# path. Treat invalid worker counts as fatal so misconfiguration surfaces
+# loudly (per Copilot review on PR #108).
+_validate_worker_counts() {
+    if ! [[ "$PARALLEL_FORMULAE" =~ ^[1-9][0-9]*$ ]]; then
+        print_error "PARALLEL_FORMULAE must be a positive integer (got: '$PARALLEL_FORMULAE')"
+        return 1
+    fi
+    if ! [[ "$PARALLEL_CASKS" =~ ^[1-9][0-9]*$ ]]; then
+        print_error "PARALLEL_CASKS must be a positive integer (got: '$PARALLEL_CASKS')"
+        return 1
+    fi
+    return 0
+}
+
 # Parse and install packages with better error handling
 install_packages() {
     local failed_packages=()
     local skipped_fonts=()
-    
+
+    # Validate worker counts BEFORE any xargs invocation. Defense against
+    # misconfiguration that `|| true` would otherwise silently swallow.
+    _validate_worker_counts || return 1
+
     # Pre-flight all taps serially BEFORE any parallel work (mitigation #1)
     _preflight_taps "$BREWFILE"
 

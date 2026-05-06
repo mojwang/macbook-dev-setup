@@ -704,6 +704,98 @@ assert_equals "0" "$fetch_invocations" "brew fetch should NOT be called with emp
 cleanup_mocks brew
 rm -f "$FETCH_LOG"
 
+# ── Test: Worker count validation (Copilot review fix) ──
+
+describe "Worker Count Validation"
+
+it "should expose _validate_worker_counts at top level"
+if declare -F _validate_worker_counts >/dev/null; then
+    pass_test "_validate_worker_counts is defined"
+else
+    fail_test "_validate_worker_counts should be defined at source time"
+fi
+
+it "should pass validation for valid positive integers"
+# Subshell isolates the var assignments; assertion runs in parent shell so
+# pass_test/fail_test counters increment correctly in the test framework.
+if ( PARALLEL_FORMULAE=4 PARALLEL_CASKS=2 _validate_worker_counts ) >/dev/null 2>&1; then
+    pass_test "Validation passes for 4/2"
+else
+    fail_test "Validation should pass for 4/2"
+fi
+
+it "should fail validation for non-numeric PARALLEL_FORMULAE"
+if ( PARALLEL_FORMULAE="four" PARALLEL_CASKS=2 _validate_worker_counts ) >/dev/null 2>&1; then
+    fail_test "Validation should fail for non-numeric formula count"
+else
+    pass_test "Validation rejected non-numeric value"
+fi
+
+it "should fail validation for zero PARALLEL_FORMULAE"
+if ( PARALLEL_FORMULAE=0 PARALLEL_CASKS=2 _validate_worker_counts ) >/dev/null 2>&1; then
+    fail_test "Validation should fail for zero workers"
+else
+    pass_test "Validation rejected 0 workers"
+fi
+
+it "should fail validation for empty PARALLEL_CASKS"
+if ( PARALLEL_FORMULAE=4 PARALLEL_CASKS="" _validate_worker_counts ) >/dev/null 2>&1; then
+    fail_test "Validation should fail for empty cask count"
+else
+    pass_test "Validation rejected empty value"
+fi
+
+it "should fail validation for negative number"
+if ( PARALLEL_FORMULAE=-1 PARALLEL_CASKS=2 _validate_worker_counts ) >/dev/null 2>&1; then
+    fail_test "Validation should fail for negative formula count"
+else
+    pass_test "Validation rejected negative value"
+fi
+
+# ── Test: signal-safety.sh setup_cleanup scope fix (Copilot review) ──
+
+describe "Signal-Safety setup_cleanup Scope Fix"
+
+it "should resolve cleanup function from global, not from local scope"
+# The original bug: cleanup_func was `local` inside setup_cleanup, so when
+# the trap fired AFTER setup_cleanup returned, the variable was out of
+# scope and the cleanup function never ran. Fix: store the function name
+# in _SIGNAL_SAFETY_CLEANUP_FUNC (global). Verify by simulating trap-fire.
+#
+# Marker files communicate state out of the subshell so the assertions
+# (which need parent-shell counter increments) can run with the right info.
+_marker_global_set=$(mktemp)
+_marker_cleanup_ran=$(mktemp)
+rm -f "$_marker_global_set" "$_marker_cleanup_ran"
+
+(
+    CLEANUP_DONE=false
+    _SIGNAL_SAFETY_CLEANUP_FUNC=""
+
+    my_test_cleanup() { touch "$_marker_cleanup_ran"; }
+
+    setup_cleanup my_test_cleanup
+    [[ "$_SIGNAL_SAFETY_CLEANUP_FUNC" == "my_test_cleanup" ]] && touch "$_marker_global_set"
+
+    # Simulate trap-fire by calling safe_cleanup directly (what the trap
+    # does at EXIT/INT/TERM time, AFTER setup_cleanup has returned)
+    safe_cleanup
+)
+
+if [[ -f "$_marker_global_set" ]]; then
+    pass_test "_SIGNAL_SAFETY_CLEANUP_FUNC global set after setup_cleanup"
+else
+    fail_test "_SIGNAL_SAFETY_CLEANUP_FUNC global was NOT set (regression of scope fix)"
+fi
+
+if [[ -f "$_marker_cleanup_ran" ]]; then
+    pass_test "Cleanup function ran when trap fired (global scope works)"
+else
+    fail_test "Cleanup function did NOT run — global scope fix broken"
+fi
+
+rm -f "$_marker_global_set" "$_marker_cleanup_ran"
+
 # ── Test: Collect-then-install pattern ──
 
 describe "Collect-Then-Install Pattern"
