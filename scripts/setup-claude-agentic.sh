@@ -914,7 +914,7 @@ Project init creates:
     git repo                            (initialized if not present)
     CLAUDE.md                           project template (customize for your stack)
     README.md                           minimal skeleton (if not present)
-    .claude/agents/                     product-tactician, researcher, planner, implementer, reviewer, designer
+    .claude/agents/                     boardroom, designer, implementer, planner, reflector, researcher, reviewer, skeptic, strategist, tactician, writer
     .claude/skills/                     base skills + type-specific skills
     .claude/settings.json               type-specific hooks (merged with existing)
     .claude-agents.json                 (only if not present)

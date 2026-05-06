@@ -2,7 +2,9 @@
 set -e
 
 # Test Agent Workflows Script
-# Validates the 7-agent orchestration pattern (product-strategist → product-tactician → researcher → planner → implementer → reviewer → designer)
+# Validates the agent orchestration pattern (researcher → planner → implementer → reviewer)
+# Plus per-agent definition checks for the full roster (boardroom, designer, implementer,
+# planner, reflector, researcher, reviewer, skeptic, strategist, tactician, writer).
 
 source "$(dirname "$0")/../../lib/common.sh"
 
@@ -11,7 +13,7 @@ TEST_MODE="${1:-all}"
 print_banner() {
     echo ""
     echo "════════════════════════════════════════════════"
-    echo "    Agent Workflow Testing Suite (7-Agent)"
+    echo "    Agent Workflow Testing Suite"
     echo "════════════════════════════════════════════════"
     echo ""
 }
@@ -20,7 +22,7 @@ print_banner() {
 test_agent_definitions() {
     print_info "Testing Agent Definitions"
 
-    local agents=("product-strategist" "product-tactician" "researcher" "planner" "implementer" "reviewer" "designer")
+    local agents=("boardroom" "designer" "implementer" "planner" "reflector" "researcher" "reviewer" "skeptic" "strategist" "tactician" "writer")
     local failed=0
 
     for agent in "${agents[@]}"; do

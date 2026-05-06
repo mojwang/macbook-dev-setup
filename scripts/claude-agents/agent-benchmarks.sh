@@ -2,7 +2,7 @@
 set -e
 
 # Agent Benchmarks Script
-# Performance testing for the 6-agent orchestration pattern
+# Performance testing for the 11-agent orchestration pattern
 
 source "$(dirname "$0")/../../lib/common.sh"
 
@@ -13,7 +13,7 @@ OUTPUT_FORMAT="${OUTPUT_FORMAT:-table}"
 print_banner() {
     echo ""
     echo "┌─────────────────────────────────────────────┐"
-    echo "│   Agent Performance Benchmarks (6-Agent)    │"
+    echo "│   Agent Performance Benchmarks (11-Agent)   │"
     echo "└─────────────────────────────────────────────┘"
     echo ""
 }
@@ -159,13 +159,13 @@ generate_report() {
     local report_data=$(cat <<EOF
 {
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-  "architecture": "7-agent (product-strategist, product-tactician, researcher, planner, implementer, reviewer, designer)",
+  "architecture": "11-agent (boardroom, designer, implementer, planner, reflector, researcher, reviewer, skeptic, strategist, tactician, writer)",
   "system": {
     "os": "$(uname -s)",
     "arch": "$(uname -m)",
     "cores": $(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 1)
   },
-  "agents": ["product-strategist", "product-tactician", "researcher", "planner", "implementer", "reviewer", "designer"],
+  "agents": ["boardroom", "designer", "implementer", "planner", "reflector", "researcher", "reviewer", "skeptic", "strategist", "tactician", "writer"],
   "recommendations": [
     "Run multiple implementers in parallel for independent tasks",
     "Skip researcher phase for well-understood areas",
@@ -179,26 +179,34 @@ EOF
         json)  echo "$report_data" ;;
         csv)
             echo "Agent,Role,Isolation"
-            echo "product-strategist,strategy,none"
-            echo "product-tactician,discovery,none"
-            echo "researcher,exploration,none"
-            echo "planner,planning,none"
-            echo "implementer,execution,worktree"
-            echo "reviewer,verification,none"
+            echo "boardroom,advisory,none"
             echo "designer,design,none"
+            echo "implementer,execution,worktree"
+            echo "planner,planning,none"
+            echo "reflector,reflection,none"
+            echo "researcher,exploration,none"
+            echo "reviewer,verification,none"
+            echo "skeptic,critique,none"
+            echo "strategist,strategy,none"
+            echo "tactician,discovery,none"
+            echo "writer,writing,none"
             ;;
         table|*)
-            echo "╔════════════════╤═══════════════╤═══════════╗"
-            echo "║ Agent          │ Role          │ Isolation ║"
-            echo "╠════════════════╪═══════════════╪═══════════╣"
-            echo "║ prod-strategist│ strategy      │ none      ║"
-            echo "║ prod-tactician │ discovery     │ none      ║"
-            echo "║ researcher     │ exploration   │ none      ║"
-            echo "║ planner        │ planning      │ none      ║"
-            echo "║ implementer    │ execution     │ worktree  ║"
-            echo "║ reviewer       │ verification  │ none      ║"
-            echo "║ designer       │ design        │ none      ║"
-            echo "╚════════════════╧═══════════════╧═══════════╝"
+            echo "╔═════════════╤══════════════╤═══════════╗"
+            echo "║ Agent       │ Role         │ Isolation ║"
+            echo "╠═════════════╪══════════════╪═══════════╣"
+            echo "║ boardroom   │ advisory     │ none      ║"
+            echo "║ designer    │ design       │ none      ║"
+            echo "║ implementer │ execution    │ worktree  ║"
+            echo "║ planner     │ planning     │ none      ║"
+            echo "║ reflector   │ reflection   │ none      ║"
+            echo "║ researcher  │ exploration  │ none      ║"
+            echo "║ reviewer    │ verification │ none      ║"
+            echo "║ skeptic     │ critique     │ none      ║"
+            echo "║ strategist  │ strategy     │ none      ║"
+            echo "║ tactician   │ discovery    │ none      ║"
+            echo "║ writer      │ writing      │ none      ║"
+            echo "╚═════════════╧══════════════╧═══════════╝"
             ;;
     esac
     return 0

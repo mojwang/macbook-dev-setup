@@ -707,4 +707,4 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
 
 ## Candidate pool
 
-The candidate pool is admitted with thinner schema. Each candidate gets `id`, `source`, `category`, `status: candidate`, and a one-line `value-add` hint. Full schema is expanded the first time the candidate is summoned. The pool is appended to the same `yaml` block above (continued in Task 2).
+The candidate pool is admitted with thinner schema. Each candidate gets `id`, `source`, `category`, `status: candidate`, and a one-line `value-add` hint. Full schema is expanded the first time the candidate is summoned. The pool is appended to the same `yaml` block above.
