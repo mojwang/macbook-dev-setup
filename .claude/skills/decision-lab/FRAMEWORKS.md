@@ -1,6 +1,6 @@
 # Product Strategy Frameworks
 
-Operational knowledge for the product strategist. These are decision tools — apply them through questions and analysis, never cite them by name in conversation.
+Operational knowledge for the strategist agent. These are decision tools — apply them through questions and analysis, never cite them by name in conversation.
 
 ## Idea Evaluation Engine
 

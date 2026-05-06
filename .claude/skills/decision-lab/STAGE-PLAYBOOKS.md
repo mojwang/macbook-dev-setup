@@ -1,6 +1,6 @@
 # Stage Playbooks
 
-Per-stage decision logic for the product strategist. Each stage has clear entry conditions, a central question, activities, and evidence gates that must be met before advancing.
+Per-stage decision logic for the strategist agent. Each stage has clear entry conditions, a central question, activities, and evidence gates that must be met before advancing.
 
 ---
 

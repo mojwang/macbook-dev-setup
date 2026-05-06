@@ -1,6 +1,6 @@
 # Artifact Templates
 
-Templates for every document the product strategist produces. All artifacts are written to the `decision-lab/` directory. They are persistent across sessions — not ephemeral like `research.md` or `plan.md`.
+Templates for every document the strategist agent produces. All artifacts are written to the `decision-lab/` directory. They are persistent across sessions — not ephemeral like `research.md` or `plan.md`.
 
 ---
 
