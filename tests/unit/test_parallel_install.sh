@@ -406,6 +406,111 @@ else
     fail_test "setup_cleanup should be sourced via signal-safety.sh"
 fi
 
+# ── Test: Pre-flight taps + shared-deps preinstall (commit 4) ──
+
+describe "Pre-Flight Taps + Shared-Deps Preinstall"
+
+it "should expose _preflight_taps and _preinstall_shared_deps at top level"
+if declare -F _preflight_taps >/dev/null; then
+    pass_test "_preflight_taps is defined"
+else
+    fail_test "_preflight_taps should be defined at source time"
+fi
+
+if declare -F _preinstall_shared_deps >/dev/null; then
+    pass_test "_preinstall_shared_deps is defined"
+else
+    fail_test "_preinstall_shared_deps should be defined at source time"
+fi
+
+if [[ "${SHARED_DEPS[*]:-}" == *openssl* ]]; then
+    pass_test "SHARED_DEPS array includes openssl"
+else
+    fail_test "SHARED_DEPS array should include openssl@3"
+fi
+
+it "should pre-flight all taps from a Brewfile in order"
+# Mock brew to capture every `brew tap X` invocation
+TAP_LOG=$(mktemp)
+brew() {
+    if [[ "$1" == "tap" ]]; then
+        echo "$2" >> "$TAP_LOG"
+    fi
+    return 0
+}
+export -f brew
+
+# Brewfile fixture with mixed taps + formulas
+BREWFILE_FIXTURE=$(mktemp)
+cat > "$BREWFILE_FIXTURE" << 'EOF'
+tap "homebrew/autoupdate"
+tap "oven-sh/bun"
+brew "git"
+tap "withgraphite/tap"
+brew "gh"
+EOF
+
+_preflight_taps "$BREWFILE_FIXTURE"
+
+# Verify all 3 taps were processed in file order
+tap_count=$(wc -l < "$TAP_LOG" | tr -d ' ')
+assert_equals "3" "$tap_count" "All 3 taps from Brewfile should be pre-flighted"
+
+# Verify order
+expected_order="homebrew/autoupdate
+oven-sh/bun
+withgraphite/tap"
+actual_order=$(cat "$TAP_LOG")
+assert_equals "$expected_order" "$actual_order" "Taps should be processed in Brewfile order"
+
+cleanup_mocks brew
+rm -f "$TAP_LOG" "$BREWFILE_FIXTURE"
+
+it "should install missing shared deps and skip already-installed ones"
+INSTALL_LOG=$(mktemp)
+LIST_LOG=$(mktemp)
+
+# Mock: pretend openssl@3 and readline are already installed; gmp/libffi/pkg-config are not
+brew() {
+    if [[ "$1" == "list" ]]; then
+        echo "$3" >> "$LIST_LOG"
+        case "$3" in
+            openssl@3|readline) return 0 ;;
+            *) return 1 ;;
+        esac
+    elif [[ "$1" == "install" ]]; then
+        echo "$2" >> "$INSTALL_LOG"
+        return 0
+    fi
+    return 0
+}
+export -f brew
+
+_preinstall_shared_deps >/dev/null 2>&1
+
+# Should have checked all 5 shared deps via `brew list --formula`
+list_count=$(wc -l < "$LIST_LOG" | tr -d ' ')
+assert_equals "5" "$list_count" "Should check all 5 shared deps for presence"
+
+# Should have installed only the 3 missing ones (gmp, libffi, pkg-config) — NOT openssl@3 or readline
+install_count=$(wc -l < "$INSTALL_LOG" | tr -d ' ')
+assert_equals "3" "$install_count" "Should install only the 3 missing shared deps"
+
+# Verify installed list contains the right deps
+installed_set=$(sort < "$INSTALL_LOG")
+expected_set=$(printf '%s\n' "gmp" "libffi" "pkg-config" | sort)
+assert_equals "$expected_set" "$installed_set" "Should install gmp, libffi, pkg-config"
+
+# Verify already-installed deps were NOT reinstalled
+if grep -q '^openssl@3$' "$INSTALL_LOG"; then
+    fail_test "openssl@3 should NOT be reinstalled (was already present)"
+else
+    pass_test "openssl@3 correctly skipped (already installed)"
+fi
+
+cleanup_mocks brew
+rm -f "$INSTALL_LOG" "$LIST_LOG"
+
 # ── Test: Collect-then-install pattern ──
 
 describe "Collect-Then-Install Pattern"

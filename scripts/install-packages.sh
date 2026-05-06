@@ -92,6 +92,54 @@ _warn_if_formula_is_cask() {
 # Export colors for subshells
 export GREEN YELLOW RED NC
 
+# Shared deps that show up as transitive dependencies of many parallel
+# packages. Installing these serially up-front prevents N parallel workers
+# from racing to install the same dep concurrently. Cheap (~20 sec) and
+# usually a net speedup because workers don't queue on shared-dep locks.
+# Mitigation #2 from the parallel-install hardening pass.
+SHARED_DEPS=(openssl@3 readline gmp libffi pkg-config)
+
+# Pre-install shared deps serially. Skip ones already installed.
+# Usage: _preinstall_shared_deps
+_preinstall_shared_deps() {
+    local dep
+    local installed=0 skipped=0
+    for dep in "${SHARED_DEPS[@]}"; do
+        if brew list --formula "$dep" &>/dev/null; then
+            : $((skipped++))
+            continue
+        fi
+        if HOMEBREW_NO_AUTO_UPDATE=1 brew install "$dep" &>/dev/null; then
+            echo -e "  ${GREEN}✓${NC} shared dep: $dep"
+            : $((installed++))
+        else
+            print_warning "  ↳ shared dep $dep failed; parallel installs may queue on this dep"
+        fi
+    done
+    if [[ $installed -gt 0 ]] || [[ $skipped -gt 0 ]]; then
+        echo "Shared deps: $installed installed, $skipped already present"
+    fi
+}
+
+# Pre-flight all taps from a Brewfile serially. Two parallel `brew tap`
+# operations on the same tap can race and leave state inconsistent.
+# Mitigation #1 — extracted from install_packages() so it can be tested
+# independently and called from any entry point.
+# Usage: _preflight_taps <brewfile_path>
+_preflight_taps() {
+    local brewfile="$1"
+    local line tap
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^tap[[:space:]]+\"(.+)\" ]]; then
+            tap="${BASH_REMATCH[1]}"
+            echo "Tapping $tap..."
+            if ! brew tap "$tap" 2>/dev/null; then
+                print_warning "Failed to tap $tap"
+            fi
+        fi
+    done < "$brewfile"
+}
+
 # Function to check if a font cask is already installed
 is_font_installed() {
     local font_name="$1"
@@ -103,17 +151,13 @@ install_packages() {
     local failed_packages=()
     local skipped_fonts=()
     
-    # Process taps first
-    while IFS= read -r line; do
-        if [[ "$line" =~ ^tap[[:space:]]+"(.+)" ]]; then
-            local tap="${BASH_REMATCH[1]}"
-            echo "Tapping $tap..."
-            if ! brew tap "$tap" 2>/dev/null; then
-                print_warning "Failed to tap $tap"
-            fi
-        fi
-    done < "$BREWFILE"
-    
+    # Pre-flight all taps serially BEFORE any parallel work (mitigation #1)
+    _preflight_taps "$BREWFILE"
+
+    # Pre-install shared dependencies serially BEFORE parallel formula install
+    # (mitigation #2). Prevents N parallel workers from racing on common deps.
+    _preinstall_shared_deps
+
     # Process formulae — collect what needs installing, then install in parallel
     local formulae_to_install=()
     while IFS= read -r line; do
