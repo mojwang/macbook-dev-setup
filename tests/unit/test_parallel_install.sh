@@ -226,13 +226,122 @@ rm -rf "$results_dir"
 
 # ── Test: Parallelism configuration (constants from sourced production) ──
 
+describe "Worker Count Auto-Detection (commit 6)"
+
+it "should expose _detect_optimal_formula_workers + _detect_optimal_cask_workers"
+if declare -F _detect_optimal_formula_workers >/dev/null; then
+    pass_test "_detect_optimal_formula_workers is defined"
+else
+    fail_test "_detect_optimal_formula_workers should be defined at source time"
+fi
+
+if declare -F _detect_optimal_cask_workers >/dev/null; then
+    pass_test "_detect_optimal_cask_workers is defined"
+else
+    fail_test "_detect_optimal_cask_workers should be defined at source time"
+fi
+
+it "should compute formula workers as min(perf_cores, mem_gb/2), floor 2, ceiling 16"
+# Mock sysctl to simulate different machines
+sysctl() {
+    case "$2" in
+        hw.perflevel0.physicalcpu) echo "$_MOCK_PERF_CORES" ;;
+        hw.physicalcpu)            echo "$_MOCK_PHYS_CORES" ;;
+        hw.memsize)                echo "$_MOCK_MEM_BYTES" ;;
+    esac
+    return 0
+}
+export -f sysctl
+
+# M4 Max: 12 perf cores, 128GB RAM → mem_cap=64, min(12, 64) = 12
+_MOCK_PERF_CORES=12; _MOCK_PHYS_CORES=16; _MOCK_MEM_BYTES=137438953472
+result=$(_detect_optimal_formula_workers)
+assert_equals "12" "$result" "M4 Max (12 perf, 128GB) should yield 12 workers"
+
+# M1 8GB: 4 perf cores, 8GB RAM → mem_cap=4, min(4, 4) = 4
+_MOCK_PERF_CORES=4; _MOCK_PHYS_CORES=8; _MOCK_MEM_BYTES=8589934592
+result=$(_detect_optimal_formula_workers)
+assert_equals "4" "$result" "M1 (4 perf, 8GB) should yield 4 workers"
+
+# M1 Pro 16GB: 6 perf cores, 16GB RAM → mem_cap=8, min(6, 8) = 6
+_MOCK_PERF_CORES=6; _MOCK_PHYS_CORES=10; _MOCK_MEM_BYTES=17179869184
+result=$(_detect_optimal_formula_workers)
+assert_equals "6" "$result" "M1 Pro (6 perf, 16GB) should yield 6 workers"
+
+# Memory-constrained edge case: 4 perf cores, 2GB RAM → mem_cap=1 → floor=2
+_MOCK_PERF_CORES=4; _MOCK_PHYS_CORES=4; _MOCK_MEM_BYTES=2147483648
+result=$(_detect_optimal_formula_workers)
+assert_equals "2" "$result" "Low RAM machine should hit floor of 2 workers"
+
+# Massive perf cores: 32 perf, 256GB → would compute 32, capped at ceiling 16
+_MOCK_PERF_CORES=32; _MOCK_PHYS_CORES=32; _MOCK_MEM_BYTES=274877906944
+result=$(_detect_optimal_formula_workers)
+assert_equals "16" "$result" "Huge machine should hit ceiling of 16 workers"
+
+cleanup_mocks sysctl
+unset _MOCK_PERF_CORES _MOCK_PHYS_CORES _MOCK_MEM_BYTES
+
+it "should fall back to physical cores when perflevel0 unavailable (Intel)"
+sysctl() {
+    case "$2" in
+        hw.perflevel0.physicalcpu) return 1 ;;  # Intel: this key doesn't exist
+        hw.physicalcpu)            echo "8" ;;
+        hw.memsize)                echo "34359738368" ;;  # 32GB
+    esac
+    return 0
+}
+export -f sysctl
+
+# Intel 8-core 32GB: perflevel0 fails → falls back to physical=8, mem_cap=16, min(8,16)=8
+result=$(_detect_optimal_formula_workers)
+assert_equals "8" "$result" "Intel fallback should use physical cores when perflevel0 fails"
+
+cleanup_mocks sysctl
+
+it "should compute cask workers as min(physical/2, 4), floor 2"
+sysctl() {
+    case "$2" in
+        hw.physicalcpu) echo "$_MOCK_PHYS" ;;
+    esac
+    return 0
+}
+export -f sysctl
+
+# 16 physical → 16/2=8, capped at ceiling 4
+_MOCK_PHYS=16
+result=$(_detect_optimal_cask_workers)
+assert_equals "4" "$result" "16-core machine should hit cask ceiling of 4"
+
+# 8 physical → 8/2=4
+_MOCK_PHYS=8
+result=$(_detect_optimal_cask_workers)
+assert_equals "4" "$result" "8-core machine should yield 4 cask workers"
+
+# 4 physical → 4/2=2
+_MOCK_PHYS=4
+result=$(_detect_optimal_cask_workers)
+assert_equals "2" "$result" "4-core machine should yield 2 cask workers"
+
+# 2 physical → 2/2=1, hits floor 2
+_MOCK_PHYS=2
+result=$(_detect_optimal_cask_workers)
+assert_equals "2" "$result" "Low-core machine should hit cask floor of 2"
+
+cleanup_mocks sysctl
+unset _MOCK_PHYS
+
 describe "Parallelism Configuration (production constants)"
 
-it "should expose default parallelism values from production"
-# PARALLEL_FORMULAE and PARALLEL_CASKS are set when the script is sourced.
-# Default values come from production's `${SETUP_PARALLEL_*:-N}` lines.
-assert_equals "4" "$PARALLEL_FORMULAE" "Default formula parallelism should be 4"
-assert_equals "2" "$PARALLEL_CASKS" "Default cask parallelism should be 2"
+it "should auto-detect parallelism within sane bounds (commit 6)"
+# After commit 6, defaults come from _detect_optimal_*_workers() which read
+# sysctl. Bounds: formulae in [2, 16], casks in [2, 4].
+[[ "$PARALLEL_FORMULAE" -ge 2 && "$PARALLEL_FORMULAE" -le 16 ]] \
+    && pass_test "PARALLEL_FORMULAE in [2, 16] (got $PARALLEL_FORMULAE)" \
+    || fail_test "PARALLEL_FORMULAE out of bounds: $PARALLEL_FORMULAE"
+
+[[ "$PARALLEL_CASKS" -ge 2 && "$PARALLEL_CASKS" -le 4 ]] \
+    && pass_test "PARALLEL_CASKS in [2, 4] (got $PARALLEL_CASKS)" \
+    || fail_test "PARALLEL_CASKS out of bounds: $PARALLEL_CASKS"
 
 it "should respect custom parallelism env vars when re-sourced"
 # Re-source with overrides to verify the env var wiring works in production

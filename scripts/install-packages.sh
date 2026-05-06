@@ -38,9 +38,51 @@ print_success() {
     echo -e "${GREEN}✅ $1${NC}"
 }
 
-# Parallel installation settings
-PARALLEL_FORMULAE="${SETUP_PARALLEL_FORMULAE:-4}"
-PARALLEL_CASKS="${SETUP_PARALLEL_CASKS:-2}"
+# ── Worker count auto-detection ──────────────────────────────────────────
+#
+# Defaults are derived from machine capability when not overridden:
+#   - Formulae:  perf-core count, capped by RAM (≥2GB headroom per worker
+#                for compile-heavy formulas like gcc/llvm). Floor 2,
+#                ceiling 16.
+#   - Casks:     half of physical cores (cask installs are I/O-bound, not
+#                CPU-bound). Floor 2, ceiling 4.
+#
+# Overrides via env var are preserved (existing behavior):
+#   SETUP_PARALLEL_FORMULAE=N
+#   SETUP_PARALLEL_CASKS=N
+
+# Detect optimal formula worker count from perf-core count + memory headroom.
+# Apple Silicon: hw.perflevel0.physicalcpu = perf cores.
+# Intel / fallback: hw.physicalcpu.
+_detect_optimal_formula_workers() {
+    local perf_cores mem_gb mem_cap workers
+    perf_cores=$(sysctl -n hw.perflevel0.physicalcpu 2>/dev/null) \
+        || perf_cores=$(sysctl -n hw.physicalcpu 2>/dev/null) \
+        || perf_cores=4
+
+    mem_gb=$(($(sysctl -n hw.memsize 2>/dev/null) / 1073741824))
+    [[ -z "$mem_gb" || "$mem_gb" -lt 1 ]] && mem_gb=8
+    mem_cap=$((mem_gb / 2))
+
+    workers=$perf_cores
+    [[ $workers -gt $mem_cap ]] && workers=$mem_cap
+    [[ $workers -lt 2 ]] && workers=2
+    [[ $workers -gt 16 ]] && workers=16
+    echo "$workers"
+}
+
+# Detect optimal cask worker count. Casks are I/O-bound (extract + copy).
+_detect_optimal_cask_workers() {
+    local cores workers
+    cores=$(sysctl -n hw.physicalcpu 2>/dev/null) || cores=4
+    workers=$((cores / 2))
+    [[ $workers -lt 2 ]] && workers=2
+    [[ $workers -gt 4 ]] && workers=4
+    echo "$workers"
+}
+
+PARALLEL_FORMULAE="${SETUP_PARALLEL_FORMULAE:-$(_detect_optimal_formula_workers)}"
+PARALLEL_CASKS="${SETUP_PARALLEL_CASKS:-$(_detect_optimal_cask_workers)}"
 
 # Install a single formula, logging result to a temp dir.
 # Usage: _install_one_formula <formula> <results_dir>
