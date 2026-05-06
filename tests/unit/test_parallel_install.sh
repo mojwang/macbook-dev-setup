@@ -245,6 +245,85 @@ it "should respect custom parallelism env vars when re-sourced"
     assert_equals "3" "$PARALLEL_CASKS" "Custom cask parallelism should be 3"
 )
 
+# ── Test: xargs failure handling under set -e (issue #1, #7) ──
+
+describe "Parallel xargs Failure Handling Under set -e"
+
+it "should preserve failure-collection when one parallel install fails (set -e safety)"
+results_dir=$(mktemp -d)
+touch "$results_dir/installed.txt" "$results_dir/failed.txt"
+
+# Mock brew: succeed for "good-pkg", fail for "broken-pkg"
+brew() {
+    if [[ "$2" == "broken-pkg" ]]; then
+        return 1
+    fi
+    return 0
+}
+export -f brew
+
+# Mimic the production xargs invocation pattern (safe form: -n1 + positional
+# args + || true). Without `|| true`, set -e would kill us when broken-pkg's
+# install fails inside xargs.
+printf '%s\n' "good-pkg" "broken-pkg" "good-pkg-2" | \
+    xargs -P 2 -n1 \
+        bash -c '_install_one_formula "$2" "$1"' _ "$results_dir" \
+    || true
+
+# Both temp files should be populated
+assert_file_contains "$results_dir/installed.txt" "good-pkg" \
+    "Successful installs should be in installed.txt"
+assert_file_contains "$results_dir/failed.txt" "broken-pkg" \
+    "Failed install should be in failed.txt"
+
+# Code reached here — set -e didn't abort us. Test the assertion.
+installed_count=$(wc -l < "$results_dir/installed.txt" | tr -d ' ')
+failed_count=$(wc -l < "$results_dir/failed.txt" | tr -d ' ')
+assert_equals "2" "$installed_count" "Should record 2 successful installs"
+assert_equals "1" "$failed_count" "Should record 1 failed install"
+
+cleanup_mocks brew
+rm -rf "$results_dir"
+
+it "should handle package names with shell metacharacters safely (issue #7)"
+# Issue #7: PR #108's original `xargs -I{}` pattern text-substitutes {} into
+# the command string — package names with shell metacharacters (;, &, |, $(),
+# backticks) would be interpreted by the shell. Switch to `xargs -n1` + bash
+# positional args, which passes each input as a single quoted argv element.
+#
+# Note: spaces in package names would still be split by xargs's default
+# whitespace delimiter — but Homebrew package names never contain spaces
+# (lowercase + hyphens + digits only), so this test focuses on shell
+# metachars that ARE realistic in malformed Brewfiles.
+results_dir=$(mktemp -d)
+touch "$results_dir/installed.txt" "$results_dir/failed.txt"
+
+brew() { return 0; }
+export -f brew
+
+# Package names with shell metacharacters that the OLD -I{} pattern would
+# have evaluated. With the safe -n1 pattern, they should be passed as
+# literal strings to brew install (and recorded as-is in installed.txt).
+printf '%s\n' 'pkg;evil' 'pkg&bg' 'pkg$(whoami)' 'pkg`id`' | \
+    xargs -P 1 -n1 \
+        bash -c '_install_one_formula "$2" "$1"' _ "$results_dir" \
+    || true
+
+installed_count=$(wc -l < "$results_dir/installed.txt" | tr -d ' ')
+assert_equals "4" "$installed_count" \
+    "All 4 metachar packages should install as single literal names"
+assert_file_contains "$results_dir/installed.txt" 'pkg;evil' \
+    "Semicolon should be preserved as literal"
+assert_file_contains "$results_dir/installed.txt" 'pkg&bg' \
+    "Ampersand should be preserved as literal"
+assert_file_contains "$results_dir/installed.txt" 'pkg$(whoami)' \
+    "Command substitution should NOT execute (preserved as literal)"
+assert_file_contains "$results_dir/installed.txt" 'pkg`id`' \
+    "Backtick command substitution should NOT execute (preserved as literal)"
+
+cleanup_mocks brew
+rm -rf "$results_dir"
+
 # ── Test: Collect-then-install pattern ──
 
 describe "Collect-Then-Install Pattern"

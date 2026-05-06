@@ -93,10 +93,18 @@ install_packages() {
         results_dir=$(mktemp -d)
         touch "$results_dir/installed.txt" "$results_dir/failed.txt"
 
+        # Safe pattern: -n1 (one input per invocation, no -I{} text-substitution
+        # which would word-split package names containing spaces or shell
+        # metacharacters). `|| true` swallows xargs's non-zero exit when any
+        # parallel install fails — failure tracking happens via the temp-file
+        # results below, not via xargs's exit code. Without `|| true`, set -e
+        # would abort the script before failure collection runs.
         printf '%s\n' "${formulae_to_install[@]}" | \
-            xargs -P "$PARALLEL_FORMULAE" -I{} bash -c '_install_one_formula "$@"' _ {} "$results_dir"
+            xargs -P "$PARALLEL_FORMULAE" -n1 \
+                bash -c '_install_one_formula "$2" "$1"' _ "$results_dir" \
+            || true
 
-        # Collect failures
+        # Collect failures from temp-file results (authoritative — not xargs exit)
         while IFS= read -r pkg; do
             [[ -n "$pkg" ]] && failed_packages+=("brew \"$pkg\"")
         done < "$results_dir/failed.txt"
@@ -163,8 +171,11 @@ install_packages() {
         }
         export -f _install_one_cask
 
+        # Safe pattern + failure-tolerant exit (see formula install above for rationale)
         printf '%s\n' "${casks_to_install[@]}" | \
-            xargs -P "$PARALLEL_CASKS" -I{} bash -c '_install_one_cask "$@"' _ {} "$cask_results_dir"
+            xargs -P "$PARALLEL_CASKS" -n1 \
+                bash -c '_install_one_cask "$2" "$1"' _ "$cask_results_dir" \
+            || true
 
         while IFS= read -r pkg; do
             [[ -n "$pkg" ]] && failed_packages+=("cask \"$pkg\"")
