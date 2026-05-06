@@ -2,7 +2,7 @@
 set -e
 
 # Agent Benchmarks Script
-# Performance testing for the 6-agent orchestration pattern
+# Performance testing for the 11-agent orchestration pattern
 
 source "$(dirname "$0")/../../lib/common.sh"
 
@@ -13,7 +13,7 @@ OUTPUT_FORMAT="${OUTPUT_FORMAT:-table}"
 print_banner() {
     echo ""
     echo "┌─────────────────────────────────────────────┐"
-    echo "│   Agent Performance Benchmarks (6-Agent)    │"
+    echo "│   Agent Performance Benchmarks (11-Agent)   │"
     echo "└─────────────────────────────────────────────┘"
     echo ""
 }
@@ -192,17 +192,21 @@ EOF
             echo "writer,writing,none"
             ;;
         table|*)
-            echo "╔════════════════╤═══════════════╤═══════════╗"
-            echo "║ Agent          │ Role          │ Isolation ║"
-            echo "╠════════════════╪═══════════════╪═══════════╣"
-            echo "║ prod-strategist│ strategy      │ none      ║"
-            echo "║ prod-tactician │ discovery     │ none      ║"
-            echo "║ researcher     │ exploration   │ none      ║"
-            echo "║ planner        │ planning      │ none      ║"
-            echo "║ implementer    │ execution     │ worktree  ║"
-            echo "║ reviewer       │ verification  │ none      ║"
-            echo "║ designer       │ design        │ none      ║"
-            echo "╚════════════════╧═══════════════╧═══════════╝"
+            echo "╔═════════════╤══════════════╤═══════════╗"
+            echo "║ Agent       │ Role         │ Isolation ║"
+            echo "╠═════════════╪══════════════╪═══════════╣"
+            echo "║ boardroom   │ advisory     │ none      ║"
+            echo "║ designer    │ design       │ none      ║"
+            echo "║ implementer │ execution    │ worktree  ║"
+            echo "║ planner     │ planning     │ none      ║"
+            echo "║ reflector   │ reflection   │ none      ║"
+            echo "║ researcher  │ exploration  │ none      ║"
+            echo "║ reviewer    │ verification │ none      ║"
+            echo "║ skeptic     │ critique     │ none      ║"
+            echo "║ strategist  │ strategy     │ none      ║"
+            echo "║ tactician   │ discovery    │ none      ║"
+            echo "║ writer      │ writing      │ none      ║"
+            echo "╚═════════════╧══════════════╧═══════════╝"
             ;;
     esac
     return 0
