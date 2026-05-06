@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
+set -e
 
-# Unit tests for parallel brew installation in scripts/install-packages.sh
-# Tests the parallel helpers, Brewfile parsing, and result collection logic
-# without actually calling brew (mocked).
+# Unit tests for parallel brew installation in scripts/install-packages.sh.
+# Sources the production script directly (which is source-safe via the
+# _INSTALL_PACKAGES_SOURCED guard) so tests exercise real production code,
+# not inline copies.
 
 _TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _PROJECT_ROOT="$(cd "$_TEST_DIR/../.." && pwd)"
 
 source "$_TEST_DIR/../test_framework.sh"
 
-# ── Regex patterns (must be in variables for bash =~ with quotes) ──
+# Source production code — this defines functions, constants, and regex
+# patterns without running the install flow (guarded by the SOURCED check).
+# shellcheck source=../../scripts/install-packages.sh
+source "$_PROJECT_ROOT/scripts/install-packages.sh"
 
+# Regex patterns from production. We mirror them here ONLY for the parsing
+# tests below — production uses inline regex in install_packages(), which
+# isn't exposed as a separate function. If the parsing logic gets
+# extracted to its own helper later, these tests should source that
+# helper instead.
 BREW_PATTERN='^brew[[:space:]]+"(.+)"'
 CASK_PATTERN='^cask[[:space:]]+"(.+)"'
 TAP_PATTERN='^tap[[:space:]]+"(.+)"'
@@ -20,7 +30,6 @@ TAP_PATTERN='^tap[[:space:]]+"(.+)"'
 FIXTURE_DIR=$(mktemp -d /tmp/test_parallel_install.XXXXXX)
 trap 'rm -rf "$FIXTURE_DIR"' EXIT
 
-# Create a minimal test Brewfile
 cat > "$FIXTURE_DIR/Brewfile" << 'EOF'
 tap "homebrew/autoupdate"
 
@@ -34,7 +43,7 @@ cask "arc"
 cask "font-anonymice-nerd-font"
 EOF
 
-# ── Test: Brewfile parsing extracts correct package names ──
+# ── Test: Brewfile parsing ──
 
 describe "Brewfile Parsing"
 
@@ -91,7 +100,7 @@ done < "$FIXTURE_DIR/Brewfile.comments"
 
 assert_equals "2" "${#comment_formulae[@]}" "Should only find 2 formulae, skipping comments"
 
-# ── Test: Font detection regex ──
+# ── Test: Font detection ──
 
 describe "Font Detection"
 
@@ -160,7 +169,7 @@ done < "$results_dir/failed.txt"
 assert_equals "0" "${#failed_packages[@]}" "Should have no failed packages"
 rm -rf "$results_dir"
 
-# ── Test: Concurrent writes to results files ──
+# ── Test: Concurrent writes ──
 
 describe "Concurrent Write Safety"
 
@@ -168,7 +177,6 @@ it "should handle parallel appends to results files without data loss"
 results_dir=$(mktemp -d)
 touch "$results_dir/installed.txt"
 
-# Simulate 10 parallel appends (mimics xargs -P behavior)
 for i in $(seq 1 10); do
     echo "package-$i" >> "$results_dir/installed.txt" &
 done
@@ -178,9 +186,9 @@ line_count=$(wc -l < "$results_dir/installed.txt" | tr -d ' ')
 assert_equals "10" "$line_count" "All 10 parallel writes should be captured"
 rm -rf "$results_dir"
 
-# ── Test: _install_one_formula helper ──
+# ── Test: _install_one_formula (sourced from production) ──
 
-describe "Formula Install Helper"
+describe "Formula Install Helper (production code)"
 
 it "should record success in installed.txt when brew succeeds"
 results_dir=$(mktemp -d)
@@ -190,24 +198,10 @@ touch "$results_dir/installed.txt" "$results_dir/failed.txt"
 brew() { return 0; }
 export -f brew
 
-# Source colors (needed by the helper)
-export GREEN='\033[0;32m' YELLOW='\033[1;33m' RED='\033[0;31m' NC='\033[0m'
-
-# Define the helper inline (same logic as install-packages.sh)
-_install_one_formula() {
-    local formula="$1"
-    local results_dir="$2"
-    if HOMEBREW_NO_AUTO_UPDATE=1 brew install "$formula" &>/dev/null; then
-        echo "$formula" >> "$results_dir/installed.txt"
-    else
-        echo "$formula" >> "$results_dir/failed.txt"
-    fi
-}
-
+# _install_one_formula was sourced from production — no inline copy
 _install_one_formula "test-pkg" "$results_dir"
 assert_file_contains "$results_dir/installed.txt" "test-pkg" "Successful install should be recorded"
 
-# Verify not in failed
 failed_count=$(wc -l < "$results_dir/failed.txt" | tr -d ' ')
 assert_equals "0" "$failed_count" "Should not appear in failed.txt"
 
@@ -218,7 +212,6 @@ it "should record failure in failed.txt when brew fails"
 results_dir=$(mktemp -d)
 touch "$results_dir/installed.txt" "$results_dir/failed.txt"
 
-# Mock brew to fail
 brew() { return 1; }
 export -f brew
 
@@ -231,38 +224,32 @@ assert_equals "0" "$installed_count" "Should not appear in installed.txt"
 cleanup_mocks brew
 rm -rf "$results_dir"
 
-# ── Test: Parallelism settings ──
+# ── Test: Parallelism configuration (constants from sourced production) ──
 
-describe "Parallelism Configuration"
+describe "Parallelism Configuration (production constants)"
 
-it "should use default parallelism values"
-# Unset any overrides
-unset SETUP_PARALLEL_FORMULAE SETUP_PARALLEL_CASKS
-
-PARALLEL_FORMULAE="${SETUP_PARALLEL_FORMULAE:-4}"
-PARALLEL_CASKS="${SETUP_PARALLEL_CASKS:-2}"
-
+it "should expose default parallelism values from production"
+# PARALLEL_FORMULAE and PARALLEL_CASKS are set when the script is sourced.
+# Default values come from production's `${SETUP_PARALLEL_*:-N}` lines.
 assert_equals "4" "$PARALLEL_FORMULAE" "Default formula parallelism should be 4"
 assert_equals "2" "$PARALLEL_CASKS" "Default cask parallelism should be 2"
 
-it "should respect custom parallelism env vars"
-export SETUP_PARALLEL_FORMULAE=8
-export SETUP_PARALLEL_CASKS=3
-
-PARALLEL_FORMULAE="${SETUP_PARALLEL_FORMULAE:-4}"
-PARALLEL_CASKS="${SETUP_PARALLEL_CASKS:-2}"
-
-assert_equals "8" "$PARALLEL_FORMULAE" "Custom formula parallelism should be 8"
-assert_equals "3" "$PARALLEL_CASKS" "Custom cask parallelism should be 3"
-
-unset SETUP_PARALLEL_FORMULAE SETUP_PARALLEL_CASKS
+it "should respect custom parallelism env vars when re-sourced"
+# Re-source with overrides to verify the env var wiring works in production
+(
+    export SETUP_PARALLEL_FORMULAE=8
+    export SETUP_PARALLEL_CASKS=3
+    # shellcheck source=../../scripts/install-packages.sh
+    source "$_PROJECT_ROOT/scripts/install-packages.sh"
+    assert_equals "8" "$PARALLEL_FORMULAE" "Custom formula parallelism should be 8"
+    assert_equals "3" "$PARALLEL_CASKS" "Custom cask parallelism should be 3"
+)
 
 # ── Test: Collect-then-install pattern ──
 
 describe "Collect-Then-Install Pattern"
 
 it "should correctly separate installed vs new packages"
-# Simulate: git and bat are installed, ripgrep and fd are not
 installed_list="git
 bat"
 

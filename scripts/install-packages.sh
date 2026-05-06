@@ -3,6 +3,15 @@
 # Install packages from Brewfile with error handling
 set -e
 
+# Detect whether this script is being sourced (for testing) or executed.
+# When sourced, the main install flow at the bottom is skipped — only
+# function/constant definitions are exposed to the sourcing shell.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    _INSTALL_PACKAGES_SOURCED=false
+else
+    _INSTALL_PACKAGES_SOURCED=true
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -42,21 +51,6 @@ _install_one_formula() {
 export -f _install_one_formula
 # Export colors for subshells
 export GREEN YELLOW RED NC
-
-# Check if Homebrew is installed
-if ! command -v brew &> /dev/null; then
-    print_error "Homebrew is not installed. Please run install-homebrew.sh first."
-    exit 1
-fi
-
-# Check if Brewfile exists
-BREWFILE="${BREWFILE:-homebrew/Brewfile}"
-if [[ ! -f "$BREWFILE" ]]; then
-    print_error "Brewfile not found at $BREWFILE"
-    exit 1
-fi
-
-echo "Installing packages from Brewfile..."
 
 # Function to check if a font cask is already installed
 is_font_installed() {
@@ -199,36 +193,54 @@ install_packages() {
     fi
 }
 
-# Run installation with fallback to brew bundle if custom installation fails
-if ! install_packages; then
-    print_warning "Custom installation encountered errors. Trying brew bundle as fallback..."
-    if ! HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="$BREWFILE"; then
-        print_error "Some packages failed to install. Check the output above for details."
+# Main install flow — skipped when sourced (e.g., from tests)
+if [[ "$_INSTALL_PACKAGES_SOURCED" == "false" ]]; then
+    # Homebrew presence check (only when actually running)
+    if ! command -v brew &> /dev/null; then
+        print_error "Homebrew is not installed. Please run install-homebrew.sh first."
         exit 1
     fi
-fi
 
-# Install local overrides if present (machine-specific packages)
-if [[ -f "homebrew/Brewfile.local" ]]; then
-    print_success "Installing local packages from Brewfile.local..."
-    HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="homebrew/Brewfile.local" || \
-        print_warning "Some local packages failed to install"
-fi
+    # Brewfile presence check (only when actually running)
+    BREWFILE="${BREWFILE:-homebrew/Brewfile}"
+    if [[ ! -f "$BREWFILE" ]]; then
+        print_error "Brewfile not found at $BREWFILE"
+        exit 1
+    fi
 
-# Update all packages
-echo "Updating Homebrew and installed packages..."
-if ! brew update; then
-    print_warning "Failed to update Homebrew package list"
-fi
+    echo "Installing packages from Brewfile..."
 
-if ! brew upgrade; then
-    print_warning "Failed to upgrade some packages"
-fi
+    # Run installation with fallback to brew bundle if custom installation fails
+    if ! install_packages; then
+        print_warning "Custom installation encountered errors. Trying brew bundle as fallback..."
+        if ! HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="$BREWFILE"; then
+            print_error "Some packages failed to install. Check the output above for details."
+            exit 1
+        fi
+    fi
 
-# Cleanup
-echo "Cleaning up old package versions..."
-if ! brew cleanup; then
-    print_warning "Cleanup failed, but packages are installed"
-fi
+    # Install local overrides if present (machine-specific packages)
+    if [[ -f "homebrew/Brewfile.local" ]]; then
+        print_success "Installing local packages from Brewfile.local..."
+        HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="homebrew/Brewfile.local" || \
+            print_warning "Some local packages failed to install"
+    fi
 
-print_success "Package installation and cleanup completed"
+    # Update all packages
+    echo "Updating Homebrew and installed packages..."
+    if ! brew update; then
+        print_warning "Failed to update Homebrew package list"
+    fi
+
+    if ! brew upgrade; then
+        print_warning "Failed to upgrade some packages"
+    fi
+
+    # Cleanup
+    echo "Cleaning up old package versions..."
+    if ! brew cleanup; then
+        print_warning "Cleanup failed, but packages are installed"
+    fi
+
+    print_success "Package installation and cleanup completed"
+fi
