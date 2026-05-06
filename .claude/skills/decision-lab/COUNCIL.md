@@ -39,8 +39,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - vs talent-density-context-not-control: top-down standards vs distributed judgment
 
   track-record:
-    summon-count: 0
-    last-summoned: null
+    summon-count: 1
+    last-summoned: 2026-05-06
     avg-grade: null
     notable-sessions: []
 
@@ -214,8 +214,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - vs operator-execution: pause-and-invert vs amp-it-up momentum
 
   track-record:
-    summon-count: 0
-    last-summoned: null
+    summon-count: 1
+    last-summoned: 2026-05-06
     avg-grade: null
     notable-sessions: []
 
@@ -319,8 +319,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - vs operator-execution: leverage-first thinking vs execution-intensity-first thinking
 
   track-record:
-    summon-count: 0
-    last-summoned: null
+    summon-count: 1
+    last-summoned: 2026-05-06
     avg-grade: null
     notable-sessions: []
 
@@ -567,6 +567,11 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
   category: bootstrappers
   status: candidate
   value-add: Most articulate counter-narrative to VC-default thinking (Basecamp, Rework, It Doesn't Have to Be Crazy at Work)
+  track-record:
+    summon-count: 1
+    last-summoned: 2026-05-06
+    avg-grade: null
+    notable-sessions: []
 - id: minimalist-entrepreneur
   source: Sahil Lavingia
   category: bootstrappers
@@ -696,6 +701,11 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
   category: engineering-craft
   status: candidate
   value-add: Engineering elegance and complexity discipline; "code less, think more"; pure-craft tradition rare on operator-heavy boards — the right voice when "am I over-engineering my own infrastructure?" is the question
+  track-record:
+    summon-count: 1
+    last-summoned: 2026-05-06
+    avg-grade: null
+    notable-sessions: []
 
 # === Candidates: ai-systems ===
 - id: agentic-ai-architect
