@@ -14,11 +14,18 @@ jobs:
   review:
     name: Claude Code Review
     runs-on: ubuntu-latest
-    # Skip if Claude's own review triggered this (avoid loops)
+    # Skip on:
+    #   - Fork PRs: GitHub does not pass user-defined secrets (CLAUDE_CODE_OAUTH_TOKEN)
+    #     to workflows triggered from forks. Without the token, the action fails at
+    #     env validation. Skipping returns SUCCESS for the required-status-check
+    #     ruleset, so fork PRs are still mergeable (Copilot review remains the
+    #     active automated reviewer for fork PRs).
+    #   - Self-triggered loops: pull_request_review events from anyone but Copilot.
     if: >-
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'pull_request_review' &&
-       github.event.review.user.login == 'copilot-pull-request-reviewer')
+      github.event.pull_request.head.repo.fork == false &&
+      (github.event_name == 'pull_request' ||
+       (github.event_name == 'pull_request_review' &&
+        github.event.review.user.login == 'copilot-pull-request-reviewer'))
     permissions:
       contents: write
       pull-requests: write
