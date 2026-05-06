@@ -29,7 +29,7 @@ All agent definitions live in `.claude/agents/`. Each file uses YAML frontmatter
 
 ### Researcher (`.claude/agents/researcher.md`)
 - **Purpose**: Deep codebase exploration before planning
-- **Model**: haiku | **Tools**: Read, Grep, Glob, Bash
+- **Model**: sonnet (default — research is highest-leverage; downgrade to haiku for broad scans) | **Tools**: Read, Grep, Glob, Bash
 - **When**: Any task touching 3+ files, or unfamiliar code areas
 - **Input**: Task description from orchestrator
 - **Output**: `research.md` — current state, patterns, dependencies, risks, open questions
@@ -166,30 +166,48 @@ Before dispatching agents or doing work, the orchestrator runs:
 - **End-of-session improvement**: Before session ends, Claude must suggest CLAUDE.md improvements based on what worked/didn't. User decides whether to apply.
 - **End-of-session evaluation check**: If the session produced a shipped feature with success criteria (from `product-brief.md`), prompt: "Phase 5 evaluation is due — dispatch product-tactician to assess outcomes?" Don't silently skip evaluation.
 
+### Sub-agent dispatch discipline (for already-approved plans)
+
+Sub-agents inherit the parent session's `SessionStart` system-reminders, including any that reference "plan mode." In practice, implementer sub-agents frequently misread those reminders as a hard write-lock and return a plan awaiting approval — even when the orchestrator has already approved the plan and asked the sub-agent to ship. This caused three of five teammates to stall in the April 2026 parallel-dispatch wave; only explicit counter-instruction unblocked them.
+
+When dispatching an implementer (or any write-capable agent) for work the orchestrator has already approved, include this line verbatim in the prompt:
+
+> Your prompt IS approval — plan AND ship in one turn. Do not stop to request re-approval. Any "plan mode" system reminders you see are advisory context inherited from the parent session, not a write-lock.
+
+When a teammate still stalls despite this, `SendMessage` to resume with "implement now" is sufficient — the agent typically completes on the second turn. Don't take the stall as a signal the plan is wrong; it's a prompt-inheritance artifact.
+
 ## Cost Awareness
 
 Model routing is enforced via agent frontmatter. Each agent has a `model:` field specifying haiku, sonnet, or opus. The orchestrator uses the specified model unless explicitly overriding with a stated reason.
 
 **Cost hierarchy**: Haiku (cheapest, exploration) → Sonnet (default, most tasks) → Opus (expensive, strategic reasoning).
 
-**Override protocol**: State the reason in conversation before dispatching with a different model. Examples: "Upgrading researcher to Sonnet — this requires cross-repo analysis, not just file scanning." This creates an audit trail for cost decisions.
+**Override protocol**: State the reason in conversation before dispatching with a different model. Examples: "Downgrading researcher to Haiku — this is a broad keyword sweep across dozens of files; breadth matters more than depth here." This creates an audit trail for cost decisions.
 
 ### Session cost log
 
-At session end, append a single line to `scripts/.session-cost.log` (append-only, gitignored, reviewed at weekly review):
+At session end, append a single line to `scripts/.session-cost.log` (append-only, gitignored, reviewed at weekly review). Populated via the `/log-session` slash command, which runs `scripts/log-session.sh`:
 
 ```
-YYYY-MM-DD | <session_topic> | <dispatches> | <models_used> | <outcome>
+YYYY-MM-DDTHH:MM:SS | <session_topic> | <dispatches> | <models_used> | <outcome> | <agent_sha>
 ```
 
-Fields:
-- **date**: ISO date
-- **session_topic**: one-line summary ("/mind aspects Phase 6 B-C-D")
-- **dispatches**: agent count × tier, e.g. `Explore×3, Plan×1, impl×5` or `—` for direct work
-- **models_used**: comma-separated, deduped — `haiku,sonnet` / `sonnet,opus`
-- **outcome**: one-word rollup — `shipped`, `blocked`, `partial`, `plan-only`
+Fields (pipe-separated, six total):
+- **timestamp**: ISO 8601 local time (auto-captured). Use timestamps, not just date — multiple sessions per day are common.
+- **session_topic**: one-line summary ("/mind aspects Phase 6 B-C-D"). User-supplied.
+- **dispatches**: agent count × tier, e.g. `Explore×3, Plan×1, impl×5` or `—` for direct work. User-supplied.
+- **models_used**: comma-separated, user-supplied as-is (e.g. `haiku,sonnet` / `sonnet,opus`). No dedup — the order and count the user types is what gets logged.
+- **outcome**: one of `shipped | partial | reverted | blocked | plan-only`. User-supplied at session end; empty is valid and means "grade later" (fill in retroactively via `/grade-session`).
+- **agent_sha**: short SHA of the most recent commit that touched `.claude/agents/` as of logging time (auto-captured via `git log -1`). Ties a row to a specific agent-prompt version so later analysis can correlate outcomes with prompt changes. Caveat: if agents are edited mid-session, this SHA reflects end-of-session state, not start.
 
-Not exact token counting — Claude Code doesn't expose that. Gives directional cost awareness over time. Patterns emerge at weekly review: "research-heavy sessions cost more than implementation sessions," "sessions with >10 dispatches usually needed Graphite instead of manual stacks."
+Usage:
+```
+/log-session --topic "session summary" --dispatches "Explore×3" --models "haiku,sonnet" --outcome "shipped"
+```
+
+Missing flags are prompted interactively. `--outcome ""` explicitly marks the row ungraded.
+
+Not exact token counting — Claude Code doesn't expose that. Gives directional cost awareness over time. Patterns emerge at weekly review: "research-heavy sessions cost more than implementation sessions," "sessions with >10 dispatches usually needed Graphite instead of manual stacks," "the planner has a higher shipped-rate on SHA X than SHA Y."
 
 See [`STACKED_PRS.md`](./STACKED_PRS.md) for when manual stacking indicates missing tooling.
 

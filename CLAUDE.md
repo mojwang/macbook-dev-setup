@@ -165,7 +165,7 @@ Skills in `.claude/skills/` (core) and `config/skills/` (web, deployed via `/ini
 
 **Core** (always available):
 - security-review, shell-conventions, commit-review — auto-invoked
-- /init-project, /deep-research, /init-design-system, /competitive-audit, /product-lab, /entropy-scan — user-invoked
+- /init-project, /deep-research, /init-design-system, /competitive-audit, /decision-lab, /boardroom, /entropy-scan — user-invoked
 
 **Web** (deployed to web projects):
 - design-review, design-elevation, typescript-conventions, web-review, doc-garden — auto-invoked
@@ -199,19 +199,44 @@ Agent frontmatter specifies the model. The orchestrator MUST use the specified m
 
 | Agent | Model | Rationale |
 |-------|-------|-----------|
-| researcher | Haiku | Broad scans, cheap exploration |
+| researcher | Sonnet | Research is the highest-leverage step; compounds into plan and code quality. Haiku is an explicit override for broad scans. |
 | planner | Sonnet | Structured reasoning, good balance |
 | implementer | Sonnet | Code generation, standard tasks |
 | reviewer | Sonnet | Skeptical evaluation |
 | designer | Sonnet | Design reasoning |
-| product-strategist | Opus | Market analysis needs strongest reasoning |
-| product-tactician | Sonnet | Feature scoping |
+| strategist | Opus | Market analysis needs strongest reasoning |
+| tactician | Sonnet | Feature scoping |
+| boardroom | Opus | Convenes curated council of operating wisdom; needs strongest reasoning for voice synthesis + dispatch |
 | writer | Sonnet | Writing quality |
 
 **Override examples** (state the reason when overriding):
-- Researcher hitting complex analysis → upgrade to Sonnet
+- Researcher doing broad keyword sweep across dozens of files → downgrade to Haiku (breadth > depth)
 - Simple code review → downgrade reviewer to Haiku
 - Architecture-critical planning → upgrade planner to Opus
+
+### Local tier (Gemma 4 31B IT via MLX)
+
+Free local inference on the M4 Max for cost-insensitive, sovereignty-sensitive, or throughput-heavy work. Model: `mlx-community/gemma-4-31b-it-4bit` (~18GB resident RAM, ~40–80 tok/s, ~2–5s first-token).
+
+**Surfaces today:**
+- `/ask-gemma "<prompt>"` — escape hatch for ad-hoc queries. Flags: `--file <path>`, `--system "..."`, `--max-tokens N`. See `.claude/commands/ask-gemma.md`.
+- Critical-path integrations in workspace commands (`/vault-ask`, `/process-inbox`, `/graduate-notes`, `/vault-brief`) via `--provider=local|claude|compare` flag. Claude-preserving defaults — opt-in for local/compare.
+
+**Reach-for-it cases:**
+- Short ad-hoc queries (rephrasing, classification, quick lookups)
+- Summaries of private/vault content (sovereignty — nothing leaves the machine)
+- Bulk repetitive work (tagging, scoring, first-pass classification)
+- Second opinion on Claude's answer via `/vault-ask --provider=compare`
+- Anthropic rate-limited or unavailable
+
+**Operational:**
+- Server starts automatically on login via the `com.mojwang.mlx-server` LaunchAgent (`config/launchd/com.mojwang.mlx-server.plist`).
+- Manual start: `./scripts/mlx-server-start.sh`
+- Verify: `./scripts/local-model-check.sh` — fast-fails with actionable error if unreachable.
+- Logs: `~/Library/Logs/mlx-server.log`
+
+**NOT yet supported:**
+- `provider: local` on agent frontmatter. Claude Code CLI doesn't honor that field today, so agent dispatches still route through Anthropic regardless. Command-level integration (above) is the current surface. Shared router (`scripts/model-route.sh`) is a future roadmap item — extract once a week of per-integration usage data tells us which integrations are reached for.
 
 ## Testing
 **Write tests BEFORE implementation** — especially when agents implement autonomously.
@@ -230,8 +255,12 @@ Red-green-refactor: failing test first, minimal code to pass, then clean up.
 
 ## MCP Server Priority
 1. **Context7** (plugin): Library docs, code examples, API references (check first)
-2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `product-tactician` and `product-strategist` agents.
+2. **Taskmaster**: Direct task management commands via MCP (`task-master list`, `task-master next`). Task tracking and breakdown only — product thinking is handled by the native `tactician` and `strategist` agents.
 3. **Exa**: General web research (fallback for non-code queries)
+
+## Decision Capture
+
+When a non-trivial decision ships in this repo (build-vs-buy, scope-cut, technical-direction-change, agentic-infra trade-off), capture it to the workspace inbox per the full protocol in `~/ai/workspace/claude/CLAUDE.md` § Cross-repo decision capture. Drop `_inbox/notes/decision-YYYYMMDD-<slug>.md` using the decision-record template; the inbox-processor fast lane routes it priority-7 on next `/process-inbox`. Keeps decisions and their outcomes accumulating into the vault rather than scattered across commits.
 
 ## Important
 - Do only what's asked; nothing more

@@ -1,6 +1,6 @@
 # Stage Playbooks
 
-Per-stage decision logic for the product strategist. Each stage has clear entry conditions, a central question, activities, and evidence gates that must be met before advancing.
+Per-stage decision logic for the strategist agent. Each stage has clear entry conditions, a central question, activities, and evidence gates that must be met before advancing.
 
 ---
 
@@ -28,7 +28,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] Riskiest assumption identified and a plan exists to test it
 - [ ] Founder can articulate a specific, narrow target user (not "everyone")
 
-**Artifact produced**: `product-lab/ideas/[name]/evaluation.md`
+**Artifact produced**: `decision-lab/ideas/[name]/evaluation.md`
 
 **Red flags**:
 - Founder can't name a single person who has this problem
@@ -64,7 +64,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] At least 3 users expressed willingness to pay or try a solution
 - [ ] Riskiest assumption from ideation has T1 or T2 evidence (not just T3)
 
-**Artifact produced**: `product-lab/discovery.md`
+**Artifact produced**: `decision-lab/discovery.md`
 
 **Red flags**:
 - Users say "that sounds cool" but won't commit to trying it
@@ -103,7 +103,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] Kill criteria defined (what evidence would make you stop)
 - [ ] Assumption map complete — riskiest assumption is what MVP tests
 
-**Artifact produced**: `product-lab/mvp-scope.md`
+**Artifact produced**: `decision-lab/mvp-scope.md`
 
 **Red flags**:
 - MVP scope keeps growing ("just one more feature")
@@ -141,7 +141,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] Revenue exists (any amount) or clear evidence for why free trial is strategic
 - [ ] You know which features users actually use vs. which they ignore
 
-**Artifact produced**: `product-lab/launch-plan.md`
+**Artifact produced**: `decision-lab/launch-plan.md`
 
 **Red flags**:
 - Users try it once and don't come back
@@ -180,7 +180,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] Clear understanding of what core users love and why
 - [ ] Push→pull transition beginning (inbound > outbound effort)
 
-**Artifact produced**: `product-lab/pmf-assessment.md`
+**Artifact produced**: `decision-lab/pmf-assessment.md`
 
 **Red flags**:
 - PMF score below 40% across all segments
@@ -218,7 +218,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] Market category chosen and justified
 - [ ] Messaging tested with 5+ target customers for resonance
 
-**Artifact produced**: `product-lab/positioning.md`
+**Artifact produced**: `decision-lab/positioning.md`
 
 **Red flags**:
 - Positioning is based on what you want to be, not what users say you are
@@ -257,7 +257,7 @@ Per-stage decision logic for the product strategist. Each stage has clear entry 
 - [ ] Weekly sprint cycle operational (measure → experiment → decide)
 - [ ] Growth rate is stable or accelerating (not decelerating)
 
-**Artifact produced**: `product-lab/growth-engine.md`
+**Artifact produced**: `decision-lab/growth-engine.md`
 
 **Red flags**:
 - Growth is entirely paid with no organic component

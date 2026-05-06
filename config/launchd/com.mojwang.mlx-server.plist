@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent: auto-start the local Gemma server on login.
+
+  Install once (replace ${SECOND_BRAIN_HOME} with the real path or use
+  the provided symlink helper):
+
+      cp config/launchd/com.mojwang.mlx-server.plist \
+          ~/Library/LaunchAgents/com.mojwang.mlx-server.plist
+      launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.mojwang.mlx-server.plist
+
+  Reload after script edits:
+      launchctl kickstart -k gui/$UID/com.mojwang.mlx-server
+
+  Remove:
+      launchctl bootout gui/$UID ~/Library/LaunchAgents/com.mojwang.mlx-server.plist
+      rm ~/Library/LaunchAgents/com.mojwang.mlx-server.plist
+
+  The plist references an absolute ProgramArguments path to
+  mlx-server-start.sh. Edit the path below if the repo lives
+  somewhere other than the default SECOND_BRAIN_HOME location.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mojwang.mlx-server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>exec "$HOME/ai/workspace/claude/repos/personal/macbook-dev-setup/scripts/mlx-server-start.sh"</string>
+    </array>
+
+    <!-- Run at login + keep alive. If the server crashes, restart. -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!-- Throttle respawn to avoid tight crash loops. -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <!-- Logs land here (mlx-server-start.sh also appends directly). -->
+    <key>StandardOutPath</key>
+    <string>/tmp/mlx-server.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/mlx-server.stderr.log</string>
+
+    <!-- Need HOME + PATH so pyenv shims resolve. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <!-- Process limits: Gemma 4 31B IT 4-bit uses ~18GB resident RAM.
+         macOS doesn't need explicit memory limits here; this is noted
+         for anyone tuning the deployment. -->
+</dict>
+</plist>

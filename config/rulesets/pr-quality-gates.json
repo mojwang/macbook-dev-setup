@@ -1,0 +1,39 @@
+{
+  "_comment": "Template for the 'PR quality gates' branch ruleset applied to default branches across the fleet. Consumed by scripts/bootstrap-repo-ruleset.sh. Presets merge into required_status_checks at bootstrap time; edit that list per preset if CI job names change. Context strings MUST match the check-run 'name:' field GitHub emits, not the workflow job ID — see lesson in docs/CLAUDE_AGENTS.md.",
+  "name": "PR quality gates",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": ["~DEFAULT_BRANCH"]
+    }
+  },
+  "rules": [
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "required_reviewers": [],
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": true,
+        "allowed_merge_methods": ["squash"]
+      }
+    },
+    {"type": "deletion"},
+    {"type": "non_fast_forward"},
+    {
+      "type": "copilot_code_review",
+      "parameters": {
+        "review_on_push": true,
+        "review_draft_pull_requests": false
+      }
+    },
+    {
+      "type": "code_quality",
+      "parameters": {"severity": "warnings"}
+    }
+  ]
+}

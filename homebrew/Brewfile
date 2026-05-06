@@ -66,6 +66,7 @@ brew "tree-sitter"
 # Development workflow
 brew "lazygit"               # Terminal Git UI
 brew "starship"              # Cross-shell prompt
+brew "tmux"                  # Terminal multiplexer — required by Claude Code agent-team mode (.claude/settings.json teammateMode: "tmux")
 
 # Database tools
 brew "postgresql@16"        # PostgreSQL database

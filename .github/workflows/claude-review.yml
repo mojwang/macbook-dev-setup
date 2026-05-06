@@ -3,8 +3,6 @@ name: Claude Review
 on:
   pull_request:
     types: [opened, synchronize]
-    paths-ignore:
-      - ".github/workflows/**"
   pull_request_review:
     types: [submitted]
 
@@ -14,6 +12,7 @@ concurrency:
 
 jobs:
   review:
+    name: Claude Code Review
     runs-on: ubuntu-latest
     # Skip if Claude's own review triggered this (avoid loops)
     if: >-

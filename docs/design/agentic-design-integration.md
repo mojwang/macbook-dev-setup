@@ -4,7 +4,7 @@ How the designer agent collaborates with engineering agents as a first-class pee
 
 ## Architecture
 
-The designer is one of 7 agents in `.claude/agents/` (product-strategist, product-tactician, researcher, planner, implementer, reviewer, designer). It produces design artifacts; engineering agents consume them.
+The designer is one of 11 agents in `.claude/agents/` (boardroom, designer, implementer, planner, reflector, researcher, reviewer, skeptic, strategist, tactician, writer). It produces design artifacts; engineering agents consume them.
 
 Key principle: **agents are execution roles, skills are deployment units**. The designer agent *uses* design skills (design-review, init-design-system, competitive-audit) the same way the reviewer uses security-review.
 

@@ -82,11 +82,14 @@ plan.md
 design-spec.md
 product-brief.md
 
-# Product strategy artifacts (persistent across sessions, not committed)
-/product-lab/
+# Strategist working state (persistent across sessions, not committed; renamed from /product-lab/)
+/decision-lab/
 
 # Skill staleness tracker (local machine state)
 .skill-runs.json
 
 # Claude Code worktree metadata
 .claude/worktrees/
+
+# Session cost log (populated by /log-session at end of each session)
+scripts/.session-cost.log
