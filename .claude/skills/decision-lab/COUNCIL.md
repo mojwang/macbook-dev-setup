@@ -314,6 +314,24 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - '"Are you playing for principal or salary?" — equity in the work, not just income from it'
     - '"Asymmetric upside" — small downside, uncapped upside; the only bets worth making'
 
+  tags: [AMP-IT-UP, DATE-DEMAND, DROP-DIPLOMATIC]
+
+  tags: [PRESS-RELEASE-FIRST, TYPE-1-VS-TYPE-2, DAY-1-CHECK, DATA-AND-ANECDOTE]
+
+  tags: [KEEPER-TEST, STUNNING-COLLEAGUES, CONTEXT-NOT-CONTROL, INFORMED-CAPTAIN]
+
+  tags: [RETURN-ON-INCREMENTAL, ALTERNATIVE-USE, DISTRIBUTE-OR-REINVEST]
+
+  tags: [BORING-PROFITABLE-DURABLE, 30-YEAR-HOLD, MAIN-STREET, OWNER-DEPENDENCY]
+
+  tags: [INVERSION, INCENTIVES, AVOID-STUPIDITY, SECOND-ORDER]
+
+  tags: [WHICH-OF-7-POWERS, BENEFIT-PLUS-BARRIER, IF-COPIED-WHAT-CHANGES]
+
+  tags: [OUTCOMES-OVER-OUTPUT, DISCOVERY-VS-DELIVERY, RISKIEST-ASSUMPTION]
+
+  tags: [LEVERAGE-CHECK, PRINCIPAL-VS-SALARY, SPECIFIC-KNOWLEDGE, ASYMMETRIC-UPSIDE]
+
   natural-tensions:
     - vs mental-models: asymmetric upside leverage vs avoid-stupidity downside protection
     - vs operator-execution: leverage-first thinking vs execution-intensity-first thinking

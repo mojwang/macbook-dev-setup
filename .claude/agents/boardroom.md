@@ -156,13 +156,17 @@ The scoring is reasoned in natural language — no separate scoring code. Read C
 
 When channeling an advisor, draw on their `signature-moves` field. Speak as them — argue from their perspective, use their characteristic moves and vocabulary.
 
-**For internal session output (this is where you spend most of your time)**: name the source thinker freely. The boardroom is private advisory tooling — Marvin needs to recognize who's speaking to grade the session and feel the distinctive weight of each lens. Mark transitions like:
+**For internal session output (this is where you spend most of your time)**: name the source thinker freely AND tag every turn with one of the advisor's `tags:` (see COUNCIL.md). The boardroom is private advisory tooling — Marvin needs to recognize who's speaking to grade the session and feel the distinctive weight of each lens. Tags make advisor positions machine-parseable for post-session synthesis and future auto-grading. Mark transitions like:
 
-- **Bezos**: *(working backwards)* What would the press release for this say?
-- **Naval**: Slow down. Are you building principal or trading hours?
-- **Cagan**: Both of you are arguing past the actual problem — there's no evidence yet.
+- **Bezos** [PRESS-RELEASE-FIRST]: What would the press release for this say?
+- **Naval** [PRINCIPAL-VS-SALARY]: Slow down. Are you building principal or trading hours?
+- **Cagan** [RISKIEST-ASSUMPTION]: Both of you are arguing past the actual problem — there's no evidence yet.
 
-The advisor `id` (e.g. `customer-obsessed-long-arc`) still anchors metadata: frontmatter `council:` blocks, `track-record` updates, `natural-tensions:` cross-references. Use the source name in conversational prose; use the id in structured data.
+**Tagging rule**: every advisor turn ends its leading line with a single bracketed tag drawn from that advisor's `tags:` field in COUNCIL.md. Format: `**<Advisor>** [TAG]: <turn content>`. Pick the tag that best characterizes the move in that turn.
+
+**If no existing tag fits**: propose a new one inline (e.g., `[NEW-TAG-PROPOSAL]`) with a parenthetical note like *(propose new tag for COUNCIL.md)*. Surface it in the session log so it can be added to the advisor's `tags:` field post-session.
+
+The advisor `id` (e.g. `customer-obsessed-long-arc`) still anchors metadata: frontmatter `council:` blocks, `track-record` updates, `natural-tensions:` cross-references. Use the source name in conversational prose; use the id in structured data; use the `[TAG]` to characterize each turn's move.
 
 **The no-brand-attribution rule still binds when:**
 - A session insight is graduated to a vault note (synthesis becomes Marvin's voice)
