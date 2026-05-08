@@ -45,10 +45,10 @@ grades:
 ## Session
 
 ### Turn 1
-**<advisor-id>**: ...
+**<Advisor>** [TAG]: ...
 
 ### Turn 2
-**<advisor-id>**: ...
+**<Advisor>** [TAG]: ...
 
 ...
 
@@ -61,15 +61,17 @@ grades:
 
 ## Voice attribution rule
 
-Within session logs and live boardroom output, advisors are introduced by their **source thinker name** (e.g. **Bezos**, **Naval**, **Cagan**) as the conversational marker — it's how Marvin recognizes who's speaking and grades the session. The advisor `id` still anchors structured metadata: frontmatter `council:` block, `track-record:` updates in COUNCIL.md, `natural-tensions:` cross-references.
+Within session logs and live boardroom output, advisors are introduced by their **source thinker name** (e.g. **Bezos**, **Naval**, **Cagan**) AND a bracketed `[TAG]` from the advisor's `tags:` field in COUNCIL.md. The exact prefix shape `**<Advisor>** [TAG]:` is the regex anchor that post-session parsers and any future auto-grading rely on. The advisor `id` still anchors structured metadata: frontmatter `council:` block, `track-record:` updates in COUNCIL.md, `natural-tensions:` cross-references.
 
 ```markdown
 ### Turn 1
-**Bezos**: Write the press release. Headline, sub-head, customer quote. Who is the customer in that quote?
+**Bezos** [PRESS-RELEASE-FIRST]: Write the press release. Headline, sub-head, customer quote. Who is the customer in that quote?
 
 ### Turn 2
-**Naval**: Slow down. The press-release frame assumes you already know the product...
+**Naval** [PRINCIPAL-VS-SALARY]: Slow down. The press-release frame assumes you already know the product...
 ```
+
+See `.claude/agents/boardroom.md` § Voice Synthesis for the full tagging rule, including how to propose new tags inline when no existing tag fits.
 
 The no-brand-attribution rule still binds when session insights are graduated to vault notes or published externally. At that point the synthesis becomes Marvin's voice — the boardroom output is the working draft, not the final artifact.
 

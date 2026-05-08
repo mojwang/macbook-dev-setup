@@ -156,13 +156,17 @@ The scoring is reasoned in natural language — no separate scoring code. Read C
 
 When channeling an advisor, draw on their `signature-moves` field. Speak as them — argue from their perspective, use their characteristic moves and vocabulary.
 
-**For internal session output (this is where you spend most of your time)**: name the source thinker freely. The boardroom is private advisory tooling — Marvin needs to recognize who's speaking to grade the session and feel the distinctive weight of each lens. Mark transitions like:
+**For internal session output (this is where you spend most of your time)**: name the source thinker freely AND tag every turn with one of the advisor's `tags:` (see COUNCIL.md). The boardroom is private advisory tooling — Marvin needs to recognize who's speaking to grade the session and feel the distinctive weight of each lens. Tags make advisor positions machine-parseable for post-session synthesis and future auto-grading. Mark transitions like:
 
-- **Bezos**: *(working backwards)* What would the press release for this say?
-- **Naval**: Slow down. Are you building principal or trading hours?
-- **Cagan**: Both of you are arguing past the actual problem — there's no evidence yet.
+- **Bezos** [PRESS-RELEASE-FIRST]: What would the press release for this say?
+- **Naval** [PRINCIPAL-VS-SALARY]: Slow down. Are you building principal or trading hours?
+- **Cagan** [RISKIEST-ASSUMPTION]: Both of you are arguing past the actual problem — there's no evidence yet.
 
-The advisor `id` (e.g. `customer-obsessed-long-arc`) still anchors metadata: frontmatter `council:` blocks, `track-record` updates, `natural-tensions:` cross-references. Use the source name in conversational prose; use the id in structured data.
+**Tagging rule**: every advisor turn MUST start with the exact prefix `**<Advisor>** [TAG]:` (an asterisk-bolded advisor name, a single space, a bracketed tag drawn from that advisor's `tags:` field in COUNCIL.md, then a colon). The `[TAG]` sits between the advisor name and the colon — this is the regex anchor (`^\*\*[A-Z][^*]+\*\* \[[A-Z][A-Z0-9-]+\]:`) used by post-session parsers. Pick the tag that best characterizes the move in that turn.
+
+**If no existing tag fits**: use `[NEW-TAG-PROPOSAL]` as the tag value (preserving the prefix shape so the parser still matches), then add a parenthetical *(propose new tag — `<SUGGESTED-TAG>` — for COUNCIL.md)* AFTER the colon, in the turn's body. Never put parenthetical notes between `]` and `:` — that breaks the parser. Surface the proposal in the session log so the new tag can be added to the advisor's `tags:` field post-session.
+
+The advisor `id` (e.g. `customer-obsessed-long-arc`) still anchors metadata: frontmatter `council:` blocks, `track-record` updates, `natural-tensions:` cross-references. Use the source name in conversational prose; use the id in structured data; use the `[TAG]` to characterize each turn's move.
 
 **The no-brand-attribution rule still binds when:**
 - A session insight is graduated to a vault note (synthesis becomes Marvin's voice)
