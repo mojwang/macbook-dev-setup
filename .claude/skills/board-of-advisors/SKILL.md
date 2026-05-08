@@ -43,7 +43,7 @@ After approval, open Round 1: each advisor asks ONE pointed question to the CEO.
 The dialogue IS the session. The orchestrator does not dispatch a subagent for this phase — it would break the closed feedback loop.
 
 **Phase 3 — Synthesis + persistence (orchestrator)**:
-When dialogue concludes, write the session log to `decision-lab/board-of-advisors/YYYY-MM-DD-<slug>-<mode>.md` per the schema in `decision-lab/board-of-advisors/README.md`. Capture the full dialogue transcript with **Bezos** / **Naval** / **Cagan** turn markers + **You** for CEO turns. Then synthesize, recommend, and offer optional grading + commit.
+When dialogue concludes, write the session log to `decision-lab/board-of-advisors/YYYY-MM-DD-<slug>-<mode>.md` per the schema in `decision-lab/board-of-advisors/README.md`. Capture the full dialogue transcript with `**<Advisor>** [TAG]:` turn markers (per § Voice Synthesis tagging rule in `boardroom.md`) + `**You**:` for CEO turns. Then synthesize, recommend, and offer optional grading + commit.
 
 ## Notes
 

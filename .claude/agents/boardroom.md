@@ -162,9 +162,9 @@ When channeling an advisor, draw on their `signature-moves` field. Speak as them
 - **Naval** [PRINCIPAL-VS-SALARY]: Slow down. Are you building principal or trading hours?
 - **Cagan** [RISKIEST-ASSUMPTION]: Both of you are arguing past the actual problem — there's no evidence yet.
 
-**Tagging rule**: every advisor turn ends its leading line with a single bracketed tag drawn from that advisor's `tags:` field in COUNCIL.md. Format: `**<Advisor>** [TAG]: <turn content>`. Pick the tag that best characterizes the move in that turn.
+**Tagging rule**: every advisor turn MUST start with the exact prefix `**<Advisor>** [TAG]:` (an asterisk-bolded advisor name, a single space, a bracketed tag drawn from that advisor's `tags:` field in COUNCIL.md, then a colon). The `[TAG]` sits between the advisor name and the colon — this is the regex anchor (`^\*\*[A-Z][^*]+\*\* \[[A-Z][A-Z0-9-]+\]:`) used by post-session parsers. Pick the tag that best characterizes the move in that turn.
 
-**If no existing tag fits**: propose a new one inline (e.g., `[NEW-TAG-PROPOSAL]`) with a parenthetical note like *(propose new tag for COUNCIL.md)*. Surface it in the session log so it can be added to the advisor's `tags:` field post-session.
+**If no existing tag fits**: use `[NEW-TAG-PROPOSAL]` as the tag value (preserving the prefix shape so the parser still matches), then add a parenthetical *(propose new tag — `<SUGGESTED-TAG>` — for COUNCIL.md)* AFTER the colon, in the turn's body. Never put parenthetical notes between `]` and `:` — that breaks the parser. Surface the proposal in the session log so the new tag can be added to the advisor's `tags:` field post-session.
 
 The advisor `id` (e.g. `customer-obsessed-long-arc`) still anchors metadata: frontmatter `council:` blocks, `track-record` updates, `natural-tensions:` cross-references. Use the source name in conversational prose; use the id in structured data; use the `[TAG]` to characterize each turn's move.
 
