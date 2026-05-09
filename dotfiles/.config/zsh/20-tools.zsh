@@ -36,20 +36,20 @@ fi
 # Enhanced cat (bat)
 if command -v bat &> /dev/null; then
     alias cat="bat"
-    # Catppuccin Mocha — coordinated with Warp/tmux/nvim. The four Catppuccin
-    # variants ship with bat; "Catppuccin Mocha" must match the theme name
+    # Solarized (dark) — coordinated with Warp/tmux/nvim. Both Solarized
+    # variants ship with bat; "Solarized (dark)" must match the theme name
     # as listed by `bat --list-themes`.
-    export BAT_THEME="Catppuccin Mocha"
+    export BAT_THEME="Solarized (dark)"
 fi
 
-# Fuzzy finder (fzf) — Catppuccin Mocha palette overrides
+# Fuzzy finder (fzf) — Solarized Dark palette overrides
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
     export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border \
---color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
---color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
---color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
---color=selected-bg:#45475a --color=border:#313244,label:#cdd6f4"
+--color=bg+:#073642,bg:#002b36,spinner:#cb4b16,hl:#b58900 \
+--color=fg:#839496,header:#dc322f,info:#6c71c4,pointer:#268bd2 \
+--color=marker:#2aa198,fg+:#93a1a1,prompt:#268bd2,hl+:#cb4b16 \
+--color=selected-bg:#073642 --color=border:#586e75,label:#839496"
     
     # Use fd for fzf if available
     if command -v fd &> /dev/null; then
