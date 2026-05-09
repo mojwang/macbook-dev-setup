@@ -1,6 +1,20 @@
 -- Basic Neovim configuration
 -- This configuration provides essential settings for a modern development environment
 
+-- Plugins via vim.pack (built-in package manager, nvim 0.12+). Guarded so
+-- older nvim versions still load the rest of the config without erroring.
+if vim.pack and vim.pack.add then
+  vim.pack.add({
+    { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
+  })
+  -- Configure flavor BEFORE applying the colorscheme. Mocha matches the
+  -- Warp + tmux + bat palette ("Catppuccin Mocha" everywhere).
+  pcall(function()
+    require("catppuccin").setup({ flavour = "mocha", transparent_background = false })
+  end)
+  pcall(vim.cmd.colorscheme, "catppuccin-mocha")
+end
+
 -- Basic settings
 vim.opt.number = true              -- Show line numbers
 vim.opt.relativenumber = true      -- Show relative line numbers

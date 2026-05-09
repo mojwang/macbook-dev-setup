@@ -36,6 +36,7 @@ backup_organized ~/.config/nvim "dotfiles" "Neovim config backup"
 backup_organized ~/.config/zsh "dotfiles" "Zsh config backup"
 backup_organized ~/.config/starship.toml "dotfiles" "Starship config backup"
 backup_organized ~/.config/tmux/tmux.conf "dotfiles" "tmux config backup"
+backup_organized ~/.warp/settings.toml "dotfiles" "Warp settings backup"
 
 # Install dotfiles
 install_dotfile() {
@@ -169,6 +170,32 @@ install_dotfile "dotfiles/.config/starship.toml" ~/.config/starship.toml "Starsh
 if [[ -f "dotfiles/.config/tmux/tmux.conf" ]]; then
     mkdir -p ~/.config/tmux
     install_dotfile "dotfiles/.config/tmux/tmux.conf" ~/.config/tmux/tmux.conf "tmux configuration"
+fi
+
+# Setup Warp custom themes (~/.warp/themes/) and flip the active theme.
+# Warp themes don't follow XDG; they live under ~/.warp/. We deploy YAMLs and
+# point Warp at catppuccin_mocha by patching only the theme= line in
+# settings.toml, leaving everything else (font, agent prefs, etc.) untouched.
+if [[ -d "dotfiles/.warp/themes" && -d "$HOME/.warp" ]]; then
+    mkdir -p "$HOME/.warp/themes"
+    for theme_file in dotfiles/.warp/themes/*.yml; do
+        [[ -f "$theme_file" ]] || continue
+        cp "$theme_file" "$HOME/.warp/themes/"
+        print_success "Deployed Warp theme: $(basename "$theme_file")"
+    done
+
+    settings="$HOME/.warp/settings.toml"
+    if [[ -f "$settings" ]] && ! grep -q 'theme = "catppuccin_mocha"' "$settings"; then
+        backup_file "$settings" "warp-settings"
+        # Flip ONLY the [appearance.themes].theme = "..." line. sed -i '' is
+        # macOS-safe; the regex anchors on whitespace + theme= to avoid
+        # matching the system_theme key.
+        if sed -i '' 's/^[[:space:]]*theme[[:space:]]*=[[:space:]]*".*"/theme = "catppuccin_mocha"/' "$settings"; then
+            print_success "Warp active theme switched to catppuccin_mocha"
+        else
+            print_warning "Could not patch Warp theme in $settings — set manually via Settings → Appearance"
+        fi
+    fi
 fi
 
 # Create scripts directory and copy scripts
