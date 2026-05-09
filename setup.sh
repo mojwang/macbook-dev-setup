@@ -421,6 +421,9 @@ main_setup() {
         print_step "Setting up dotfiles..."
         ./scripts/setup-dotfiles.sh
 
+        # tmux + TPM (after dotfiles so tmux.conf exists when TPM auto-installs plugins)
+        ui_spinner "Configuring tmux + TPM" ./scripts/setup-tmux.sh
+
         # Not wrapped in spinner — needs user interaction for diff review
         print_step "Setting up global Claude configuration..."
         ./scripts/setup-claude-global.sh
@@ -498,6 +501,10 @@ main_setup() {
         if [[ -f "./scripts/setup-dotfiles.sh" ]]; then
             print_step "Updating dotfiles..."
             ./scripts/setup-dotfiles.sh --update
+        fi
+
+        if [[ -f "./scripts/setup-tmux.sh" ]]; then
+            ui_spinner "Updating tmux + TPM" ./scripts/setup-tmux.sh
         fi
 
         # Not wrapped in spinner — needs user interaction for diff review

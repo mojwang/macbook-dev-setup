@@ -35,6 +35,7 @@ backup_organized ~/.scripts "dotfiles" "scripts backup"
 backup_organized ~/.config/nvim "dotfiles" "Neovim config backup"
 backup_organized ~/.config/zsh "dotfiles" "Zsh config backup"
 backup_organized ~/.config/starship.toml "dotfiles" "Starship config backup"
+backup_organized ~/.config/tmux/tmux.conf "dotfiles" "tmux config backup"
 
 # Install dotfiles
 install_dotfile() {
@@ -163,6 +164,12 @@ fi
 # Setup Starship prompt configuration
 mkdir -p ~/.config
 install_dotfile "dotfiles/.config/starship.toml" ~/.config/starship.toml "Starship prompt configuration"
+
+# Setup tmux configuration (XDG path)
+if [[ -f "dotfiles/.config/tmux/tmux.conf" ]]; then
+    mkdir -p ~/.config/tmux
+    install_dotfile "dotfiles/.config/tmux/tmux.conf" ~/.config/tmux/tmux.conf "tmux configuration"
+fi
 
 # Create scripts directory and copy scripts
 if [[ -d "dotfiles/scripts" ]]; then
