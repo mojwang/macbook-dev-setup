@@ -82,7 +82,7 @@ Before scoring advisors for selection, check whether the roster (sitting + candi
 1. **Decompose the topic into 2-4 domain dimensions.** Examples:
    - Topic: "audit my agentic system" → dimensions: *engineering craft / complexity discipline*, *AI agent orchestration*, *personal knowledge infrastructure*, *leverage vs over-engineering*
    - Topic: "should I expand IHW into chiropractic services?" → dimensions: *healthcare service-business economics*, *small-business expansion*, *brand extension*, *capital allocation*
-   - Topic: "Netflix exit timing" → dimensions: *career arc inflection*, *equity-vesting decisions*, *leverage architecture*, *personal-brand transition*
+   - Topic: "senior tech leadership exit timing" → dimensions: *career arc inflection*, *equity-vesting decisions*, *leverage architecture*, *personal-brand transition*
 2. **For each dimension, scan the roster** (sitting + candidates) for at least one voice that explicitly covers it via `when-to-summon` or `value-add`. Coverage requires substantive match, not just adjacent vocabulary.
 3. **Flag dimensions with no covering voice** as roster gaps.
 

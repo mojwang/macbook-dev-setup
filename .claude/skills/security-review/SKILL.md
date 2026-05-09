@@ -49,8 +49,9 @@ When issues found, report as:
 ### Allowlist (public-OK references — do NOT flag)
 
 - "Netflix" as employer reference
-- Marvin's public role: "Sr Engineering Manager", "DVX Live UI", "DVX Live"
+- Marvin's LinkedIn-public role: "Engineering Manager", "Live Viewing Experiences" (team)
 - Public initiatives Netflix has announced (live streaming launch dates publicly disclosed; SDUI publicly published)
+- Marvin's preference: prefer functional descriptors ("live streaming product experiences") over team names — team names change with reorgs
 - Public talks Marvin has given (titles, venues, conference names)
 - Open-source projects Marvin maintains
 - General industry concepts ("server-driven UI", "platform engineering")
