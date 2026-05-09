@@ -439,7 +439,7 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
   source: Matthew Ball
   category: writers-analysts
   status: candidate
-  value-add: Definitive analyst on media, gaming, and streaming economics — directly relevant to DVX work
+  value-add: Definitive analyst on media, gaming, and streaming economics
 - id: finance-meets-tech
   source: Byrne Hobart
   category: writers-analysts
