@@ -20,14 +20,15 @@ ZSH_TOOLS="$ROOT_DIR/dotfiles/.config/zsh/20-tools.zsh"
 DOTFILES_SETUP="$ROOT_DIR/scripts/setup-dotfiles.sh"
 
 # ─── Warp theme ─────────────────────────────────────────────────────
-it "should ship Warp catppuccin_mocha theme YAML"
+it "should ship Warp catppuccin_mocha theme YAML with required fields"
 assert_file_exists "$WARP_THEME" "Warp Catppuccin Mocha YAML should exist"
+assert_file_contains "$WARP_THEME" "name: 'Catppuccin Mocha'" "YAML must declare name (required by Warp)"
 assert_file_contains "$WARP_THEME" "background: '#1e1e2e'" "background should be Mocha base"
 assert_file_contains "$WARP_THEME" "foreground: '#cdd6f4'" "foreground should be Mocha text"
 
-it "should deploy Warp themes + flip active theme via setup-dotfiles.sh"
+it "should deploy Warp themes via setup-dotfiles.sh (UI selection required)"
 assert_file_contains "$DOTFILES_SETUP" 'dotfiles/.warp/themes' "setup-dotfiles.sh should reference Warp themes source"
-assert_file_contains "$DOTFILES_SETUP" 'theme = "catppuccin_mocha"' "setup-dotfiles.sh should set the active theme"
+assert_file_contains "$DOTFILES_SETUP" "Settings → Appearance → Themes" "should instruct user to pick theme via Warp UI"
 
 # ─── tmux ────────────────────────────────────────────────────────────
 it "should declare catppuccin/tmux plugin and Mocha flavor"
