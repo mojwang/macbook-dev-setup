@@ -36,13 +36,20 @@ fi
 # Enhanced cat (bat)
 if command -v bat &> /dev/null; then
     alias cat="bat"
-    export BAT_THEME="auto"
+    # Catppuccin Mocha — coordinated with Warp/tmux/nvim. The four Catppuccin
+    # variants ship with bat; "Catppuccin Mocha" must match the theme name
+    # as listed by `bat --list-themes`.
+    export BAT_THEME="Catppuccin Mocha"
 fi
 
-# Fuzzy finder (fzf)
+# Fuzzy finder (fzf) — Catppuccin Mocha palette overrides
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
-    export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
+    export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border \
+--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+--color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
+--color=selected-bg:#45475a --color=border:#313244,label:#cdd6f4"
     
     # Use fd for fzf if available
     if command -v fd &> /dev/null; then
