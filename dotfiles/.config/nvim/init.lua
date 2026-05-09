@@ -5,14 +5,16 @@
 -- older nvim versions still load the rest of the config without erroring.
 if vim.pack and vim.pack.add then
   vim.pack.add({
-    { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
+    { src = "https://github.com/maxmx03/solarized.nvim", name = "solarized.nvim" },
   })
-  -- Configure flavor BEFORE applying the colorscheme. Mocha matches the
-  -- Warp + tmux + bat palette ("Catppuccin Mocha" everywhere).
+  -- Set background BEFORE colorscheme — solarized.nvim picks the dark/light
+  -- variant from vim.o.background. "dark" matches the Warp + tmux + bat
+  -- palette ("Solarized Dark" / "Solarized (dark)" everywhere).
+  vim.o.background = "dark"
   pcall(function()
-    require("catppuccin").setup({ flavour = "mocha", transparent_background = false })
+    require("solarized").setup({ transparent = { enabled = false } })
   end)
-  pcall(vim.cmd.colorscheme, "catppuccin-mocha")
+  pcall(vim.cmd.colorscheme, "solarized")
 end
 
 -- Basic settings
