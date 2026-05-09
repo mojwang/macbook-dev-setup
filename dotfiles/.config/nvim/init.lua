@@ -24,6 +24,11 @@ vim.opt.colorcolumn = "80"         -- Show column at 80 characters
 -- Enable mouse support
 vim.opt.mouse = "a"
 
+-- Use the system clipboard for all yank/delete/paste. tmux.conf has
+-- `set-clipboard on` (OSC 52), so this round-trips to macOS pbpaste through
+-- tmux without needing a custom clipboard provider, even over SSH.
+vim.opt.clipboard = "unnamedplus"
+
 -- Better split behavior
 vim.opt.splitright = true          -- Vertical splits to the right
 vim.opt.splitbelow = true          -- Horizontal splits below
@@ -38,11 +43,24 @@ vim.g.mapleader = " "              -- Set leader key to space
 -- Key mappings
 local keymap = vim.keymap.set
 
--- Better window navigation
-keymap("n", "<C-h>", "<C-w>h", { desc = "Go to left window" })
-keymap("n", "<C-j>", "<C-w>j", { desc = "Go to lower window" })
-keymap("n", "<C-k>", "<C-w>k", { desc = "Go to upper window" })
-keymap("n", "<C-l>", "<C-w>l", { desc = "Go to right window" })
+-- Seamless vim-tmux navigation. Ctrl-h/j/k/l moves between vim splits;
+-- when already at the edge of vim's window tree and we're inside tmux, hop
+-- into the adjacent tmux pane. Mirrors the vim-tmux-navigator UX without
+-- pulling in a plugin manager.
+local function smart_nav(vim_dir, tmux_dir)
+  return function()
+    local before = vim.api.nvim_get_current_win()
+    vim.cmd("wincmd " .. vim_dir)
+    if before == vim.api.nvim_get_current_win() and vim.env.TMUX then
+      vim.fn.system({ "tmux", "select-pane", "-" .. tmux_dir })
+    end
+  end
+end
+
+keymap("n", "<C-h>", smart_nav("h", "L"), { desc = "Nav left (vim split → tmux pane)" })
+keymap("n", "<C-j>", smart_nav("j", "D"), { desc = "Nav down (vim split → tmux pane)" })
+keymap("n", "<C-k>", smart_nav("k", "U"), { desc = "Nav up (vim split → tmux pane)" })
+keymap("n", "<C-l>", smart_nav("l", "R"), { desc = "Nav right (vim split → tmux pane)" })
 
 -- Better indenting
 keymap("v", "<", "<gv", { desc = "Indent left" })

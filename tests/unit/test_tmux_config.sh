@@ -33,6 +33,12 @@ assert_file_contains "$TMUX_CONF" "renumber-windows on" "renumber-windows should
 assert_file_contains "$TMUX_CONF" "focus-events on" "focus-events should be on (nvim integration)"
 assert_file_contains "$TMUX_CONF" "base-index 1" "base-index should start at 1"
 
+it "should declare vim-aware seamless pane navigation"
+assert_file_contains "$TMUX_CONF" 'is_vim=' "should define is_vim shell predicate"
+assert_file_contains "$TMUX_CONF" "if-shell \"\$is_vim\" 'send-keys C-h' 'select-pane -L'" "C-h should passthrough or select-pane left"
+assert_file_contains "$TMUX_CONF" "if-shell \"\$is_vim\" 'send-keys C-l' 'select-pane -R'" "C-l should passthrough or select-pane right"
+assert_file_contains "$TMUX_CONF" "bind C-l send-keys 'C-l'" "prefix+C-l should restore literal clear-screen"
+
 it "should enumerate the baseline TPM plugins"
 assert_file_contains "$TMUX_CONF" "tmux-plugins/tpm" "tpm plugin manager should be declared"
 assert_file_contains "$TMUX_CONF" "tmux-plugins/tmux-sensible" "tmux-sensible should be declared"
@@ -92,5 +98,31 @@ it "should ship 00-xdg.zsh exporting XDG_CONFIG_HOME"
 assert_file_exists "$ROOT_DIR/dotfiles/.config/zsh/00-xdg.zsh" "00-xdg.zsh module should exist"
 assert_file_contains "$ROOT_DIR/dotfiles/.config/zsh/00-xdg.zsh" 'XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"' \
     "00-xdg.zsh should export XDG_CONFIG_HOME with default"
+
+# ─── nvim ↔ tmux integration ────────────────────────────────────────
+NVIM_INIT="$ROOT_DIR/dotfiles/.config/nvim/init.lua"
+
+it "should ship a smart vim↔tmux navigator in init.lua"
+assert_file_exists "$NVIM_INIT" "nvim init.lua should exist"
+assert_file_contains "$NVIM_INIT" "function smart_nav" "init.lua should define smart_nav helper"
+assert_file_contains "$NVIM_INIT" 'vim.env.TMUX' "smart_nav should detect tmux via vim.env.TMUX"
+assert_file_contains "$NVIM_INIT" '"tmux", "select-pane"' "smart_nav should shell out to tmux select-pane"
+
+it "should bind C-h/j/k/l to smart_nav rather than plain wincmd"
+assert_file_contains "$NVIM_INIT" 'smart_nav("h", "L")' "C-h should call smart_nav for left"
+assert_file_contains "$NVIM_INIT" 'smart_nav("j", "D")' "C-j should call smart_nav for down"
+assert_file_contains "$NVIM_INIT" 'smart_nav("k", "U")' "C-k should call smart_nav for up"
+assert_file_contains "$NVIM_INIT" 'smart_nav("l", "R")' "C-l should call smart_nav for right"
+
+it "should enable OSC 52 clipboard via unnamedplus"
+assert_file_contains "$NVIM_INIT" 'vim.opt.clipboard = "unnamedplus"' "clipboard should be unnamedplus"
+
+it "should load without errors when nvim is installed"
+if command -v nvim >/dev/null 2>&1; then
+    nvim_load_errors=$(nvim --headless -u "$NVIM_INIT" -c 'qa!' 2>&1 | grep -iE "error|E[0-9]+" || true)
+    assert_empty "$nvim_load_errors" "nvim should load init.lua without errors"
+else
+    echo "  (nvim not installed — skipping live load check)"
+fi
 
 summarize
