@@ -34,6 +34,11 @@ assert_file_contains "$TMUX_CONF" "renumber-windows on" "renumber-windows should
 assert_file_contains "$TMUX_CONF" "focus-events on" "focus-events should be on (nvim integration)"
 assert_file_contains "$TMUX_CONF" "base-index 1" "base-index should start at 1"
 
+it "should override scrollwheel speed for smoother trackpad pacing"
+assert_file_contains "$TMUX_CONF" "WheelUpPane   select-pane" "WheelUpPane should be customized"
+assert_file_contains "$TMUX_CONF" "send-keys -X -N 3 scroll-up" "wheel up should scroll 3 lines (not default 5)"
+assert_file_contains "$TMUX_CONF" "send-keys -X -N 3 scroll-down" "wheel down should scroll 3 lines (not default 5)"
+
 it "should declare vim-aware seamless pane navigation"
 assert_file_contains "$TMUX_CONF" 'is_vim=' "should define is_vim shell predicate"
 assert_file_contains "$TMUX_CONF" "if-shell \"\$is_vim\" 'send-keys C-h' 'select-pane -L'" "C-h should passthrough or select-pane left"
