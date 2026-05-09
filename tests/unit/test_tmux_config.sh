@@ -23,8 +23,9 @@ assert_file_exists "$SETUP_SCRIPT" "setup-tmux.sh should exist"
 assert_true "[[ -x '$SETUP_SCRIPT' ]]" "setup-tmux.sh should be executable"
 
 it "should declare the rebound prefix"
-assert_file_contains "$TMUX_CONF" "set -g prefix C-Space" "C-Space prefix should be set"
+assert_file_contains "$TMUX_CONF" "set -g prefix C-a" "C-a prefix should be set"
 assert_file_contains "$TMUX_CONF" "unbind C-b" "default C-b prefix should be unbound"
+assert_file_contains "$TMUX_CONF" "bind C-a send-prefix" "double-tap should send literal C-a (shell readline start-of-line)"
 
 it "should enable vi-mode and modern QoL defaults"
 assert_file_contains "$TMUX_CONF" "mode-keys vi" "vi copy-mode should be enabled"
