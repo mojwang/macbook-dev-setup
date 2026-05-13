@@ -34,6 +34,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - '"Drive, alignment, execution" — narrow focus beats broad initiatives'
     - Cuts through consensus-by-politeness; surfaces what people actually think
 
+  tags: [AMP-IT-UP, DATE-DEMAND, DROP-DIPLOMATIC]
+
   natural-tensions:
     - vs customer-obsessed-long-arc: intensity-now vs patient long-arc
     - vs talent-density-context-not-control: top-down standards vs distributed judgment
@@ -68,6 +70,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - '"Disagree and commit" — disagreement is fine; lingering disagreement after the call is not'
     - '"Day 1 vs Day 2" — surfaces process-for-process-sake, proxy metrics, customer-orientation as theater'
     - Narrative memos over slides; if you can't write it in prose, you don't understand it
+
+  tags: [PRESS-RELEASE-FIRST, TYPE-1-VS-TYPE-2, DAY-1-CHECK, DATA-AND-ANECDOTE]
 
   natural-tensions:
     - vs operator-execution: long-arc patience vs intensity-now
@@ -104,6 +108,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - '"Informed captain" replaces approval gates — one decision-maker, broad input'
     - '"No rules rules" — eliminate process; trust judgment; document principles, not procedures'
 
+  tags: [KEEPER-TEST, STUNNING-COLLEAGUES, CONTEXT-NOT-CONTROL, INFORMED-CAPTAIN]
+
   natural-tensions:
     - vs operator-execution: distributed judgment vs top-down standards
     - vs acquisition-long-hold: fire fast vs long-hold relationships
@@ -138,6 +144,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - Skeptical of empire-building, M&A theater, and "strategic" investments without ROI logic
     - '"Return on incremental capital" beats absolute returns'
     - Distribution beats reinvestment when reinvestment opportunities are weak
+
+  tags: [RETURN-ON-INCREMENTAL, ALTERNATIVE-USE, DISTRIBUTE-OR-REINVEST]
 
   natural-tensions:
     - vs product-empowered-orgs: build product-led vs sometimes don't build, allocate capital instead
@@ -174,6 +182,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - '"Main street, not Sand Hill" — small businesses with real cash flow over venture-shaped bets'
     - Surfaces relationship moats operators dismiss because they don't scale to billion-dollar TAM
 
+  tags: [BORING-PROFITABLE-DURABLE, 30-YEAR-HOLD, MAIN-STREET, OWNER-DEPENDENCY]
+
   natural-tensions:
     - vs talent-density-context-not-control: long-hold relationships vs fire-fast standards
     - vs operator-execution: patient compounding vs amp-it-up intensity
@@ -208,6 +218,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - Pulls models from psychology, economics, engineering, biology — refuses single-discipline analysis
     - 'Names the cognitive biases at play: social proof, commitment bias, availability heuristic'
     - '"I never want to be there" — surfaces second-order and third-order effects others miss'
+
+  tags: [INVERSION, INCENTIVES, AVOID-STUPIDITY, SECOND-ORDER]
 
   natural-tensions:
     - vs leverage-and-judgment: avoid stupidity downside vs asymmetric upside leverage
@@ -244,6 +256,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - Distinguishes power (structural) from advantage (transient) from preference (taste)
     - 'Pressure-tests durability under stress: founder leaves, market shifts, capital floods in'
 
+  tags: [WHICH-OF-7-POWERS, BENEFIT-PLUS-BARRIER, IF-COPIED-WHAT-CHANGES]
+
   natural-tensions:
     - vs operator-execution: structural moat vs operational excellence
     - vs acquisition-long-hold: explicit power-source vs relationship-moat (Helmer would press to formalize)
@@ -279,6 +293,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - Demands product judgment, not roadmap stenography
     - '"Customer-facing problems they own" — empowerment requires owning the problem space, not just the implementation'
 
+  tags: [OUTCOMES-OVER-OUTPUT, DISCOVERY-VS-DELIVERY, RISKIEST-ASSUMPTION]
+
   natural-tensions:
     - vs capital-allocator: build product-led vs sometimes don't build
     - vs strategy-power: org-design as competitive advantage vs structural-power as the real moat
@@ -313,6 +329,8 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
     - '"Play long-term games with long-term people" — iterated reputation is the actual asset'
     - '"Are you playing for principal or salary?" — equity in the work, not just income from it'
     - '"Asymmetric upside" — small downside, uncapped upside; the only bets worth making'
+
+  tags: [LEVERAGE-CHECK, PRINCIPAL-VS-SALARY, SPECIFIC-KNOWLEDGE, ASYMMETRIC-UPSIDE]
 
   natural-tensions:
     - vs mental-models: asymmetric upside leverage vs avoid-stupidity downside protection
@@ -421,7 +439,7 @@ Curated roster of operating-wisdom voices. The boardroom agent reads this file t
   source: Matthew Ball
   category: writers-analysts
   status: candidate
-  value-add: Definitive analyst on media, gaming, and streaming economics — directly relevant to DVX work
+  value-add: Definitive analyst on media, gaming, and streaming economics
 - id: finance-meets-tech
   source: Byrne Hobart
   category: writers-analysts
