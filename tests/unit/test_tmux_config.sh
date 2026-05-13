@@ -69,7 +69,10 @@ assert_file_contains "$SETUP_SCRIPT" "install_plugins" "installer should run TPM
 
 it "should remove an effectively-empty legacy ~/.tmux.conf placeholder"
 assert_file_contains "$SETUP_SCRIPT" 'rm "$HOME/.tmux.conf"' "installer should rm legacy placeholder"
-assert_file_contains "$SETUP_SCRIPT" '[[:space:]]' "installer should guard rm with a whitespace-only check"
+# Assert the specific grep pattern that detects whitespace-only files. Generic
+# [[:space:]] would pass on almost any shell script (it has whitespace patterns
+# everywhere) and didn't actually verify the guard logic.
+assert_file_contains "$SETUP_SCRIPT" "grep -v '^\[\[:space:\]\]\*\$'" "installer should detect whitespace-only file via grep -v of '^[[:space:]]*\$'"
 
 # ─── orchestration assertions ───────────────────────────────────────
 it "should be wired into setup.sh after setup-dotfiles.sh"
@@ -98,8 +101,9 @@ if command -v tmux >/dev/null 2>&1; then
     parse_stderr=$(tmux -L "$_SOCK" -f "$TMUX_CONF" new-session -d -s parsecheck 2>&1)
     tmux -L "$_SOCK" kill-server 2>/dev/null || true
     # tmux prints config errors to stderr at server start; treat any non-empty,
-    # non-warning-only output as a failure.
-    parse_errors=$(echo "$parse_stderr" | grep -iE "error|unknown variable|invalid" || true)
+    # non-warning-only output as a failure. tmux's common error phrasings:
+    # "error", "unknown variable", "unknown option", "bad option", "invalid".
+    parse_errors=$(echo "$parse_stderr" | grep -iE "error|unknown (variable|option)|bad option|invalid" || true)
     assert_empty "$parse_errors" "tmux should parse the config without errors"
 else
     echo "  (tmux not installed — skipping live parse check)"
