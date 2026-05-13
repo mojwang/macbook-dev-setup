@@ -72,7 +72,7 @@ assert_file_contains "$SETUP_SCRIPT" 'rm "$HOME/.tmux.conf"' "installer should r
 # Assert the specific grep pattern that detects whitespace-only files. Generic
 # [[:space:]] would pass on almost any shell script (it has whitespace patterns
 # everywhere) and didn't actually verify the guard logic.
-assert_file_contains "$SETUP_SCRIPT" "grep -v '^\[\[:space:\]\]\*\$'" "installer should detect whitespace-only file via grep -v of '^[[:space:]]*\$'"
+assert_file_contains "$SETUP_SCRIPT" "grep -v '^[[:space:]]*\$'" "installer should detect whitespace-only file via grep -v of '^[[:space:]]*\$'"
 
 # ─── orchestration assertions ───────────────────────────────────────
 it "should be wired into setup.sh after setup-dotfiles.sh"
