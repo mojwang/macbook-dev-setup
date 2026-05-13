@@ -35,6 +35,7 @@ backup_organized ~/.scripts "dotfiles" "scripts backup"
 backup_organized ~/.config/nvim "dotfiles" "Neovim config backup"
 backup_organized ~/.config/zsh "dotfiles" "Zsh config backup"
 backup_organized ~/.config/starship.toml "dotfiles" "Starship config backup"
+backup_organized ~/.config/tmux/tmux.conf "dotfiles" "tmux config backup"
 
 # Install dotfiles
 install_dotfile() {
@@ -163,6 +164,31 @@ fi
 # Setup Starship prompt configuration
 mkdir -p ~/.config
 install_dotfile "dotfiles/.config/starship.toml" ~/.config/starship.toml "Starship prompt configuration"
+
+# Setup tmux configuration (XDG path)
+if [[ -f "dotfiles/.config/tmux/tmux.conf" ]]; then
+    mkdir -p ~/.config/tmux
+    install_dotfile "dotfiles/.config/tmux/tmux.conf" ~/.config/tmux/tmux.conf "tmux configuration"
+fi
+
+# Setup Warp custom themes (~/.warp/themes/). Warp doesn't follow XDG and
+# doesn't accept arbitrary `theme = "<filename>"` values in settings.toml —
+# the theme has to be selected via Settings → Themes once after the YAML is
+# deployed, which writes whatever internal ID Warp wants. We just stage the
+# YAML and tell the user to pick it.
+if [[ -d "dotfiles/.warp/themes" && -d "$HOME/.warp" ]]; then
+    mkdir -p "$HOME/.warp/themes"
+    deployed_any=false
+    for theme_file in dotfiles/.warp/themes/*.yml; do
+        [[ -f "$theme_file" ]] || continue
+        cp "$theme_file" "$HOME/.warp/themes/"
+        print_success "Deployed Warp theme: $(basename "$theme_file")"
+        deployed_any=true
+    done
+    if [[ "$deployed_any" == "true" ]]; then
+        print_info "→ Restart Warp, then pick the theme via Settings → Appearance → Themes"
+    fi
+fi
 
 # Create scripts directory and copy scripts
 if [[ -d "dotfiles/scripts" ]]; then

@@ -36,13 +36,20 @@ fi
 # Enhanced cat (bat)
 if command -v bat &> /dev/null; then
     alias cat="bat"
-    export BAT_THEME="auto"
+    # Solarized (dark) — coordinated with Warp/tmux/nvim. Both Solarized
+    # variants ship with bat; "Solarized (dark)" must match the theme name
+    # as listed by `bat --list-themes`.
+    export BAT_THEME="Solarized (dark)"
 fi
 
-# Fuzzy finder (fzf)
+# Fuzzy finder (fzf) — Solarized Dark palette overrides
 if command -v fzf &> /dev/null; then
     eval "$(fzf --zsh)"
-    export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
+    export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border \
+--color=bg+:#073642,bg:#002b36,spinner:#cb4b16,hl:#b58900 \
+--color=fg:#839496,header:#dc322f,info:#6c71c4,pointer:#268bd2 \
+--color=marker:#2aa198,fg+:#93a1a1,prompt:#268bd2,hl+:#cb4b16 \
+--color=selected-bg:#073642 --color=border:#586e75,label:#839496"
     
     # Use fd for fzf if available
     if command -v fd &> /dev/null; then
